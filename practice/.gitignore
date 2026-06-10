@@ -1,0 +1,6 @@
+# Terraform 生成文件和状态文件
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+output/
