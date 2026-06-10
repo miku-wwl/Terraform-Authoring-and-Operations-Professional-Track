@@ -48,23 +48,22 @@
    - 数据来源：基础概念可通过`local_file`练习，但课程中的AWS AMI、子网等数据源需要AWS
 
 2. **Docker本地环境推荐配置**：
-下面是一个可构建的 `Dockerfile` 示例，基于 Debian slim，包含 `terraform`、`checkov` 和 `vault`，可直接用于本地构建与测试：
-```dockerfile
-FROM python:3.11-slim
 
-ENV TERRAFORM_VERSION=1.5.7
-ENV VAULT_VERSION=1.14.3
+直接使用 HashiCorp 官方 `hashicorp/terraform` 镜像（仅 ~45MB），无需自定义 Dockerfile：
 
-RUN apt-get update && apt-get install -y curl unzip ca-certificates && \
-   curl -sSL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform.zip && \
-   unzip /tmp/terraform.zip -d /usr/local/bin && rm /tmp/terraform.zip && \
-   curl -sSL https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VERSION}_linux_amd64.zip -o /tmp/vault.zip && \
-   unzip /tmp/vault.zip -d /usr/local/bin && rm /tmp/vault.zip && \
-   pip install --no-cache-dir checkov && \
-   apt-get purge -y --auto-remove unzip && rm -rf /var/lib/apt/lists/*
+```powershell
+# 拉取镜像（仅需一次）
+docker pull hashicorp/terraform:1.11
 
-ENTRYPOINT ["/bin/bash"]
+# 启动交互式练习容器（项目目录映射到 /workspace）
+docker run -it --rm --name tf-practice `
+  -v "D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track:/workspace" `
+  -w /workspace `
+  --entrypoint sh `
+  hashicorp/terraform:1.11
 ```
+
+> 在 VS Code 中编写 `.tf` 文件，容器内运行 `terraform init/plan/apply`，双向实时同步。详细练习步骤见 `practice/GUIDE.md`。
 
 3. **AWS权限建议**：
    实操时建议创建一个仅包含必要权限的IAM用户，避免使用根账号，权限范围覆盖EC2、S3、IAM、VPC、DynamoDB即可。
