@@ -1,0 +1,1 @@
+我要开始做 lab X。请只读取 prompt-work.md 和 work/X，帮我准备 Docker 实验环境；不要读取 practice/labs/X 的参考实现，除非我要求复盘。
