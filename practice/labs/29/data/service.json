@@ -1,0 +1,9 @@
+{
+  "name": "payments",
+  "region": "local",
+  "skills": ["terraform", "json", "automation"],
+  "tags": {
+    "owner": "platform",
+    "env": "dev"
+  }
+}
