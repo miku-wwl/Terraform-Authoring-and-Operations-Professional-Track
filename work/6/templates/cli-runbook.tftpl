@@ -1,0 +1,16 @@
+# Terraform CLI 速查
+
+## 查询帮助
+
+%{ for name, command in command_catalog ~}
+- ${name}: `${command}`
+%{ endfor ~}
+
+## 自动化常用参数
+
+%{ for name, flag in automation_flags ~}
+- ${name}: `${flag}`
+%{ endfor ~}
+
+在考试和生产排障中，优先用 `terraform <command> -help` 查询当前 Terraform 版本真实支持的参数。
+

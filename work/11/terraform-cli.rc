@@ -1,0 +1,7 @@
+provider_installation {
+  filesystem_mirror {
+    path    = "/workspace/practice/labs/11/mirror"
+    include = ["registry.terraform.io/hashicorp/*"]
+  }
+}
+
