@@ -6,3 +6,7 @@
 output/
 tfplan
 *.tfplan
+.terraform-plugin-cache/
+mirror/
+plan.json
+scan-results/
