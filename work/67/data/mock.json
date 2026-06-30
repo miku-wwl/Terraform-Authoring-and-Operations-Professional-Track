@@ -1,0 +1,1 @@
+{"apps":[{"name":"api","tier":"backend"},{"name":"web","tier":"frontend"},{"name":"worker","tier":"backend"}]}
