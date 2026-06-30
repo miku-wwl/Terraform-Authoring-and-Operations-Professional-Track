@@ -1,0 +1,3 @@
+%{ for name, port in services ~}
+${name}: ${port}
+%{ endfor ~}
