@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "name": "payments",
+      "tier": "backend",
+      "ports": [8080, 9090]
+    },
+    {
+      "name": "portal",
+      "tier": "frontend",
+      "ports": [80, 443]
+    }
+  ]
+}
