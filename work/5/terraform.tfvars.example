@@ -1,0 +1,4 @@
+service_name    = "payments-api"
+environment     = "dev"
+approver_groups = ["platform-owners", "security-reviewers"]
+
