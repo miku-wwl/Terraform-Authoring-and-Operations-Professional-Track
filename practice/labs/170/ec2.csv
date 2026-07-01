@@ -1,0 +1,5 @@
+name,instance_id,ami_id,instance_type,region,team_name
+app-a,i-000001,ami-111111,micro,us-east-1,security
+app-b,i-000002,ami-222222,nano,ap-south-1,sre
+app-c,i-000003,ami-333333,nano,us-east-1,devops
+app-d,i-000004,ami-444444,micro,ap-southeast-1,sre
