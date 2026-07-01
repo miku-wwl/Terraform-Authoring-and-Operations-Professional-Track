@@ -1,3 +1,3 @@
-output "lock_table_name" {
-  value = terraform_data.lock_table_marker.output
+output "lock_method" {
+  value = terraform_data.s3_lockfile_marker.output.lock_method
 }

@@ -8,8 +8,7 @@ skip_metadata_api_check     = true
 skip_region_validation      = true
 skip_requesting_account_id  = true
 use_path_style              = true
-dynamodb_table              = "tf-pro-lock-localstack"
+use_lockfile                = true
 endpoints = {
-  s3       = "http://localhost:4566"
-  dynamodb = "http://localhost:4566"
+  s3 = "http://localhost:4566"
 }
