@@ -10,13 +10,12 @@ terraform {
 }
 
 locals {
-  # TODO：把这些命令改造成适合 CI/CD 的非交互式 Terraform 命令。
   pipeline_commands = [
-    "terraform init",
-    "terraform fmt",
+    "terraform init -input=false",
+    "terraform fmt -check",
     "terraform validate",
-    "terraform plan",
-    "terraform apply",
+    "terraform plan -input=false -no-color -out=tfplan",
+    "terraform apply -auto-approve tfplan",
   ]
 
   release_manifest = {
@@ -43,4 +42,3 @@ resource "local_file" "approval_note" {
     apply_command   = local.pipeline_commands[4]
   })
 }
-

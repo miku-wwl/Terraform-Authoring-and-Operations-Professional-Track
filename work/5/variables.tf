@@ -3,15 +3,20 @@ variable "service_name" {
   type        = string
   default     = "payments-api"
 
-  # TODO：添加 validation，要求服务名以小写字母开头，只包含小写字母、数字或连字符。
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{2,30}$", var.service_name))
+    error_message = "service_name 必须为 3 到 31 个字符，以字母开头，并且只能包含小写字母、数字或连字符。"
+  }
 }
 
 variable "environment" {
   description = "自动化工作流要部署的目标环境。"
   type        = string
   default     = "dev"
-
-  # TODO：添加 validation，只允许 dev、stage、prod。
+  validation {
+    condition     = contains(["dev", "stage", "prod"], var.environment)
+    error_message = "environment 必须是 dev、stage、prod 之一。"
+  }
 }
 
 variable "approver_groups" {
@@ -19,6 +24,8 @@ variable "approver_groups" {
   type        = list(string)
   default     = ["platform-owners"]
 
-  # TODO：添加 validation，至少需要一个审批用户组。
+  validation {
+    condition     = length(var.approver_groups) > 0
+    error_message = "至少需要一个审批用户组。"
+  }
 }
-
