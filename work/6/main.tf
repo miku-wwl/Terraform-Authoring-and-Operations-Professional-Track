@@ -12,15 +12,15 @@ terraform {
 locals {
   command_catalog = {
     init_help     = "terraform init -help"
-    plan_help     = "TODO：补充 plan help 查询命令"
+    plan_help     = "terraform plan -help"
     apply_help    = "terraform apply -help"
     validate_help = "terraform validate -help"
   }
 
   automation_flags = {
-    input_false      = "TODO：补充禁用交互输入参数"
+    input_false      = "-input=false"
     no_color         = "-no-color"
-    saved_plan       = "TODO：补充保存 plan 参数"
+    saved_plan       = "-out=tfplan"
     detail_exit_code = "-detailed-exitcode"
   }
 }
