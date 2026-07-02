@@ -11,8 +11,8 @@ terraform {
 
 locals {
   automation_commands = [
-    "terraform init -input=false",
-    "terraform plan -input=false -var artifact_name=ci-artifact.txt -out=tfplan",
+    "terraform init",
+    "terraform plan -out=tfplan",
     "terraform apply -auto-approve tfplan",
   ]
 }
