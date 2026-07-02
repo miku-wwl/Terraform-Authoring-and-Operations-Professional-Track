@@ -3,3 +3,7 @@ output "mirror_note" {
   value       = local_file.mirror_note.filename
 }
 
+output "cli_config_content" {
+  description = "Terraform CLI provider_installation 配置内容。"
+  value       = file("${path.module}/terraform-cli.rc")
+}

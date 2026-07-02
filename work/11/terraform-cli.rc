@@ -1,7 +1,12 @@
 provider_installation {
   filesystem_mirror {
-    path    = "/workspace/practice/labs/11/mirror"
+    # TODO 1：把 mirror 路径改成 /workspace/mirror。
+    # 提示：Docker 已把 work/11 挂载为 /workspace，所以容器内 mirror 目录就是 /workspace/mirror。
+    path    = "TODO：填写容器内 mirror 目录"
     include = ["registry.terraform.io/hashicorp/*"]
   }
-}
 
+  direct {
+    exclude = ["registry.terraform.io/hashicorp/*"]
+  }
+}
