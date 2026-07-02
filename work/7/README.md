@@ -19,10 +19,16 @@ terraform init -input=false
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
+terraform plan -input=false -var artifact_name=ci-artifact.txt -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-terraform destroy -auto-approve
+terraform destroy -auto-approve -var artifact_name=ci-artifact.txt
 ```
 
 最终验证时会使用 `terraform fmt -check`。
+
+说明：
+
+- `terraform test` 只验证命令链是否符合非交互式要求，不会生成 `output/ci-artifact.txt`。
+- 产物文件由 `terraform apply` 创建。
+- 本题不要依赖 `terraform.tfvars` 自动加载变量，重点是练习在 CI/CD 命令中显式传入 `-var artifact_name=ci-artifact.txt`。
