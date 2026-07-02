@@ -10,22 +10,26 @@
 
 生成 `output/no-color-policy.txt`，测试通过。
 
-你需要根据题目目标修复起始文件中的 `TODO`、不完整命令或故意错误配置，让实验通过验收。
+本题训练的是 CI/CD 日志可读性：给人看的终端输出可以有颜色，但保存给日志系统、审批系统或机器解析的输出应该禁用颜色控制符。
 
 ## 3. 你需要编辑的文件
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
-- `outputs.tf`：如果存在，检查输出是否满足测试断言。
-- `variables.tf`：如果存在，检查变量、默认值和校验规则。
-- `templates/`：如果存在，检查模板是否能渲染出目标内容。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+- `main.tf`：修复 `local.plan_capture_commands` 中不适合 CI/CD 的命令。
+- `outputs.tf`：检查 `plan_capture_commands` 和 `policy_file` 输出是否能帮助验证结果。
+- `tests/no_color.tftest.hcl`：验收测试，建议不要修改，优先让代码满足测试。
+
+你需要完成两个命令：
+
+- `clean_output`：保存文本 plan 时禁用颜色输出。
+- `ci_plan`：在 CI/CD 中禁用交互输入、禁用颜色输出，并保存 plan 文件。
 
 ## 4. 约束
 
 - 不要修改 `practice/labs/8/`。
 - 不要创建真实 AWS 资源。
 - 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+- 不要改变测试文件来绕过验收。
+- 本题重点是 `-no-color`，但 CI/CD 的 plan 命令也应该保留 `-input=false` 和 `-out=tfplan`。
 
 ## 5. 验收命令
 
@@ -33,12 +37,15 @@
 
 ## 6. 预期输出
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成 plan/apply/output/destroy。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform apply` 后生成 `output/no-color-policy.txt`。
+- `terraform output` 显示 `policy_file = "./output/no-color-policy.txt"`。
 
 ## 7. 常见问题
 
 1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个命令、参数或输出。
-2. `terraform validate` 失败：先检查 HCL 语法、变量名和输出名是否写错。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+2. plan 文本里出现奇怪的 `\u001b` 或 `ESC` 字符：说明没有使用 `-no-color`。
+3. CI plan 命令缺少 `-input=false`：流水线可能等待交互输入。
+4. CI plan 命令缺少 `-out=tfplan`：后续 apply 不能保证使用同一个已审查 plan。
+5. 格式检查失败：运行 `terraform fmt` 后再验证。
+6. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。

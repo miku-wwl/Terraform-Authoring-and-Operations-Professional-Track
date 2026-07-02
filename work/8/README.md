@@ -26,3 +26,10 @@ terraform destroy -auto-approve
 ```
 
 最终验证时会使用 `terraform fmt -check`。
+
+说明：
+
+- 本题的核心是 `-no-color`。
+- `terraform test` 只验证命令文本是否符合 CI/CD 要求，不会真正生成文件。
+- 产物文件由 `terraform apply` 创建。
+- 真实 CI/CD 中保存 plan 文本或日志时，建议使用 `-no-color`，避免 ANSI 控制符污染日志和审批记录。
