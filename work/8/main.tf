@@ -19,8 +19,8 @@ locals {
   # - 保存二进制 plan 文件，供 apply 使用
   plan_capture_commands = {
     colored_output = "terraform plan > color.plan"
-    clean_output   = "terraform plan > no-color.plan"
-    ci_plan        = "terraform plan -out=tfplan"
+    clean_output   = "terraform plan -no-color > no-color.plan"
+    ci_plan        = "terraform plan -input=false -no-color -out=tfplan"
   }
 }
 
