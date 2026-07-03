@@ -19,11 +19,9 @@ variable "environment" {
   description = "部署环境"
   default     = "dev"
 
-  # TODO 1：为 environment 写 validation 规则，只允许 "dev"、"staging"、"prod"。
-  # 提示：contains(["dev", "staging", "prod"], var.environment) 做白名单校验。
   validation {
-    condition     = "TODO：限制 environment 只能为 dev/staging/prod"
-    error_message = "TODO：environment 只能是 dev、staging 或 prod"
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "environment 只能是 dev、staging 或 prod"
   }
 }
 
@@ -32,11 +30,9 @@ variable "instance_count" {
   description = "实例数量，范围 1-10。"
   default     = 3
 
-  # TODO 2：为 instance_count 写 validation 规则，限制在 1 到 10 之间。
-  # 提示：var.instance_count >= 1 && var.instance_count <= 10 做范围校验。
   validation {
-    condition     = "TODO：限制 instance_count 在 1-10 范围内"
-    error_message = "TODO：instance_count 必须在 1 到 10 之间"
+    condition     = var.instance_count >= 1 && var.instance_count <= 10
+    error_message = "instance_count 必须在 1 到 10 之间"
   }
 }
 
