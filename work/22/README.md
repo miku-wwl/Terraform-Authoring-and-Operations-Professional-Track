@@ -2,9 +2,12 @@
 
 这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/22/ 中的参考实现。
 
+> **注意：以下命令请在项目根目录 `Terraform-Authoring-and-Operations-Professional-Track` 下执行，不要在本目录 (`work/22`) 中执行。**
+
 进入 Docker：
 
 ```powershell
+# 在项目根目录下执行
 docker run -it --rm --name tf-work-22 `
   -v "${PWD}/work/22:/workspace" `
   -w /workspace `
