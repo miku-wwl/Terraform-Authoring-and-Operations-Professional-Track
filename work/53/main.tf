@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：在 services 列表中添加第二个服务对象，使 service_count 为 2。
+  # 提示：添加 { name = "worker", ports = [9000] } 作为第二个元素。
   services = [{ name = "api", ports = [8080, 9090] }]
 }
 

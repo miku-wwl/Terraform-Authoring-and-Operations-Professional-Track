@@ -10,6 +10,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：移除 for 表达式中的 if row.name == "api" 过滤条件，使所有 CSV 行都生成文件。
+  # 提示：CSV 有两行 api 和 worker，去掉过滤后 length == 2。
   files = { for row in csvdecode(file("${path.module}/data/files.csv")) : row.name => row if row.name == "api" }
 }
 

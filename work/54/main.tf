@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将 prod 环境的 replicas 从 1 改为 3。
+  # 提示：测试预期 environments.prod.replicas 为 3。
   environments = { dev = { replicas = 1, region = "local" }, prod = { replicas = 1, region = "local" } }
 }
 

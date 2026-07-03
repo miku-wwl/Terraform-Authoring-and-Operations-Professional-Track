@@ -4,6 +4,8 @@ terraform {
 
 locals {
   raw_names    = ["api", "worker", "api"]
+  # TODO 1：用 toset() 将 raw_names 转为 set，使 unique_count 为 2。
+  # 提示：toset 会自动去重，去除重复的 "api"。
   unique_names = local.raw_names
 }
 

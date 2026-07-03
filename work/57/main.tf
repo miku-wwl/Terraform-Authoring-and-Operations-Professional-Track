@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：在 service_files map 中添加第二个服务，使 service_count 为 2。
+  # 提示：添加 worker = "worker service" 作为第二个 key-value。
   service_files = { api = "api service" }
 }
 

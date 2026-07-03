@@ -10,6 +10,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将 templatefile 的 name 变量从 "TODO-service" 改为 "payments"。
+  # 提示：模板输出包含服务名，测试期待渲染结果包含 "payments"。
   rendered = templatefile("${path.module}/template.tftpl", { name = "TODO-service", environment = "dev" })
 }
 

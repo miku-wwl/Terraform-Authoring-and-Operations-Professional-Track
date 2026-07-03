@@ -4,6 +4,8 @@ terraform {
 
 locals {
   users       = ["alice", "bob", "john"]
+  # TODO 1：用 for 表达式将 users 列表中的每个元素转为大写。
+  # 提示：[for user in local.users : upper(user)] 会将每个名字转为大写。
   upper_users = local.users
 }
 
