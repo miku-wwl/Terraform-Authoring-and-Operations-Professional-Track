@@ -10,11 +10,8 @@ terraform {
 }
 
 locals {
-  # TODO 1：在 Alice 和 Bob 两侧添加转义双引号 \"。
-  # TODO 2：将路径中的斜杠改为转义反斜杠 \\。
-  # 提示：Terraform 双引号字符串中用 \" 保留双引号，用 \\ 保留反斜杠。
-  quoted_message = "最好的协作者是 Alice 和 Bob。"
-  escaped_path   = "C:/terraform/training/lab25"
+  quoted_message = "最好的协作者是 \"Alice\" 和 \"Bob\"。"
+  escaped_path   = "C:\\terraform\\training\\lab25"
   multiline_text = "第一行\n第二行\n第三行"
 }
 
