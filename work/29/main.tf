@@ -17,14 +17,14 @@ locals {
   # TODO 3：将 service_object.name 从 "orders" 改为 "payments"。
   # 提示：name 字段需与 data/service.json 中的一致。
   service_object = {
-    name   = "orders"
+    name   = "payments"
     owner  = "platform"
     ports  = [8080, 9090]
     labels = { env = "dev", tier = "backend" }
   }
 
-  encoded_service = "TODO：用 jsonencode 编码 service_object"
-  decoded_service = "TODO：用 jsondecode + file 读取 data/service.json"
+  encoded_service = jsonencode(local.service_object)
+  decoded_service = jsondecode(file("${path.module}/data/service.json"))
 }
 
 resource "local_file" "service_json" {
