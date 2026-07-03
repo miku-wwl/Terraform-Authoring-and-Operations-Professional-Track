@@ -10,13 +10,16 @@
 
 输出服务名 `payments`、第一个端口 `8080` 和端口数量。
 
-你需要根据题目目标修复起始文件中的 `TODO`，将 for 过滤条件改为 backend，让实验通过验收。
+你需要逐个修复 `main.tf` 中的 3 个 TODO：
+- TODO 1：用 `jsondecode(file(...))` 从 `data/catalog.json` 读取服务目录
+- TODO 2：用 `for` 表达式筛选 `tier == "backend"` 的服务，提取 `name` 和 `ports` 字段
+- TODO 3：通过索引 `[0]` 和 `.ports` 取出第一个 backend 服务的端口列表，正确输出 `backend_ports`
 
 ## 3. 你需要编辑的文件
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+- `main.tf`：主要练习文件，包含 3 个 TODO 需要你补齐。
+- `data/`：服务目录 JSON 数据，不需要修改。
+- `tests/`：验收测试，优先让代码满足断言，不要先改测试。
 
 ## 4. 约束
 
