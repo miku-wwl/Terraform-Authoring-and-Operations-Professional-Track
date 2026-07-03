@@ -8,15 +8,20 @@
 
 ## 2. 任务目标
 
-合法名称通过，非法名称在 plan 阶段失败。
+你需要完成 `main.tf` 中的 2 个 TODO，**亲手写两条 validation 规则**：
 
-你需要根据题目目标修复起始文件中的 `TODO`，补全变量验证的阶段说明，让实验通过验收。
+- **TODO 1**：为 `environment` 变量写白名单验证，只允许 `dev`、`staging`、`prod`
+- **TODO 2**：为 `instance_count` 变量写范围验证，限制 1-10
+
+测试文件包含 3 个用例：
+- `valid_inputs_pass`：合法输入通过 apply
+- `invalid_environment_rejected`：非法 `environment` 在 plan 阶段被拒
+- `invalid_instance_count_rejected`：非法 `instance_count` 在 plan 阶段被拒
 
 ## 3. 你需要编辑的文件
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
-- `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+- `main.tf`：在 `variable "environment"` 和 `variable "instance_count"` 的 validation 块中补齐 `condition` 和 `error_message`。
+- `tests/`：已写好正反用例，不要先修改。
 
 ## 4. 约束
 
