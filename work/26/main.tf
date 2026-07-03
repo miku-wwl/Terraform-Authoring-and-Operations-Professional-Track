@@ -10,6 +10,9 @@ terraform {
 }
 
 locals {
+  # TODO 1：补充脚本 shebang（#!/bin/sh）。
+  # TODO 2：补充完成部署的提示文本。
+  # 提示：heredoc 用 <<EOT ... EOT 包裹多行内容，shebang 是 #!/bin/sh。
   deploy_script = <<EOT
 # TODO：补充脚本 shebang
 set -eu

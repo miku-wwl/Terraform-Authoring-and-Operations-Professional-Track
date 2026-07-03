@@ -14,6 +14,10 @@ resource "terraform_data" "payment_database_firewall" {
   }
 }
 
+# TODO 1：补充 moved block 的旧资源地址。
+# TODO 2：补充 moved block 的新资源地址。
+# 提示：旧地址是 terraform_data.database_firewall（moved block 中的 from），
+# 新地址是 terraform_data.payment_database_firewall（当前资源名）。
 output "moved_from" {
   value = "TODO：补充旧资源地址"
 }

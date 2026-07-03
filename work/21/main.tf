@@ -10,6 +10,9 @@ terraform {
 }
 
 locals {
+  # TODO 1：补全 targeted plan 命令中的资源地址。
+  # TODO 2：补全资源总数（本目录有 2 个 local_file 资源）。
+  # 提示：-target=local_file.release_note 指定只针对该资源执行 plan。
   target_commands = [
     "terraform plan",
     "terraform apply -target=local_file.release_note -auto-approve",
@@ -32,5 +35,5 @@ output "target_commands" {
 }
 
 output "resource_count" {
-  value = 1
+  value = 1 # TODO 2：改成正确的资源总数
 }

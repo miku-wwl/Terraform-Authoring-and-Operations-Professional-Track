@@ -10,7 +10,7 @@
 
 生成 `output/approved-change.txt`，并验证命令链包含 `terraform apply -auto-approve tfplan`。
 
-你需要根据题目目标修复起始文件中的 `TODO`、不完整命令或故意错误配置，让实验通过验收。
+你需要根据题目目标修复起始文件中的 `TODO`，补全保存 plan 的命令参数，让实验通过验收。
 
 ## 3. 你需要编辑的文件
 

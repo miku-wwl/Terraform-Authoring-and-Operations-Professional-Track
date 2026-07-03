@@ -9,6 +9,11 @@ variable "manual_resource_id" {
 }
 
 locals {
+  # TODO 1：补充生成导入配置的命令。
+  # TODO 2：补充 import block 的目标资源地址。
+  # TODO 3：补全安全组的入站端口规则（共 3 条）。
+  # 提示：生成配置命令是 terraform plan -generate-config-out=generated.tf；
+  # 目标地址是资源类型.资源名；端口参考 80、443、22。
   generated_config_command = "TODO：补充生成导入配置的命令"
   import_block_example = {
     to = "TODO：补充目标资源地址"

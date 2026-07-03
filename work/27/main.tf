@@ -16,6 +16,8 @@ locals {
     line-three
 EOT
 
+  # TODO 1：将 indented heredoc 的 <<EOT 改为 <<-EOT，使其移除共同前导空白。
+  # 提示：基础 heredoc（<<EOT）保留前导空白，indented heredoc（<<-EOT）去掉共同缩进。
   indented_heredoc = <<EOT
     line-one
       line-two

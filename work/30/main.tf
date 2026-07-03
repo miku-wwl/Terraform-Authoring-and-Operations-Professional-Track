@@ -11,6 +11,8 @@ terraform {
 
 locals {
   catalog          = jsondecode(file("${path.module}/data/catalog.json"))
+  # TODO 1：将 for 表达式的过滤条件从 "frontend" 改为 "backend"。
+  # 提示：catalog.json 中 payments 的 tier 是 "backend"，需要筛选 backend 服务。
   backend_services = [for service in local.catalog.services : service if service.tier == "frontend"]
   first_backend    = local.backend_services[0]
   backend_ports    = local.first_backend.ports

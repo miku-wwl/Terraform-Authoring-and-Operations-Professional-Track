@@ -14,6 +14,8 @@ terraform {
 }
 
 resource "random_integer" "suffix" {
+  # TODO 1：补全随机后缀的范围，要求 1000 到 9999。
+  # 提示：min 和 max 需要改成四位数范围。
   min = 1
   max = 99
 }

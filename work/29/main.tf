@@ -10,6 +10,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将服务名从 "orders" 改为 "payments"。
+  # 提示：jsonencode 将 Terraform 对象编码为 JSON，name 字段应与 data/service.json 中的一致。
   service_object = {
     name   = "orders"
     owner  = "platform"
