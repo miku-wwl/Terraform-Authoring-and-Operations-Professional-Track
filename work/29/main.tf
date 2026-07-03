@@ -10,8 +10,12 @@ terraform {
 }
 
 locals {
-  # TODO 1：将服务名从 "orders" 改为 "payments"。
-  # 提示：jsonencode 将 Terraform 对象编码为 JSON，name 字段应与 data/service.json 中的一致。
+  # TODO 1：将 service_object 用 jsonencode() 编码为 JSON 字符串。
+  # 提示：jsonencode 把 Terraform map/object 转为 JSON，如 jsonencode({a=1}) → "{\"a\":1}"。
+  # TODO 2：用 jsondecode(file(...)) 从 data/service.json 读取并解析外部 JSON。
+  # 提示：file 读取文件内容，jsondecode 把 JSON 字符串转为 Terraform map。
+  # TODO 3：将 service_object.name 从 "orders" 改为 "payments"。
+  # 提示：name 字段需与 data/service.json 中的一致。
   service_object = {
     name   = "orders"
     owner  = "platform"
@@ -19,8 +23,8 @@ locals {
     labels = { env = "dev", tier = "backend" }
   }
 
-  encoded_service = jsonencode(local.service_object)
-  decoded_service = jsondecode(file("${path.module}/data/service.json"))
+  encoded_service = "TODO：用 jsonencode 编码 service_object"
+  decoded_service = "TODO：用 jsondecode + file 读取 data/service.json"
 }
 
 resource "local_file" "service_json" {
