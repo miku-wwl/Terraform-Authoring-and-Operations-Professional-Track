@@ -13,9 +13,9 @@ locals {
   # TODO 1：在 name: payments 前增加两个空格，使其相对 app: 缩进。
   # 提示：<<-EOT 移除共同前导空白，但保留各行之间的相对缩进。
   uneven_indented = <<-EOT
-      app:
+    app:
       name: payments
-      env: prod
+    env: prod
   EOT
 
   rendered_lines = split("\n", trimspace(local.uneven_indented))
