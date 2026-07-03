@@ -18,8 +18,6 @@ locals {
 }
 
 resource "local_file" "mirror_note" {
-  # TODO 2：把输出文件名改成 output/filesystem-mirror-note.txt。
-  # 提示：测试会检查输出路径，文件名需要和团队约定一致。
-  filename = "${path.module}/output/TODO-mirror-note.txt"
+  filename = "${path.module}/output/filesystem-mirror-note.txt"
   content  = local.mirror_summary
 }
