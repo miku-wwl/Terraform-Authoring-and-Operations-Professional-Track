@@ -14,8 +14,8 @@ locals {
   # TODO 2：补充 PowerShell 中设置 TF_IN_AUTOMATION 的方式。
   # 提示：Linux/macOS 用 export，PowerShell 用 $env: 变量语法。
   automation_environment = {
-    linux_macos = "TODO：补充 Linux/macOS 设置方式"
-    powershell  = "TODO：补充 PowerShell 设置方式"
+    linux_macos = "export TF_IN_AUTOMATION=true"
+    powershell  = "$env:TF_IN_AUTOMATION='true'"
     cmd         = "set TF_IN_AUTOMATION=true"
   }
 }
