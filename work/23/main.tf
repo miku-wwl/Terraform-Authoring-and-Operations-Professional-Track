@@ -24,9 +24,7 @@ resource "local_file" "manifest" {
 }
 
 locals {
-  # TODO 1：补充 target 与依赖方向的规则。
-  # 提示：target 会包含目标资源所依赖的上游资源，但不会自动包含下游资源。
-  dependency_rule = "TODO：补充 target 与依赖方向的规则。"
+  dependency_rule = "上游资源"
 }
 
 output "dependency_rule" {
