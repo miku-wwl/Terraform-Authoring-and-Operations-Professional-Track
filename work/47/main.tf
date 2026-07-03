@@ -17,8 +17,9 @@ resource "terraform_data" "service_release" {
     var.image_version
   ]
 
+  # TODO 1：在 lifecycle 中添加 create_before_destroy = true。
+  # 提示：create_before_destroy 先创建替代对象再销毁旧对象，减少中断。
   lifecycle {
-    create_before_destroy = true
   }
 }
 
@@ -26,6 +27,8 @@ output "image_version" {
   value = terraform_data.service_release.output.image_version
 }
 
+# TODO 2：补充替换策略的名称。
+# 提示：当前 lifecycle 使用的策略是 create_before_destroy。
 output "replacement_strategy" {
   value = "TODO：补充替换策略"
 }

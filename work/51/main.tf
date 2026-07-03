@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将 map 中 owner 的值从 "TODO-owner" 改为 "platform"。
+  # 提示：测试预期 tags.owner 为 "platform"。
   tags = { owner = "TODO-owner", env = "dev", cost_center = "cc-1001" }
 }
 

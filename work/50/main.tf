@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将 list 第一个元素从 "TODO-region" 改为正确的区域名称。
+  # 提示：测试预期 values[0] 为 "ap-southeast-2"。
   values = ["TODO-region", "ap-southeast-1", "us-east-1"]
 }
 

@@ -5,6 +5,8 @@ terraform {
 variable "instance_size" {
   type        = string
   description = "本地模拟的实例规格。"
+  # TODO 1：将默认规格从 "medium" 改为 "small"。
+  # 提示：测试预期 output 为 "small"，precondition 允许 small 和 medium。
   default     = "medium"
 }
 

@@ -3,6 +3,8 @@ terraform {
 }
 
 locals {
+  # TODO 1：将 service object 的 port 从 80 改为 8080。
+  # 提示：测试预期 service.port 为 8080。
   service = { name = "payments", port = 80, enabled = true }
 }
 

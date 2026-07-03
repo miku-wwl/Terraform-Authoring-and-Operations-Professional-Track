@@ -14,6 +14,8 @@ variable "workspace_name" {
 }
 
 locals {
+  # TODO 1：补充变量验证发生的阶段。
+  # 提示：变量验证在 plan 阶段执行，把错误前移，避免 apply 时才失败。
   validation_purpose = "TODO：补充变量验证发生的阶段。"
 }
 

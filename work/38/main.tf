@@ -25,6 +25,8 @@ variable "environment" {
 }
 
 locals {
+  # TODO 1：将 policy 中的 environment 从硬编码 "stage" 改为引用 var.environment。
+  # 提示：policy 应使用变量值而非硬编码，使验证结果反映实际输入。
   policy = {
     allowed_sizes = ["small", "medium", "large"]
     environment   = "stage"
