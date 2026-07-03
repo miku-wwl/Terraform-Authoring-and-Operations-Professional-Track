@@ -8,11 +8,20 @@
 
 ## 2. 任务目标
 
-默认密码通过，短密码在 plan 阶段失败。
+你需要完成 `main.tf` 中的 3 个 TODO：
 
-你需要根据题目目标修复起始文件中的 `TODO`，将 min_length 改为 12，让实验通过验收。
+- **TODO 1**：将 `db_password` 标记为 `sensitive = true`，防止密码明文泄露
+- **TODO 2**：写 `validation` 块，用 `length()` 要求密码 ≥ 12 位
+- **TODO 3**：补全 `accepted` 表达式，判断密码是否满足长度要求
+
+测试文件包含 2 个用例：
+- `password_policy_passes`：默认密码通过 apply
+- `short_password_rejected`：短密码在 plan 阶段被 validation 拦截
 
 ## 3. 你需要编辑的文件
+
+- `main.tf`：在 `variable "db_password"` 和 `resource "terraform_data"` 中补齐 TODO。
+- `tests/`：已写好正反用例，不要先修改。
 
 - `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
 - `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。

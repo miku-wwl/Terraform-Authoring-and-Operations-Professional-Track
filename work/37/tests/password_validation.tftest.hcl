@@ -11,3 +11,15 @@ run "password_policy_passes" {
     error_message = "默认密码必须通过长度验证。"
   }
 }
+
+run "short_password_rejected" {
+  command = plan
+
+  variables {
+    db_password = "short"
+  }
+
+  expect_failures = [
+    var.db_password
+  ]
+}
