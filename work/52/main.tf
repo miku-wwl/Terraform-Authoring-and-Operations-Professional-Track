@@ -3,36 +3,25 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a service object with mixed attribute types.
-  # Hint: include these attributes:
-  # name = "payments", port = 8080, enabled = true,
-  # tags = { owner = "platform", env = "dev" },
-  # zones = ["az-a", "az-b"]
-  service = {}
+  service = {
+    name    = "payments",
+    port    = 8080,
+    enabled = true,
+    tags    = { owner = "platform", env = "dev" },
+    zones   = ["az-a", "az-b"]
+  }
 
-  # TODO 2: Read a string attribute from the object.
-  # Hint: use local.service.name.
-  service_name = "TODO-service-name"
+  service_name = local.service.name
 
-  # TODO 3: Read a number attribute from the object.
-  # Hint: use local.service.port.
-  service_port = 0
+  service_port = local.service.port
 
-  # TODO 4: Read a boolean attribute from the object.
-  # Hint: use local.service.enabled.
-  service_enabled = false
+  service_enabled = local.service.enabled
 
-  # TODO 5: Read a nested map/object attribute.
-  # Hint: use local.service.tags.owner.
-  service_owner = "TODO-owner"
+  service_owner = local.service.tags.owner
 
-  # TODO 6: Read the first element from the object's zones list.
-  # Hint: use local.service.zones[0].
-  primary_zone = "TODO-zone"
+  primary_zone = local.service.zones[0]
 
-  # TODO 7: Build a derived value from object attributes.
-  # Hint: use "${local.service.name}:${local.service.port}".
-  service_endpoint = "TODO-endpoint"
+  service_endpoint = "${local.service.name}:${local.service.port}"
 }
 
 resource "terraform_data" "lesson" {
