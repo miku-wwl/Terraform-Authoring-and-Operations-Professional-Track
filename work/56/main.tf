@@ -3,33 +3,19 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a map from service name to port number.
-  # Hint: use api = 8080, worker = 9000, web = 8081.
-  service_ports = {}
+  service_ports = { api = 8080, worker = 9000, web = 8081 }
 
-  # TODO 2: Read one map value by key.
-  # Hint: use local.service_ports["api"].
-  api_port = 0
+  api_port = local.service_ports["api"]
 
-  # TODO 3: Count how many services are in the map.
-  # Hint: use length(local.service_ports).
-  service_count = 0
+  service_count = length(local.service_ports)
 
-  # TODO 4: Get the sorted list of service names.
-  # Hint: use keys(local.service_ports).
-  service_names = []
+  service_names = keys(local.service_ports)
 
-  # TODO 5: Get the list of service port numbers.
-  # Hint: use values(local.service_ports).
-  port_numbers = []
+  port_numbers = values(local.service_ports)
 
-  # TODO 6: Read an optional service port with a fallback value.
-  # Hint: use lookup(local.service_ports, "admin", 7000).
-  admin_port = 0
+  admin_port = lookup(local.service_ports, "admin", 7000)
 
-  # TODO 7: Convert the map into "service:port" labels.
-  # Hint: use [for name, port in local.service_ports : "${name}:${port}"].
-  service_port_labels = []
+  service_port_labels = [for name, port in local.service_ports : "${name}:${port}"]
 }
 
 resource "terraform_data" "lesson" {
