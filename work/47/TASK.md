@@ -43,11 +43,15 @@ sh scripts/clean.sh
 
 Windows PowerShell 使用对应的 `.ps1` 脚本。
 
+这里的 `terraform plan` / `terraform apply` 只会创建默认的 `image_version = "v1"`。
+`scripts/verify.*` 会额外执行一次 `terraform plan -var="image_version=v2"`，用来观察替换计划；这个 `v2` 不会被 apply。
+
 ## 5. 预期结果
 
 - `terraform test` 通过。
 - `scripts/verify.*` 通过。
-- `replace-check.txt` 中能看到 replacement plan。
+- `replace-check.txt` 中能看到 `image_version = "v2"` 触发的 replacement plan。
+- `replace-check.txt` 中能看到 `create replacement and then destroy`。
 
 ## 6. 约束
 
