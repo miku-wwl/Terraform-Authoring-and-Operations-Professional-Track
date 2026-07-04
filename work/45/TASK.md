@@ -8,9 +8,17 @@
 
 ## 2. 任务目标
 
-输出包含 `lifecycle`。
+用 `terraform_data` 模拟 Terraform 对资源的创建、销毁、原地更新和替换判断，并练习常见 meta-argument。
 
-你需要根据题目目标修复起始文件中的 `TODO`，补全第 4 条资源行为和修正 meta-argument，让实验通过验收。
+你需要根据题目目标修复起始文件中的 `TODO`，重点练习：
+
+- **TODO 1**：将替换触发信号接到 `var.deployment_generation`
+- **TODO 2**：记录替换顺序为 `create_before_destroy`
+- **TODO 3**：用 `for_each = local.desired_services` 创建服务对象；新增 key 表示 create，删除 key 表示 destroy
+- **TODO 4**：用 `triggers_replace = local.replacement_generation` 模拟需要替换的属性变化
+- **TODO 5**：在 `lifecycle` 中启用 `create_before_destroy = true`
+
+本实验不会创建真实云资源；它用 `terraform_data` 让你观察 Terraform 如何通过配置、state 和 meta-argument 推导资源行为。
 
 ## 3. 你需要编辑的文件
 
@@ -32,7 +40,7 @@
 
 ## 6. 预期输出
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的专项验证。
+`terraform test` 返回 `1 passed, 0 failed`，并确认 `for_each`、更新字段、替换触发信号和 `lifecycle` 策略都符合预期。
 
 ## 7. 常见问题
 
