@@ -15,7 +15,7 @@
 本节 TODO 都围绕 `check` block 的资源外合约验证：
 
 - **TODO 1**：补全 `local.service_url_uses_https`，用 `startswith(...)` 表达 HTTPS 合约
-- **TODO 2**：让 `service_url_contract_ok` 输出同一个合约检查结果，供测试验收
+- **TODO 2**：在 `check "service_url_contract"` 的 `assert.condition` 中引用这个合约判断
 
 验收时会确认：
 
