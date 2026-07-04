@@ -3,39 +3,27 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define three user names for count-based resources.
-  # Hint: use ["user-01", "user-02", "user-03"].
-  user_names = []
+  user_names = ["user-01", "user-02", "user-03"]
 }
 
+# count is a resource meta-argument. When count creates multiple instances,
+# Terraform exposes count.index inside this block as the current zero-based index.
 resource "terraform_data" "user" {
-  # TODO 2: Create one terraform_data instance per user name.
-  # Hint: use count = length(local.user_names).
-  count = 0
+  count = length(local.user_names)
 
   input = {
-    # TODO 3: Read the matching user name by count index.
-    # Hint: use local.user_names[count.index].
-    name = "TODO-name"
+    name = local.user_names[count.index]
 
-    # TODO 4: Store the zero-based resource index.
-    # Hint: use count.index.
-    index = 0
+    index = count.index
 
-    # TODO 5: Build a stable label from the count index and user name.
-    # Hint: use "user-${count.index}-${local.user_names[count.index]}".
-    label = "TODO-label"
+    label = "user-${count.index}-${local.user_names[count.index]}"
   }
 }
 
 locals {
-  # TODO 6: Collect names back from all count-created resource instances.
-  # Hint: use [for user in terraform_data.user : user.output.name].
-  created_user_names = []
+  created_user_names = [for user in terraform_data.user : user.output.name]
 
-  # TODO 7: Collect labels back from all count-created resource instances.
-  # Hint: use [for user in terraform_data.user : user.output.label].
-  created_user_labels = []
+  created_user_labels = [for user in terraform_data.user : user.output.label]
 }
 
 output "user_names" {
