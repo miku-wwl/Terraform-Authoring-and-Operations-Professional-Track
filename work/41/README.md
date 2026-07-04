@@ -2,6 +2,8 @@
 
 这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/41/ 中的参考实现。
 
+本节重点练习 `check` block：把服务 URL 必须使用 HTTPS 的要求写成资源外合约检查，而不是写进某个资源的 `lifecycle`。
+
 进入 Docker：
 
 ```powershell

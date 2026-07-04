@@ -8,9 +8,15 @@
 
 ## 2. 任务目标
 
-默认 HTTPS 地址通过。
+默认 HTTPS 健康检查地址通过资源外合约验证。
 
-你需要根据题目目标修复起始文件中的 `TODO`，将默认 URL 和 check 条件都改为 https，让实验通过验收。
+你需要根据题目目标修复起始文件中的 `TODO`，用 `check` block 表达服务 URL 合约：生产服务地址必须使用 `https://`。这个约束不属于某个资源的 `lifecycle`，而是对模块整体输入与输出契约的旁路检查。
+
+验收时会确认：
+
+- `service_url` 输出以 `https://` 开头
+- `service_url_contract_ok` 输出为 `true`
+- `check "service_url_contract"` 的断言条件与上述合约一致
 
 ## 3. 你需要编辑的文件
 
