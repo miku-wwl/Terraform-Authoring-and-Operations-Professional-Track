@@ -8,11 +8,19 @@
 
 ## 2. 任务目标
 
-默认 small 通过，xlarge 被拒绝。
+你需要完成 `main.tf` 中的 2 个 TODO，**亲手写 `precondition` 和 `postcondition`**：
 
-你需要根据题目目标修复起始文件中的 `TODO`，将默认规格改为 small，让实验通过验收。
+- **TODO 1**：在 `lifecycle` 中写 `precondition`，用 `contains()` 限制 `var.instance_size` 只能是 `small` 或 `medium`
+- **TODO 2**：在 `lifecycle` 中写 `postcondition`，用 `self.output.size` 确认创建后规格仍在允许范围内
+
+测试文件包含 2 个用例：
+- `pre_and_post_conditions_pass`：默认 `small` 通过 apply（验证 precondition + postcondition）
+- `precondition_rejects_xlarge`：`xlarge` 在 plan 阶段被 precondition 拦截
 
 ## 3. 你需要编辑的文件
+
+- `main.tf`：在 `lifecycle` 块中补齐 `precondition` 和 `postcondition` 的 `condition` 与 `error_message`。
+- `tests/`：已写好正反用例，不要先修改。
 
 - `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
 - `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。
