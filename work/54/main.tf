@@ -3,41 +3,24 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a map of environment objects.
-  # Hint: include dev and prod:
-  # dev = { region = "local", replicas = 1, zones = ["az-a"], tags = { tier = "test", owner = "platform" } }
-  # prod = { region = "ap-southeast-2", replicas = 3, zones = ["az-a", "az-b"], tags = { tier = "live", owner = "platform" } }
-  environments = {}
+  environments = { dev = { region = "local", replicas = 1, zones = ["az-a"], tags = { tier = "test", owner = "platform" } },
+    prod = { region = "ap-southeast-2", replicas = 3, zones = ["az-a", "az-b"], tags = { tier = "live", owner = "platform" } }
+  }
 
-  # TODO 2: Count how many environments are in the map.
-  # Hint: use length(local.environments).
-  environment_count = 0
+  environment_count = length(local.environments)
 
-  # TODO 3: Read a nested number value from the prod environment.
-  # Hint: use local.environments.prod.replicas.
-  prod_replicas = 0
+  prod_replicas = local.environments.prod.replicas
 
-  # TODO 4: Read a nested string value from the prod environment.
-  # Hint: use local.environments.prod.region.
-  prod_region = "TODO-region"
+  prod_region = local.environments.prod.region
 
-  # TODO 5: Read the first element from a nested zones list.
-  # Hint: use local.environments.prod.zones[0].
-  prod_primary_zone = "TODO-zone"
+  prod_primary_zone = local.environments.prod.zones[0]
 
-  # TODO 6: Read a nested tag value from the prod environment.
-  # Hint: use local.environments.prod.tags.owner.
-  prod_owner = "TODO-owner"
+  prod_owner = local.environments.prod.tags.owner
 
-  # TODO 7: Get the sorted list of environment names.
-  # Hint: use keys(local.environments).
-  environment_names = []
+  environment_names = keys(local.environments)
 
-  # TODO 8: Build "environment:region" labels from the nested map.
-  # Hint: use [for name, env in local.environments : "${name}:${env.region}"].
-  environment_region_labels = []
+  environment_region_labels = [for name, env in local.environments : "${name}:${env.region}"]
 }
-
 resource "terraform_data" "lesson" {
   input = {
     topic        = "nested value reads"
