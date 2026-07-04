@@ -3,21 +3,65 @@ terraform {
 }
 
 locals {
-  # TODO 1：将 map 中 owner 的值从 "TODO-owner" 改为 "platform"。
-  # 提示：测试预期 tags.owner 为 "platform"。
-  tags = { owner = "TODO-owner", env = "dev", cost_center = "cc-1001" }
+  # TODO 1: Define a map of common resource tags.
+  # Hint: use key = value pairs inside braces:
+  # owner = "platform", env = "dev", cost_center = "cc-1001"
+  tags = {}
+
+  # TODO 2: Read one map value by key.
+  # Hint: use local.tags["owner"].
+  owner_tag = "TODO-owner"
+
+  # TODO 3: Count how many key/value pairs are in the map.
+  # Hint: use length(local.tags).
+  tag_count = 0
+
+  # TODO 4: Get the sorted list of map keys.
+  # Hint: use keys(local.tags).
+  tag_keys = []
+
+  # TODO 5: Read an optional key with a fallback value.
+  # Hint: use lookup(local.tags, "service", "checkout").
+  service_name = "TODO-service"
+
+  # TODO 6: Convert the map into "key=value" labels.
+  # Hint: use [for key, value in local.tags : "${key}=${value}"].
+  tag_labels = []
 }
 
 resource "terraform_data" "lesson" {
-  input = { topic = "map 数据类型" }
+  input = {
+    topic = "map 数据类型"
+    tags  = local.tags
+  }
 }
 
 output "tags" {
-  value = local.tags
+  description = "完整 tag map。"
+  value       = local.tags
+}
+
+output "owner_tag" {
+  description = "通过 map key 读取出的 owner tag。"
+  value       = local.owner_tag
 }
 
 output "tag_count" {
-  value = length(local.tags)
+  description = "通过 length() 计算出的 map 键值对数量。"
+  value       = local.tag_count
 }
 
+output "tag_keys" {
+  description = "通过 keys() 取得的 map key list。"
+  value       = local.tag_keys
+}
 
+output "service_name" {
+  description = "通过 lookup() 读取的可选 service 名称。"
+  value       = local.service_name
+}
+
+output "tag_labels" {
+  description = "通过 for 表达式生成的 key=value 标签。"
+  value       = local.tag_labels
+}
