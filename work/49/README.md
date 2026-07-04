@@ -2,6 +2,8 @@
 
 这个 lab 使用 Terraform AWS Provider + LocalStack 模拟 AWS EC2，不会访问真实 AWS。
 
+你要先完成 `main.tf` 里的 TODO，再执行下面的验收命令。
+
 核心练习：
 
 - 状态漂移 drift
@@ -37,6 +39,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\clean.ps1
 ```
 
+这组命令分三段：
+
+- `terraform plan/apply`：只创建基线 EC2，初始 tag 是 `Owner = "terraform"`。
+- `scripts/verify.ps1`：用 AWS CLI 把远端 tag 改成 `Owner = "external"`，制造 drift，然后检查 Terraform plan 是否保持干净。
+- `scripts/clean.ps1`：销毁模拟 EC2，并清理 `tfplan`、`drift-check.txt`。
+
 ## Linux / Terraform Sandbox
 
 ```sh
@@ -53,6 +61,12 @@ sh scripts/verify.sh
 sh scripts/clean.sh
 ```
 
+这组命令分三段：
+
+- `terraform plan/apply`：只创建基线 EC2，初始 tag 是 `Owner = "terraform"`。
+- `scripts/verify.sh`：用 AWS CLI 把远端 tag 改成 `Owner = "external"`，制造 drift，然后检查 Terraform plan 是否保持干净。
+- `scripts/clean.sh`：销毁模拟 EC2，并清理 `tfplan`、`drift-check.txt`。
+
 ## 验证重点
 
 `terraform test` 只检查 starter 的基础结构。
@@ -66,3 +80,16 @@ sh scripts/clean.sh
 - 完整 plan 会写入 `drift-check.txt`。
 
 这个 lab 练的是 tag drift，不练 EC2 running/stopped 这类状态机行为。
+
+如果想手动观察 drift，可以在 `terraform apply` 后执行：
+
+```powershell
+aws --endpoint-url=http://localhost:4566 ec2 create-tags `
+  --region us-east-1 `
+  --resources (terraform output -raw web_instance_id) `
+  --tags Key=Owner,Value=external
+
+terraform plan -input=false -no-color
+```
+
+写对 `ignore_changes` 后，plan 不应该计划把 `Owner` 改回去。

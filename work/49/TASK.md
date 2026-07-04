@@ -20,6 +20,14 @@
 
 TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
+本题只需要改 `lifecycle.ignore_changes`，不要改 tag 的初始值，也不要改 provider、脚本或测试。
+
+目标效果是：
+
+- Terraform 配置里仍然写 `Owner = "terraform"`。
+- 外部系统把远端 tag 改成 `Owner = "external"`。
+- Terraform plan 不再尝试把远端 tag 改回 `terraform`。
+
 ## 4. 验收方式
 
 基础检查：
@@ -49,10 +57,13 @@ Windows PowerShell 使用对应的 `.ps1` 脚本。
 - `drift-check.txt` 中能看到远端 `Owner` tag 已经被外部改成 `external`。
 - `drift-check.txt` 中应该显示 Terraform plan 没有要执行的资源变更。
 
+如果 `ignore_changes` 没写对，`scripts/verify.*` 会失败，因为 Terraform 会计划修复这个 tag drift。
+
 ## 6. 约束
 
 - 不要连接真实 AWS。
 - 不要写入真实 AWS credentials。
 - 不要修改 `practice/` 下的讲义文件。
 - 不要为了让所有 drift 消失而写 `ignore_changes = all`。
+- 不要把本实验改成 EC2 running/stopped 状态实验；本节只观察 tag drift。
 - 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
