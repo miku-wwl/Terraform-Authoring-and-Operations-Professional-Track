@@ -2,80 +2,89 @@ terraform {
   required_version = ">= 1.5.0"
 }
 
-variable "service_version" {
+variable "ami_id" {
   type        = string
-  description = "模拟可原地更新的服务版本。"
-  default     = "1.0.0"
+  description = "模拟 AWS EC2 使用的 AMI ID；真实 aws_instance 中 AMI 变化通常会触发替换。"
+  default     = "ami-0123456789abcdef0"
 }
 
-variable "deployment_generation" {
+variable "instance_type" {
   type        = string
-  description = "模拟触发替换的部署代际。"
-  default     = "generation-1"
+  description = "模拟 AWS EC2 instance_type；用于表示可调整的运行配置。"
+  default     = "t3.micro"
 }
 
 locals {
-  desired_services = {
-    api = {
-      version = var.service_version
+  desired_ec2_instances = {
+    web = {
+      instance_type = var.instance_type
+      tags = {
+        Name        = "web"
+        Environment = "dev"
+      }
     }
   }
 
-  # TODO 1：把替换触发信号接到 deployment_generation。
-  # 提示：这个值会同时进入 input 和 triggers_replace，用来模拟 replace 行为。
-  replacement_generation = "TODO-generation"
+  # TODO 1：把 AWS EC2 的 AMI 替换信号接到 var.ami_id。
+  # 提示：真实 aws_instance 修改 ami 通常不是原地 update，而是 replace。
+  ec2_ami_force_new_marker = "TODO-ami-id"
 
-  # TODO 2：记录替换顺序策略。
-  # 提示：这里应与 lifecycle 中的 create_before_destroy 对应。
-  replacement_order = "TODO-replacement-order"
+  # TODO 2：记录替换策略名称，用来和 lifecycle.create_before_destroy 对齐。
+  # 提示：这里应填写 create_before_destroy。
+  replacement_strategy = "TODO-replacement-strategy"
 }
 
-resource "terraform_data" "release_gate" {
+resource "terraform_data" "ami_rollout" {
   input = {
-    generation = local.replacement_generation
+    ami_id = local.ec2_ami_force_new_marker
   }
 }
 
-resource "terraform_data" "service" {
-  # TODO 3：用 for_each 根据 desired_services 创建服务对象。
-  # 提示：新增 key 表示 create，删除 key 表示 destroy。
+resource "terraform_data" "ec2_instance_model" {
+  # TODO 3：用 for_each 根据 desired_ec2_instances 创建模拟 EC2 实例。
+  # 提示：新增 map key 表示 create，删除 map key 表示 destroy。
   for_each = {}
 
   input = {
-    name                   = each.key
-    version                = each.value.version
-    replacement_generation = local.replacement_generation
-    replacement_order      = local.replacement_order
+    aws_resource_type    = "aws_instance"
+    name                 = each.key
+    ami                  = local.ec2_ami_force_new_marker
+    instance_type        = each.value.instance_type
+    tags                 = each.value.tags
+    update_in_place_keys = ["instance_type", "tags"]
+    force_new_keys       = ["ami"]
+    replacement_strategy = local.replacement_strategy
   }
-
-  # TODO 4：用 triggers_replace 声明哪些值变化时需要替换资源。
-  # 提示：使用 local.replacement_generation。
-  triggers_replace = "TODO-replacement-trigger"
 
   lifecycle {
-    # TODO 5：替换时先创建新对象，再销毁旧对象。
-    # 提示：把这里改为 true。
+    # TODO 4：模拟 EC2 替换时先创建新实例，再销毁旧实例。
+    # 提示：真实 AWS 中使用前要确认名称、IP、配额等是否允许新旧资源同时存在。
     create_before_destroy = false
-  }
 
-  depends_on = [terraform_data.release_gate]
+    # TODO 5：把 AMI rollout 资源作为替换触发来源。
+    # 提示：使用 [terraform_data.ami_rollout]。
+    replace_triggered_by = []
+  }
 }
 
-output "resource_behavior_model" {
+output "aws_ec2_behavior_model" {
   value = {
-    created_services = keys(terraform_data.service)
-    service_versions = {
-      for name, service in terraform_data.service : name => service.output.version
+    created_instances = keys(terraform_data.ec2_instance_model)
+    ami_by_instance = {
+      for name, instance in terraform_data.ec2_instance_model : name => instance.output.ami
     }
-    replacement_generations = {
-      for name, service in terraform_data.service : name => service.output.replacement_generation
+    instance_type_by_instance = {
+      for name, instance in terraform_data.ec2_instance_model : name => instance.output.instance_type
     }
-    replacement_triggers = {
-      for name, service in terraform_data.service : name => service.triggers_replace
+    update_in_place_keys = {
+      for name, instance in terraform_data.ec2_instance_model : name => instance.output.update_in_place_keys
     }
-    replacement_orders = {
-      for name, service in terraform_data.service : name => service.output.replacement_order
+    force_new_keys = {
+      for name, instance in terraform_data.ec2_instance_model : name => instance.output.force_new_keys
     }
-    meta_arguments = ["for_each", "depends_on", "lifecycle", "create_before_destroy"]
+    replacement_strategies = {
+      for name, instance in terraform_data.ec2_instance_model : name => instance.output.replacement_strategy
+    }
+    meta_arguments = ["for_each", "lifecycle", "create_before_destroy", "replace_triggered_by"]
   }
 }

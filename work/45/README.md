@@ -2,7 +2,7 @@
 
 这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/45/ 中的参考实现。
 
-本节用 `terraform_data` 模拟资源行为：`for_each` 控制创建/销毁集合，`input` 字段模拟原地更新，`triggers_replace` 模拟替换触发，`lifecycle` 调整替换顺序。
+本节用 `terraform_data` 模拟 AWS EC2 (`aws_instance`) 的资源行为：`for_each` 控制创建/销毁集合，`instance_type` 和 `tags` 类比原地更新字段，`ami` 类比会触发替换的字段，`lifecycle` 调整替换顺序。实验不会连接 AWS，也不会创建真实资源。
 
 进入 Docker：
 
