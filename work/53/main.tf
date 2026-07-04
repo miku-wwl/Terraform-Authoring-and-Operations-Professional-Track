@@ -3,43 +3,28 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a list of service objects.
-  # Hint: include two objects:
-  # { name = "api", ports = [8080, 9090], tags = { tier = "frontend", owner = "platform" } }
-  # { name = "worker", ports = [9000], tags = { tier = "backend", owner = "platform" } }
-  services = []
+  services = [{ name = "api", ports = [8080, 9090], tags = { tier = "frontend", owner = "platform" } },
+  { name = "worker", ports = [9000], tags = { tier = "backend", owner = "platform" } }]
 
-  # TODO 2: Count how many service objects are in the list.
-  # Hint: use length(local.services).
-  service_count = 0
+  service_count = length(local.services)
 
-  # TODO 3: Read a nested attribute from the first service object.
-  # Hint: use local.services[0].name.
-  first_service_name = "TODO-first-service"
+  first_service_name = local.services[0].name
 
-  # TODO 4: Read a nested list element from the first service object.
-  # Hint: use local.services[0].ports[0].
-  api_primary_port = 0
+  api_primary_port = local.services[0].ports[0]
 
-  # TODO 5: Convert the list of objects into a list of names.
-  # Hint: use [for service in local.services : service.name].
-  service_names = []
+  service_names = [for service in local.services : service.name]
 
-  # TODO 6: Flatten all nested port lists into one list.
-  # Hint: use flatten([for service in local.services : service.ports]).
-  all_ports = []
+  all_ports = flatten([for service in local.services : service.ports])
 
-  # TODO 7: Build "service:port" labels from nested loops.
-  # Hint: use flatten with a nested for expression.
-  service_port_labels = []
+  service_port_labels = flatten([
+    for service in local.services : [
+      for port in service.ports : "${service.name}:${port}"
+    ]
+  ])
 
-  # TODO 8: Convert the list of objects into a map keyed by service name.
-  # Hint: use { for service in local.services : service.name => service }.
-  service_by_name = {}
+  service_by_name = { for service in local.services : service.name => service }
 
-  # TODO 9: Read a nested value through the derived map.
-  # Hint: use local.service_by_name["worker"].tags.tier.
-  worker_tier = "TODO-tier"
+  worker_tier = local.service_by_name["worker"].tags.tier
 }
 
 resource "terraform_data" "lesson" {
