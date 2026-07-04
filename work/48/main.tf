@@ -18,10 +18,7 @@ resource "local_file" "critical_config" {
   content  = "critical_config=true\nowner=platform\n"
 
   lifecycle {
-    # TODO 1: Protect this critical file from accidental Terraform destroy.
-    # Hint: set prevent_destroy to true. After apply, `terraform destroy`
-    # should fail, and `scripts/verify.*` checks that behavior.
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
