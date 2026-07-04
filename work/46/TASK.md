@@ -1,43 +1,60 @@
-# Terraform 实操训练 46：Lifecycle meta-argument 总览
+# Terraform 实操训练 46：Lifecycle meta-argument 行为实验
 
 ## 1. 背景
 
-本目录是 `work/46` 上机做题环境，来源于 `practice/46.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成代码或命令练习。
+本目录是 `work/46` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 配置，并用 LocalStack 观察真实计划和资源行为。
 
-核心主题：`create_before_destroy`、`prevent_destroy`、`ignore_changes`、`replace_triggered_by`
+本实验不会创建真实 AWS 资源。AWS Provider 已被配置为访问 LocalStack endpoint。
 
-## 2. 任务目标
+## 2. 核心主题
 
-测试确认四个参数都存在。
+- `create_before_destroy`：替换资源时先创建新对象，再销毁旧对象。
+- `prevent_destroy`：阻止 Terraform 销毁受保护资源。
+- `ignore_changes`：忽略指定属性的外部漂移。
+- `replace_triggered_by`：引用对象变化时强制替换当前资源。
 
-你需要根据题目目标修复起始文件中的 `TODO`，补全 prevent_destroy 含义和 replace_triggered_by 条目，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成四个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
-- `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 给 `terraform_data.protected_release_marker` 启用 `prevent_destroy`。
+2. 给 `aws_instance.web` 启用 `create_before_destroy`。
+3. 让 `aws_instance.web` 忽略外部系统修改的 `tags["Owner"]`。
+4. 让 `aws_instance.web` 在 `terraform_data.ami_rollout` 变化时被强制替换。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/46/`。
-- 不要创建真实 AWS 资源。
-- Vault 实验只使用本地 dev server，不连接真实 Vault。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+行为检查：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+sh scripts/verify.sh
+sh scripts/clean.sh
+```
 
-## 7. 常见问题
+Windows PowerShell 使用对应的 `.ps1` 脚本。
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个条件、参数或输出。
-2. `terraform validate` 失败：先检查 HCL 语法、变量名和输出名是否写错。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+## 5. 预期结果
+
+- `terraform test` 通过。
+- `scripts/verify.*` 通过，并确认四个 lifecycle 行为都能观察到。
+- `scripts/clean.*` 能清理实验资源。
+
+## 6. 约束
+
+- 不要连接真实 AWS。
+- 不要写入真实 AWS credentials。
+- 不要修改 `practice/` 下的讲义文件。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。

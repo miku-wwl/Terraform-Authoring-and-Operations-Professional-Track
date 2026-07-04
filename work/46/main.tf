@@ -1,23 +1,47 @@
-terraform {
-  required_version = ">= 1.5.0"
-}
-
-locals {
-  # TODO 1：补全 prevent_destroy 的含义。
-  # 提示：prevent_destroy 用于阻止 Terraform 意外销毁受保护的资源。
-  # TODO 2：补充缺失的第四个 lifecycle 参数 replace_triggered_by 及其含义。
-  # 提示：replace_triggered_by 在引用对象变化时触发本资源的替换。
-  lifecycle_arguments = {
-    create_before_destroy = "先创建替代对象，再销毁旧对象"
-    prevent_destroy       = "TODO：补充 prevent_destroy 的含义"
-    ignore_changes        = "忽略指定属性的外部漂移"
+resource "terraform_data" "ami_rollout" {
+  input = {
+    generation = var.ami_rollout_generation
   }
 }
 
-resource "terraform_data" "lifecycle_overview" {
-  input = local.lifecycle_arguments
+resource "terraform_data" "protected_release_marker" {
+  input = {
+    name  = "tf-lab-46-protected-release"
+    owner = "platform"
+  }
+
+  lifecycle {
+    # TODO 1: Enable prevent_destroy to protect this release marker from accidental destroy.
+    # Hint: after apply, `terraform destroy -target=terraform_data.protected_release_marker`
+    # should fail. `scripts/verify.*` checks this behavior automatically.
+    prevent_destroy = false
+  }
 }
 
-output "lifecycle_arguments" {
-  value = terraform_data.lifecycle_overview.output
+resource "aws_instance" "web" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+
+  tags = {
+    Name    = "tf-lab-46-web"
+    Project = "tf-lab-46"
+    Owner   = "terraform"
+  }
+
+  lifecycle {
+    # TODO 2: During replacement, create the new EC2 instance before destroying the old one.
+    # Hint: after changing TF_VAR_ami_rollout_generation, the plan should say
+    # "create replacement and then destroy".
+    create_before_destroy = false
+
+    # TODO 3: Ignore only the externally managed Owner tag.
+    # Hint: `scripts/verify.*` changes Owner to "external" with AWS CLI, then expects
+    # `terraform plan -detailed-exitcode` to return 0.
+    ignore_changes = []
+
+    # TODO 4: Force EC2 replacement when the rollout marker changes.
+    # Hint: point this at terraform_data.ami_rollout so rollout generation changes
+    # replace the instance even when ami and instance_type stay the same.
+    replace_triggered_by = []
+  }
 }
