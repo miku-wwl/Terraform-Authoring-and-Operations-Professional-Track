@@ -6,27 +6,27 @@ locals {
   # TODO 1: Define a map of common resource tags.
   # Hint: use key = value pairs inside braces:
   # owner = "platform", env = "dev", cost_center = "cc-1001"
-  tags = {}
+  tags = { owner = "platform", env = "dev", cost_center = "cc-1001" }
 
   # TODO 2: Read one map value by key.
   # Hint: use local.tags["owner"].
-  owner_tag = "TODO-owner"
+  owner_tag = local.tags["owner"]
 
   # TODO 3: Count how many key/value pairs are in the map.
   # Hint: use length(local.tags).
-  tag_count = 0
+  tag_count = length(local.tags)
 
   # TODO 4: Get the sorted list of map keys.
   # Hint: use keys(local.tags).
-  tag_keys = []
+  tag_keys = keys(local.tags)
 
   # TODO 5: Read an optional key with a fallback value.
   # Hint: use lookup(local.tags, "service", "checkout").
-  service_name = "TODO-service"
+  service_name = lookup(local.tags, "service", "checkout")
 
   # TODO 6: Convert the map into "key=value" labels.
   # Hint: use [for key, value in local.tags : "${key}=${value}"].
-  tag_labels = []
+  tag_labels = [for key, value in local.tags : "${key}=${value}"]
 }
 
 resource "terraform_data" "lesson" {
