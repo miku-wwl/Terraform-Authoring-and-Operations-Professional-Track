@@ -3,43 +3,27 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a map of service descriptions for for_each.
-  # Hint: use api = "api service", worker = "worker service", web = "web service".
-  service_files = {}
+  service_files = { api = "api service", worker = "worker service", web = "web service" }
 }
 
 resource "terraform_data" "service" {
-  # TODO 2: Create one terraform_data instance per service map entry.
-  # Hint: use for_each = local.service_files.
-  for_each = {}
+  for_each = local.service_files
 
   input = {
-    # TODO 3: Store the current map key.
-    # Hint: use each.key.
-    name = "TODO-name"
+    name = each.key
 
-    # TODO 4: Store the current map value.
-    # Hint: use each.value.
-    content = "TODO-content"
+    content = each.value
 
-    # TODO 5: Build a stable label from the key and value.
-    # Hint: use "${each.key}:${each.value}".
-    label = "TODO-label"
+    label = "${each.key}:${each.value}"
   }
 }
 
 locals {
-  # TODO 6: Get the sorted list of service keys.
-  # Hint: use keys(local.service_files).
-  service_keys = []
+  service_keys = keys(local.service_files)
 
-  # TODO 7: Collect content values from all for_each-created instances.
-  # Hint: use [for service in terraform_data.service : service.output.content].
-  service_contents = []
+  service_contents = [for service in terraform_data.service : service.output.content]
 
-  # TODO 8: Build a map of labels from all for_each-created instances.
-  # Hint: use { for name, service in terraform_data.service : name => service.output.label }.
-  service_labels_by_name = {}
+  service_labels_by_name = { for name, service in terraform_data.service : name => service.output.label }
 }
 
 output "service_files" {
