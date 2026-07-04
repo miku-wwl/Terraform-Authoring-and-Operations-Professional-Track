@@ -12,10 +12,10 @@
 
 你需要根据题目目标修复起始文件中的 `TODO`，用 `check` block 表达服务 URL 合约：生产服务地址必须使用 `https://`。这个约束不属于某个资源的 `lifecycle`，而是对模块整体输入与输出契约的旁路检查。
 
-本节只需要补两个很小的地方：
+本节 TODO 都围绕 `check` block 的资源外合约验证：
 
-- **TODO 1**：把 `service_url` 的默认值从 `http://...` 改成 `https://...`
-- **TODO 2**：把 `local.service_url_uses_https` 从占位值改成 `startswith(...)` 判断
+- **TODO 1**：补全 `local.service_url_uses_https`，用 `startswith(...)` 表达 HTTPS 合约
+- **TODO 2**：让 `service_url_contract_ok` 输出同一个合约检查结果，供测试验收
 
 验收时会确认：
 

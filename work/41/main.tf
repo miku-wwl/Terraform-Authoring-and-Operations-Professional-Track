@@ -5,13 +5,11 @@ terraform {
 variable "service_url" {
   type        = string
   description = "需要进行合约验证的服务健康检查地址。"
-  # TODO 1：把默认服务地址改成 HTTPS。
-  # 提示：测试要求 output.service_url 以 https:// 开头。
-  default = "http://example.com/health"
+  default     = "https://example.com/health"
 }
 
 locals {
-  # TODO 2：补全资源外合约判断，确认 service_url 使用 HTTPS。
+  # TODO 1：补全资源外合约判断，确认 service_url 使用 HTTPS。
   # 提示：用 startswith(var.service_url, "https://") 返回 true/false。
   service_url_uses_https = false
 }
@@ -35,5 +33,7 @@ output "service_url" {
 }
 
 output "service_url_contract_ok" {
-  value = local.service_url_uses_https
+  # TODO 2：输出同一个合约检查结果，方便 terraform test 验收。
+  # 提示：这里应该引用上面的 local.service_url_uses_https。
+  value = false
 }
