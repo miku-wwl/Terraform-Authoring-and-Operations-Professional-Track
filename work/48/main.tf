@@ -9,24 +9,28 @@ terraform {
   }
 }
 
-resource "local_file" "critical_config" {
-  filename = "${path.module}/output/critical-config.txt"
-  content  = "受 prevent_destroy 保护的关键配置。\n"
+locals {
+  critical_config_path = "${path.module}/output/critical-config.txt"
+}
 
-  # TODO 1：在 lifecycle 中添加 prevent_destroy = true。
-  # 提示：prevent_destroy 阻止 terraform destroy 销毁此资源。
+resource "local_file" "critical_config" {
+  filename = local.critical_config_path
+  content  = "critical_config=true\nowner=platform\n"
+
   lifecycle {
+    # TODO 1: Protect this critical file from accidental Terraform destroy.
+    # Hint: set prevent_destroy to true. After apply, `terraform destroy`
+    # should fail, and `scripts/verify.*` checks that behavior.
+    prevent_destroy = false
   }
 }
 
-# TODO 2：补充受保护资源的完整地址。
-# 提示：资源地址格式为 资源类型.资源名。
-output "protected_resource" {
-  value = "TODO：补充受保护资源地址"
+output "critical_config_path" {
+  description = "受保护配置文件的路径。"
+  value       = local_file.critical_config.filename
 }
 
-# TODO 3：补全 state 清理命令。
-# 提示：用 terraform state rm 从 state 中移除资源再删除本地文件。
-output "cleanup_command" {
-  value = "TODO：补充 state 清理命令 && rm -f output/critical-config.txt"
+output "protected_resource_address" {
+  description = "后续 state 清理要移除的资源地址。"
+  value       = "local_file.critical_config"
 }
