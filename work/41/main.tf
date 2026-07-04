@@ -9,17 +9,13 @@ variable "service_url" {
 }
 
 locals {
-  # TODO 1：补全资源外合约判断，确认 service_url 使用 HTTPS。
-  # 提示：用 startswith(var.service_url, "https://") 返回 true/false。
-  service_url_uses_https = false
+  service_url_uses_https = startswith(var.service_url, "https://")
 }
 
 check "service_url_contract" {
   # check block 不属于某个 resource 的 lifecycle，它表达的是模块整体合约。
   assert {
-    # TODO 2：把上面的合约判断接到 check block 的 assert.condition 上。
-    # 提示：condition 应该引用 local.service_url_uses_https。
-    condition     = local.service_url_uses_https && false
+    condition     = local.service_url_uses_https
     error_message = "生产服务地址必须使用 https。"
   }
 }
