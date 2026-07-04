@@ -8,9 +8,14 @@
 
 ## 2. 任务目标
 
-默认 HTTPS 健康检查地址通过资源外合约验证。
+完成 TODO 后，默认 HTTPS 健康检查地址应通过资源外合约验证。
 
 你需要根据题目目标修复起始文件中的 `TODO`，用 `check` block 表达服务 URL 合约：生产服务地址必须使用 `https://`。这个约束不属于某个资源的 `lifecycle`，而是对模块整体输入与输出契约的旁路检查。
+
+本节只需要补两个很小的地方：
+
+- **TODO 1**：把 `service_url` 的默认值从 `http://...` 改成 `https://...`
+- **TODO 2**：把 `local.service_url_uses_https` 从占位值改成 `startswith(...)` 判断
 
 验收时会确认：
 
