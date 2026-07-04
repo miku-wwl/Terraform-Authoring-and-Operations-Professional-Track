@@ -8,11 +8,20 @@
 
 ## 2. 任务目标
 
-默认值通过，非法规格被拒绝。
+你需要完成 `main.tf` 中的 2 个 TODO，**亲手写两条 `contains()` 白名单验证**：
 
-你需要根据题目目标修复起始文件中的 `TODO`，将硬编码的 "stage" 改为 var.environment，让实验通过验收。
+- **TODO 1**：为 `instance_size` 写 validation，限制为 `small`、`medium`、`large`
+- **TODO 2**：为 `environment` 写 validation，限制为 `dev`、`stage`、`prod`
+
+测试文件包含 3 个用例：
+- `allowed_values_are_enforced`：默认合法值通过 apply
+- `invalid_size_rejected`：`huge` 在 plan 阶段被拒绝
+- `invalid_environment_rejected`：`production` 在 plan 阶段被拒绝
 
 ## 3. 你需要编辑的文件
+
+- `main.tf`：在 `variable "instance_size"` 和 `variable "environment"` 的 validation 块中补齐 `condition` 和 `error_message`。
+- `tests/`：已写好正反用例，不要先修改。
 
 - `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
 - `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。

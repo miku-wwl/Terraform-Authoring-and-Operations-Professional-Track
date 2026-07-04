@@ -11,3 +11,27 @@ run "allowed_values_are_enforced" {
     error_message = "默认环境应为 dev。"
   }
 }
+
+run "invalid_size_rejected" {
+  command = plan
+
+  variables {
+    instance_size = "huge"
+  }
+
+  expect_failures = [
+    var.instance_size
+  ]
+}
+
+run "invalid_environment_rejected" {
+  command = plan
+
+  variables {
+    environment = "production"
+  }
+
+  expect_failures = [
+    var.environment
+  ]
+}
