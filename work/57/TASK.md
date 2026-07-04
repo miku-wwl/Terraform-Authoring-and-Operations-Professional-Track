@@ -2,42 +2,68 @@
 
 ## 1. 背景
 
-本目录是 `work/57` 上机做题环境，来源于 `practice/57.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/57` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform `for_each` 基础练习。
 
-核心主题：for_each 基础
+这个 lab 不需要云资源，只使用 `terraform_data` 模拟通过 map 创建多个资源实例。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- `for_each`：根据 map 或 set 创建多个资源实例。
+- `each.key`：读取当前 map entry 的 key。
+- `each.value`：读取当前 map entry 的 value。
+- 资源实例 key：用 `terraform_data.service["api"]` 读取 for_each 创建出的某个实例。
+- 资源实例遍历：用 `for` 表达式收集所有 for_each 实例的输出值。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成八个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 定义包含 `api`、`worker`、`web` 的 `local.service_files` map。
+2. 用 `for_each = local.service_files` 创建对应数量的 `terraform_data.service` 实例。
+3. 用 `each.key` 为每个实例设置 `name`。
+4. 用 `each.value` 为每个实例设置 `content`。
+5. 用 `each.key` 和 `each.value` 拼接 `label`。
+6. 用 `keys(local.service_files)` 得到 `service_keys`。
+7. 用 `for` 表达式从所有 `terraform_data.service` 实例中收集 `service_contents`。
+8. 用 `for` 表达式从所有 `terraform_data.service` 实例中构造 `service_labels_by_name`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/57/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output service_files` 显示三个服务。
+- `terraform output service_count` 显示 `3`。
+- `terraform output resource_count` 显示 `3`。
+- `terraform output service_keys` 显示排序后的服务名。
+- `terraform output api_content` 显示 `api service`。
+- `terraform output worker_name` 显示 `worker`。
+- `terraform output service_contents` 显示三个服务内容。
+- `terraform output service_labels_by_name` 显示以服务名为 key 的标签 map。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要把 `for_each` 改成 `count`；本节目标是理解 `each.key` 和 `each.value`。
+- 不要硬编码输出绕过 `for_each` 创建出的资源实例。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
