@@ -2,42 +2,69 @@
 
 ## 1. 背景
 
-本目录是 `work/58` 上机做题环境，来源于 `practice/58.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/58` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 条件表达式练习。
 
-核心主题：条件表达式
+这个 lab 不需要云资源，只练 Terraform 表达式和数据类型组合。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- 条件表达式：用 `condition ? true_value : false_value` 在两个值之间选择。
+- 字符串比较：根据 `local.environment == "prod"` 选择值。
+- 布尔条件：根据 `true` 或 `false` 选择值。
+- 数字比较：根据 `local.replica_count >= 3` 选择值。
+- 条件选择集合：用条件表达式选择 list 或 map。
+- 条件过滤：在 `for` 表达式中使用 `if` 子句过滤元素。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成九个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 将 `environment` 设置为 `prod`。
+2. 将 `enable_backups` 设置为 `true`。
+3. 将 `replica_count` 设置为 `3`。
+4. 用 `local.environment == "prod" ? "large" : "small"` 得到 `instance_size`。
+5. 用 `local.enable_backups ? "daily" : "none"` 得到 `backup_policy`。
+6. 用 `local.replica_count >= 3 ? true : false` 得到 `high_availability`。
+7. 根据环境选择 `selected_zones`。
+8. 根据环境选择并合并 `selected_tags`。
+9. 用 `for` 表达式里的 `if` 子句生成 `enabled_features`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/58/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output environment` 显示 `prod`。
+- `terraform output instance_size` 显示 `large`。
+- `terraform output backup_policy` 显示 `daily`。
+- `terraform output high_availability` 显示 `true`。
+- `terraform output selected_zones` 显示 `az-a`、`az-b`。
+- `terraform output selected_tags` 显示带 `critical = "true"` 的 tags。
+- `terraform output enabled_features` 显示 `metrics`、`tracing`。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要用硬编码输出绕过条件表达式练习。
+- 条件表达式两边的结果类型要保持兼容。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
