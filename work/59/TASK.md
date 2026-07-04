@@ -2,42 +2,66 @@
 
 ## 1. 背景
 
-本目录是 `work/59` 上机做题环境，来源于 `practice/59.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/59` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform `for` 表达式基础练习。
 
-核心主题：for 表达式基础
+这个 lab 不需要云资源，只练 Terraform 表达式和集合转换。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- list 转换：用 `for` 表达式把一个 list 转成另一个 list。
+- index 变量：在 list 遍历中同时读取 index 和 value。
+- list 过滤：在 `for` 表达式中使用 `if` 子句。
+- map 遍历：同时读取 map 的 key 和 value。
+- 生成 map：用 `{ for ... : key => value }` 生成对象/map。
+- map 过滤：在生成 map 时使用 `if` 子句过滤元素。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成六个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 用 `[for user in local.users : upper(user)]` 生成 `upper_users`。
+2. 用带 index 的 `for` 表达式生成 `indexed_users`。
+3. 用 `for` 表达式加 `if` 子句生成 `short_users`。
+4. 用遍历 map 的 `for` 表达式生成 `service_port_labels`。
+5. 用 `{ for user in local.users : user => upper(user) }` 生成 `user_lookup`。
+6. 用带 `if` 子句的 map `for` 表达式生成 `public_service_ports`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/59/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output upper_users` 显示 `ALICE`、`BOB`、`JOHN`。
+- `terraform output indexed_users` 显示三个 `index:name` 标签。
+- `terraform output short_users` 显示 `bob`、`john`。
+- `terraform output service_port_labels` 显示三个 `service:port` 标签。
+- `terraform output user_lookup` 显示按用户名索引的大写用户名 map。
+- `terraform output public_service_ports` 显示端口小于 `9000` 的服务 map。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要硬编码输出绕过 `for` 表达式练习。
+- 需要生成 list 的地方使用 `[]` 形式的 `for` 表达式。
+- 需要生成 map 的地方使用 `{}` 和 `=>` 形式的 `for` 表达式。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
