@@ -2,6 +2,8 @@
 
 这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/42/ 中的参考实现。
 
+本节重点练习 `sensitive = true`、敏感 output 标记、非敏感派生状态，以及 `terraform.tfstate` / plan 文件仍可能包含敏感信息的风险。
+
 进入 Docker：
 
 ```powershell

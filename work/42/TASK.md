@@ -8,9 +8,15 @@
 
 ## 2. 任务目标
 
-token 被隐藏，`token_is_configured` 为 true。
+模拟 API token 由测试或 CI 注入；Terraform CLI 输出中应隐藏 token 原文，同时仍能输出非敏感派生状态 `token_is_configured = true`。
 
-你需要根据题目目标修复起始文件中的 `TODO`，设置非空 token 并标记为 sensitive，让实验通过验收。
+你需要根据题目目标修复起始文件中的 `TODO`，重点练习三件事：
+
+- **TODO 1**：将输入变量 `api_token` 标记为 `sensitive = true`
+- **TODO 2**：用 `nonsensitive(...)` 暴露安全的派生布尔值，而不是输出 token 原文
+- **TODO 3**：如果必须输出 token 本身，output 也要显式 `sensitive = true`
+
+注意：`sensitive = true` 只减少 CLI 明文展示，不等于加密。敏感值仍可能进入 `terraform.tfstate` 或保存下来的 plan 文件，所以 state backend、plan 文件和访问权限都要按敏感材料处理。
 
 ## 3. 你需要编辑的文件
 
@@ -32,7 +38,7 @@ token 被隐藏，`token_is_configured` 为 true。
 
 ## 6. 预期输出
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的专项验证。
+`terraform test` 返回 `1 passed, 0 failed`，并确认 token 已配置、非敏感状态可见、实验包含 state 风险提醒。
 
 ## 7. 常见问题
 
