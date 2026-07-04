@@ -3,22 +3,13 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a list of three region strings.
-  # Hint: use square brackets and keep this order:
-  # "ap-southeast-2", "ap-southeast-1", "us-east-1"
-  regions = []
+  regions = ["ap-southeast-2", "ap-southeast-1", "us-east-1"]
 
-  # TODO 2: Read the first list element by index.
-  # Hint: Terraform list indexes start at 0, so use local.regions[0].
-  primary_region = "TODO-primary-region"
+  primary_region = local.regions[0]
 
-  # TODO 3: Count how many elements are in the list.
-  # Hint: use length(local.regions).
-  region_count = 0
+  region_count = length(local.regions)
 
-  # TODO 4: Build one label per region with a for expression.
-  # Hint: use [for index, region in local.regions : "${index}:${region}"].
-  indexed_region_labels = []
+  indexed_region_labels = [for index, region in local.regions : "${index}:${region}"]
 }
 
 resource "terraform_data" "lesson" {
