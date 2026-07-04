@@ -14,17 +14,10 @@ resource "terraform_data" "service_release" {
     image_version = var.image_version
   }
 
-  # TODO 1: Make image_version changes replace this release object.
-  # Hint: put var.image_version in triggers_replace. After apply, run:
-  # terraform plan -var="image_version=v2" -input=false -no-color
-  # The plan should show terraform_data.service_release must be replaced.
-  triggers_replace = []
+  triggers_replace = var.image_version
 
   lifecycle {
-    # TODO 2: Change the replacement order to create the new object first.
-    # Hint: set create_before_destroy to true. With TODO 1 also completed,
-    # the replacement plan should say "create replacement and then destroy".
-    create_before_destroy = false
+    create_before_destroy = true
   }
 }
 
