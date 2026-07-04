@@ -1,43 +1,56 @@
-# Terraform 实操训练 47：`create_before_destroy`
+# Terraform 实操训练 47：替换顺序与 triggers_replace
 
 ## 1. 背景
 
-本目录是 `work/47` 上机做题环境，来源于 `practice/47.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成代码或命令练习。
+本目录是 `work/47` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 配置，并观察 plan 中的替换顺序。
 
-核心主题：替换顺序、`create_before_destroy`、`triggers_replace`
+这个 lab 不需要 LocalStack。`terraform_data` 是 Terraform 内置资源，足够用来模拟“某个配置变化后必须替换对象”。
 
-## 2. 任务目标
+## 2. 核心主题
 
-默认流程通过，并可用 `image_version=v2` 观察替换。
+- `triggers_replace`：当指定表达式变化时，强制替换 `terraform_data` 对象。
+- `create_before_destroy`：替换时先创建新对象，再销毁旧对象。
+- 替换顺序：从 plan 中读懂 `-/+` 和 `+/-` 的区别。
 
-你需要根据题目目标修复起始文件中的 `TODO`，补全 lifecycle 配置和替换策略名称，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成两个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 配置。
-- `input/` 或 `scripts/`：如果存在，是本实验需要的输入或辅助脚本。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 让 `image_version` 变化时触发 `terraform_data.service_release` 替换。
+2. 让替换顺序变成先创建新对象，再销毁旧对象。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/47/`。
-- 不要创建真实 AWS 资源。
-- Vault 实验只使用本地 dev server，不连接真实 Vault。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+行为检查：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+sh scripts/verify.sh
+sh scripts/clean.sh
+```
 
-## 7. 常见问题
+Windows PowerShell 使用对应的 `.ps1` 脚本。
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个条件、参数或输出。
-2. `terraform validate` 失败：先检查 HCL 语法、变量名和输出名是否写错。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+## 5. 预期结果
+
+- `terraform test` 通过。
+- `scripts/verify.*` 通过。
+- `replace-check.txt` 中能看到 replacement plan。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要为了通过测试去写描述型 output。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
