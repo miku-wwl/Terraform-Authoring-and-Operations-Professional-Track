@@ -2,42 +2,67 @@
 
 ## 1. 背景
 
-本目录是 `work/52` 上机做题环境，来源于 `practice/52.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/52` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform object 表达式练习。
 
-核心主题：object 数据类型
+这个 lab 不需要云资源，只练 Terraform 基础数据类型。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- object 字面量：用 `{}` 定义带固定属性的结构。
+- 属性读取：用 `local.service.name` 读取对象属性。
+- 混合类型：object 可以同时包含 string、number、bool、map、list。
+- 嵌套属性：从 object 内的 `tags` 读取 owner。
+- list 属性：从 object 内的 `zones` 读取第一个元素。
+- 派生值：用 object 属性拼接字符串。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成七个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 定义包含 `name`、`port`、`enabled`、`tags`、`zones` 的 `local.service` object。
+2. 用 `local.service.name` 得到 `service_name`。
+3. 用 `local.service.port` 得到 `service_port`。
+4. 用 `local.service.enabled` 得到 `service_enabled`。
+5. 用 `local.service.tags.owner` 得到 `service_owner`。
+6. 用 `local.service.zones[0]` 得到 `primary_zone`。
+7. 用 service name 和 port 拼接 `service_endpoint`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/52/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output service` 显示完整 service object。
+- `terraform output service_name` 显示 `payments`。
+- `terraform output service_port` 显示 `8080`。
+- `terraform output service_enabled` 显示 `true`。
+- `terraform output service_owner` 显示 `platform`。
+- `terraform output primary_zone` 显示 `az-a`。
+- `terraform output service_endpoint` 显示 `payments:8080`。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要把 object 拆成多个无关 locals 来绕过 object 练习。
+- 不要硬编码输出绕过 object 属性读取。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
