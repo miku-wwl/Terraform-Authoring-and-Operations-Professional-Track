@@ -8,9 +8,17 @@
 
 ## 2. 任务目标
 
-Terraform 测试通过，Vault CLI 可以写入并读取 `secret/db_creds`。
+Terraform 只记录 Vault 集成契约和 state 风险，不直接读取 secret 原文；Vault CLI smoke test 使用本地 dev server 写入并读取 `secret/db_creds`。
 
-你需要根据题目目标修复起始文件中的 `TODO`，补全 engine 名称和第 4 条治理原则，让实验通过验收。
+你需要根据题目目标修复起始文件中的 `TODO`，重点练习：
+
+- **TODO 1**：在 `main.tf` 中声明本实验使用 `kv-v2` secret engine
+- **TODO 2**：在 `main.tf` 中声明要验证的 Vault secret 路径 `secret/db_creds`
+- **TODO 3**：明确 Terraform 不读取 secret 原文，避免 secret 被写入 state
+- **TODO 4**：在 `scripts/vault-dev-smoke.sh` 中配置本地 Vault dev server 地址和 token
+- **TODO 5**：在 smoke test 中通过 Vault CLI 写入并读取 `secret/db_creds`
+
+注意：Vault 是 secret 管理系统，但 Terraform 一旦通过 provider/data source 读到 secret，值仍可能进入 `terraform.tfstate` 或保存下来的 plan 文件。本实验刻意让 Terraform 只记录 metadata，把 secret 原文读写放到 Vault CLI smoke test 中。
 
 ## 3. 你需要编辑的文件
 
@@ -32,7 +40,7 @@ Terraform 测试通过，Vault CLI 可以写入并读取 `secret/db_creds`。
 
 ## 6. 预期输出
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的专项验证。
+`terraform test` 返回 `1 passed, 0 failed`；Vault CLI smoke test 能启动 dev server，并成功写入/读取 `secret/db_creds`。
 
 ## 7. 常见问题
 

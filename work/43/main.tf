@@ -3,24 +3,28 @@ terraform {
 }
 
 locals {
-  # TODO 1：补全第 4 条 Vault 治理原则（共需 4 条）。
-  # 提示：Terraform 从 Vault 读取 secret 后，secret 可能进入 state 文件。
-  vault_operating_model = [
-    "使用短期 token 或受控身份访问 Vault",
-    "把 secret 写入 Vault，而不是写入 Terraform 代码仓库",
-    "限制 Terraform 读取 secret 的路径和权限",
+  # TODO 1：声明本实验使用的 Vault KV secret engine。
+  # 提示：Vault dev server 默认会挂载 secret/，命令行用 vault kv put/get 访问；这里记录 engine 类型为 kv-v2。
+  vault_secret_engine = "TODO-kv-engine"
 
-  ]
+  # TODO 2：声明 smoke test 要写入和读取的 secret 路径。
+  # 提示：README 中的 Vault smoke test 目标是 secret/db_creds。
+  db_creds_secret_path = "TODO-secret-path"
+
+  # TODO 3：本实验不让 Terraform 读取 secret 原文，避免把 secret 值带进 state。
+  # 提示：把这里改成 false；secret 写入/读取由 scripts/vault-dev-smoke.sh 通过 Vault CLI 完成。
+  terraform_reads_secret_value = true
+
+  state_risk_note = "Terraform state and saved plan files must be protected because provider-read secrets can be stored in tfstate."
 }
 
 resource "terraform_data" "vault_readiness" {
   input = {
-    mode       = "local-dev"
-    # TODO 2：补全 secret engine 名称。
-    # 提示：Vault 的 KV 引擎常用 kv-v2。
-    engine     = "TODO-kv-engine"
-    namespace  = "training"
-    principles = local.vault_operating_model
+    mode                         = "local-dev-server"
+    engine                       = local.vault_secret_engine
+    secret_path                  = local.db_creds_secret_path
+    terraform_reads_secret_value = local.terraform_reads_secret_value
+    state_risk_note              = local.state_risk_note
   }
 }
 
