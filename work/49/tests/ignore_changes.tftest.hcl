@@ -1,13 +1,13 @@
-run "ignore_changes_is_configured" {
-  command = apply
+run "starter_shape_is_valid" {
+  command = plan
 
   assert {
-    condition     = output.ignored_attribute == "content"
-    error_message = "实验必须忽略 content 属性漂移。"
+    condition     = output.externally_managed_tag_key == "Owner"
+    error_message = "本实验必须把 Owner tag 作为外部系统管理的 drift 目标。"
   }
 
   assert {
-    condition     = strcontains(output.managed_file, "managed-note.txt")
-    error_message = "必须生成受管理文件。"
+    condition     = output.configured_owner_tag == "terraform"
+    error_message = "Terraform 配置中的 Owner tag 初始值必须是 terraform。"
   }
 }

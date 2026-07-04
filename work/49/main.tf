@@ -1,30 +1,17 @@
-terraform {
-  required_version = ">= 1.5.0"
+resource "aws_instance" "web" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
 
-  required_providers {
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.5"
-    }
+  tags = {
+    Name    = "tf-lab-49-web"
+    Project = "tf-lab-49"
+    Owner   = "terraform"
   }
-}
 
-resource "local_file" "managed_note" {
-  filename = "${path.module}/output/managed-note.txt"
-  content  = "Terraform 管理的基线内容。\n"
-
-  # TODO 1：在 lifecycle 中添加 ignore_changes = [content]。
-  # 提示：ignore_changes 让 Terraform 忽略 content 的外部漂移。
   lifecycle {
+    # TODO 1: Ignore only the externally managed Owner tag drift.
+    # Hint: scripts/verify.* changes Owner from "terraform" to "external"
+    # with AWS CLI, then expects `terraform plan -detailed-exitcode` to return 0.
+    ignore_changes = []
   }
-}
-
-# TODO 2：补充被忽略的属性名称。
-# 提示：ignore_changes 列表中忽略了哪个属性？
-output "ignored_attribute" {
-  value = "TODO：补充被忽略的属性"
-}
-
-output "managed_file" {
-  value = local_file.managed_note.filename
 }
