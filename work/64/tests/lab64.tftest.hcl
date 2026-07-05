@@ -14,12 +14,12 @@ run "flatten_and_distinct_expressions_are_correct" {
   }
 
   assert {
-    condition = output.unique_service_names == [
+    condition = output.unique_service_names == tolist([
       "api",
       "worker",
       "billing",
       "search"
-    ]
+    ])
     error_message = "unique_service_names must remove duplicates with distinct()."
   }
 
@@ -38,11 +38,11 @@ run "flatten_and_distinct_expressions_are_correct" {
   }
 
   assert {
-    condition = output.unique_regions == [
+    condition = output.unique_regions == tolist([
       "ap-southeast-2",
       "us-east-1",
       "ap-southeast-1"
-    ]
+    ])
     error_message = "unique_regions must flatten nested_region_lists and remove duplicates."
   }
 

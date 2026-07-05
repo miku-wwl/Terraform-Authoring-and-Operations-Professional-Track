@@ -9,17 +9,11 @@ locals {
     ["worker", "search"]
   ]
 
-  # TODO 1: Flatten the nested service name lists into one list.
-  # Hint: use flatten(local.service_groups).
-  all_service_names = []
+  all_service_names = flatten(local.service_groups)
 
-  # TODO 2: Remove duplicate service names while preserving first-seen order.
-  # Hint: use distinct(local.all_service_names).
-  unique_service_names = []
+  unique_service_names = distinct(local.all_service_names)
 
-  # TODO 3: Count the unique service names.
-  # Hint: use length(local.unique_service_names).
-  unique_service_count = 0
+  unique_service_count = length(local.unique_service_names)
 
   service_regions = {
     api     = ["ap-southeast-2", "us-east-1"]
@@ -27,17 +21,15 @@ locals {
     worker  = ["ap-southeast-2"]
   }
 
-  # TODO 4: Read the map values as a nested list of region lists.
-  # Hint: use values(local.service_regions).
-  nested_region_lists = []
+  nested_region_lists = values(local.service_regions)
 
-  # TODO 5: Flatten the region lists and remove duplicates.
-  # Hint: use distinct(flatten(local.nested_region_lists)).
-  unique_regions = []
+  unique_regions = distinct(flatten(local.nested_region_lists))
 
-  # TODO 6: Build "service:region" labels from the map of region lists.
-  # Hint: use flatten with a nested for expression over service and regions.
-  service_region_labels = []
+  service_region_labels = flatten([
+    for service, regions in local.service_regions : [
+      for region in regions : "${service}:${region}"
+    ]
+  ])
 }
 
 resource "terraform_data" "lesson" {
