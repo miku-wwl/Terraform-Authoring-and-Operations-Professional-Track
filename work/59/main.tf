@@ -5,17 +5,11 @@ terraform {
 locals {
   users = ["alice", "bob", "john"]
 
-  # TODO 1: Convert every user name to uppercase.
-  # Hint: use [for user in local.users : upper(user)].
-  upper_users = []
+  upper_users = [for user in local.users : upper(user)]
 
-  # TODO 2: Build "index:name" labels from the users list.
-  # Hint: use [for index, user in local.users : "${index}:${user}"].
-  indexed_users = []
+  indexed_users = [for index, user in local.users : "${index}:${user}"]
 
-  # TODO 3: Keep only user names with four or fewer characters.
-  # Hint: use [for user in local.users : user if length(user) <= 4].
-  short_users = []
+  short_users = [for user in local.users : user if length(user) <= 4]
 
   service_ports = {
     api    = 8080
@@ -23,17 +17,11 @@ locals {
     web    = 8081
   }
 
-  # TODO 4: Convert the service port map into "service:port" labels.
-  # Hint: use [for name, port in local.service_ports : "${name}:${port}"].
-  service_port_labels = []
+  service_port_labels = [for name, port in local.service_ports : "${name}:${port}"]
 
-  # TODO 5: Convert the users list into a map keyed by user name.
-  # Hint: use { for user in local.users : user => upper(user) }.
-  user_lookup = {}
+  user_lookup = { for user in local.users : user => upper(user) }
 
-  # TODO 6: Filter the service port map to keep only ports below 9000.
-  # Hint: use { for name, port in local.service_ports : name => port if port < 9000 }.
-  public_service_ports = {}
+  public_service_ports = { for name, port in local.service_ports : name => port if port < 9000 }
 }
 
 resource "terraform_data" "lesson" {
