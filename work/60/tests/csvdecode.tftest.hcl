@@ -2,7 +2,7 @@ run "csvdecode_expressions_are_correct" {
   command = plan
 
   assert {
-    condition = output.services == [
+    condition = output.services == tolist([
       {
         name    = "api"
         port    = "8080"
@@ -18,7 +18,7 @@ run "csvdecode_expressions_are_correct" {
         port    = "7070"
         enabled = "true"
       }
-    ]
+    ])
     error_message = "services must decode all records from data/services.csv."
   }
 

@@ -5,31 +5,31 @@ terraform {
 locals {
   # TODO 1: Read and decode the CSV file into a list of objects.
   # Hint: use csvdecode(file("${path.module}/data/services.csv")).
-  services = []
+  services = csvdecode(file("${path.module}/data/services.csv"))
 
   # TODO 2: Count how many records are in the CSV.
   # Hint: use length(local.services).
-  service_count = 0
+  service_count = length(local.services)
 
   # TODO 3: Read the first service name from the decoded CSV records.
   # Hint: use local.services[0].name.
-  first_service_name = "TODO-service"
+  first_service_name = local.services[0].name
 
   # TODO 4: Convert the service port strings into numbers.
   # Hint: use [for service in local.services : tonumber(service.port)].
-  service_ports = []
+  service_ports = [for service in local.services : tonumber(service.port)]
 
   # TODO 5: Keep only enabled service names.
   # Hint: use [for service in local.services : service.name if service.enabled == "true"].
-  enabled_services = []
+  enabled_services = [for service in local.services : service.name if service.enabled == "true"]
 
   # TODO 6: Convert the decoded CSV records into a map keyed by service name.
   # Hint: use { for service in local.services : service.name => service }.
-  service_by_name = {}
+  service_by_name = { for service in local.services : service.name => service }
 
   # TODO 7: Read billing's port through the derived map and convert it to a number.
   # Hint: use tonumber(local.service_by_name["billing"].port).
-  billing_port = 0
+  billing_port = tonumber(local.service_by_name["billing"].port)
 }
 
 resource "terraform_data" "lesson" {
