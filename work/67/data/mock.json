@@ -1,1 +1,32 @@
-{"apps":[{"name":"api","tier":"backend"},{"name":"web","tier":"frontend"},{"name":"worker","tier":"backend"}]}
+{
+  "apps": [
+    {
+      "name": "api",
+      "tier": "backend",
+      "owner": "platform",
+      "enabled": true,
+      "ports": [8080, 9090]
+    },
+    {
+      "name": "web",
+      "tier": "frontend",
+      "owner": "commerce",
+      "enabled": true,
+      "ports": [3000]
+    },
+    {
+      "name": "worker",
+      "tier": "backend",
+      "owner": "platform",
+      "enabled": false,
+      "ports": [9000]
+    },
+    {
+      "name": "billing",
+      "tier": "backend",
+      "owner": "payments",
+      "enabled": true,
+      "ports": [7070]
+    }
+  ]
+}

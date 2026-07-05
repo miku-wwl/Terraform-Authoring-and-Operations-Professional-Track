@@ -2,42 +2,62 @@
 
 ## 1. 背景
 
-本目录是 `work/66` 上机做题环境，来源于 `practice/66.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/66` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 模板循环练习。
 
-核心主题：模板处理 map 和循环
+这个 lab 会把一个 service port map 传入 `templatefile()`，模板使用 `%{ for ... }` 遍历 map key，并渲染成多行文本。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- map 传参：把 Terraform map 作为 `templatefile()` 的变量传入模板。
+- `keys()`：从 map 中取出排序后的 key list，作为模板循环顺序。
+- 模板循环：在 `.tftpl` 中使用 `%{ for name in names ~}` 和 `%{ endfor ~}`。
+- 模板索引：在模板中用 `${services[name]}` 根据 key 读取 map value。
+- 渲染结果拆分：用 `trimspace()` 和 `split()` 把渲染结果转回 line list。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成五个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 定义 `service_ports` map，包含 `api`、`worker`、`billing` 三个服务端口。
+2. 用 `keys(local.service_ports)` 得到排序后的 `service_names`。
+3. 用 `templatefile()` 渲染 `template.tftpl`，并传入 `services` 与 `names`。
+4. 用 `${path.module}/output/services.txt` 构造输出文件路径。
+5. 用 `split("\n", trimspace(local.rendered_services))` 得到渲染行列表。
 
-## 4. 约束
+模板文件 `template.tftpl` 已经给出循环结构。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/66/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output service_names` 显示 `api`、`billing`、`worker`。
+- `terraform output rendered_services` 显示三行服务端口内容。
+- `terraform output rendered_lines` 显示按行拆分后的 list。
+- apply 后会生成 `output/services.txt`，destroy 后该文件资源会被删除。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要把模板渲染结果硬编码到 output 中绕过 `templatefile()`。
+- 模板循环顺序要来自 `keys(local.service_ports)`，不要手写排序结果。
+- 模板中读取端口时使用 `${services[name]}`，不要在模板中硬编码端口。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。

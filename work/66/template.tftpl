@@ -1,3 +1,4 @@
-%{ for name, port in services ~}
-${name}: ${port}
+services:
+%{ for name in names ~}
+- ${name}: ${services[name]}
 %{ endfor ~}
