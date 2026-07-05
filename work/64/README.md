@@ -1,20 +1,11 @@
 # 第 64 节做题环境
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/64/ 中的参考实现。
+这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 `practice/` 下的参考实现或讲义文件。
 
-进入 Docker：
+## 本地执行
 
 ```powershell
-docker run -it --rm --name tf-work-64 `
-  -v "${PWD}/work/64:/workspace" `
-  -w /workspace `
-  --entrypoint sh `
-  hashicorp/terraform:1.11
-```
-
-容器内执行：
-
-```sh
+cd work/64
 terraform init -input=false
 terraform fmt
 terraform validate
