@@ -27,29 +27,21 @@ locals {
     }
   ]
 
-  # TODO 1: Keep only production application names.
-  # Hint: use [for app in local.applications : app.name if app.environment == "prod"].
-  prod_application_names = []
+  prod_application_names = [for app in local.applications : app.name if app.environment == "prod"]
 
-  # TODO 2: Build a map of enabled applications keyed by name.
-  # Hint: use { for app in local.applications : app.name => app if app.enabled }.
-  enabled_applications = {}
+  enabled_applications = { for app in local.applications : app.name => app if app.enabled }
 
-  # TODO 3: Group application names by team.
-  # Hint: use { for app in local.applications : app.team => app.name... }.
-  application_names_by_team = {}
+  application_names_by_team = { for app in local.applications : app.team => app.name... }
 
-  # TODO 4: Flatten application region pairs into "app:region" labels.
-  # Hint: use flatten with nested for expressions over apps and app.regions.
-  application_region_labels = []
+  application_region_labels = flatten([
+    for app in local.applications : [
+      for region in app.regions : "${app.name}:${region}"
+    ]
+  ])
 
-  # TODO 5: Build a map from enabled production app name to its primary region.
-  # Hint: use { for app in local.applications : app.name => app.regions[0] if app.enabled && app.environment == "prod" }.
-  enabled_prod_primary_regions = {}
+  enabled_prod_primary_regions = { for app in local.applications : app.name => app.regions[0] if app.enabled && app.environment == "prod" }
 
-  # TODO 6: Build a map keyed by "team/name" for every application.
-  # Hint: use { for app in local.applications : "${app.team}/${app.name}" => app.environment }.
-  application_environment_by_path = {}
+  application_environment_by_path = { for app in local.applications : "${app.team}/${app.name}" => app.environment }
 }
 
 resource "terraform_data" "lesson" {
