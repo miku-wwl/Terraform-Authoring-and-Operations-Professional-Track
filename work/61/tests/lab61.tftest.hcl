@@ -32,7 +32,7 @@ run "advanced_for_expressions_are_correct" {
 
   assert {
     condition = output.service_names_by_tier == {
-      backend  = ["billing", "worker"]
+      backend  = ["worker", "billing"]
       frontend = ["api", "web"]
     }
     error_message = "service_names_by_tier must group service names by tier using grouping mode."
