@@ -1,27 +1,95 @@
 terraform {
   required_version = ">= 1.5.0"
-
-  required_providers {
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.5"
-    }
-  }
 }
 
 locals {
-  # TODO 1：移除 for 表达式中的 if row.name == "api" 过滤条件，使所有 CSV 行都生成文件。
-  # 提示：CSV 有两行 api 和 worker，去掉过滤后 length == 2。
-  files = { for row in csvdecode(file("${path.module}/data/files.csv")) : row.name => row if row.name == "api" }
+  applications = [
+    {
+      name        = "checkout"
+      team        = "payments"
+      environment = "prod"
+      regions     = ["ap-southeast-2", "us-east-1"]
+      enabled     = true
+    },
+    {
+      name        = "ledger"
+      team        = "payments"
+      environment = "dev"
+      regions     = ["ap-southeast-2"]
+      enabled     = false
+    },
+    {
+      name        = "catalog"
+      team        = "commerce"
+      environment = "prod"
+      regions     = ["ap-southeast-1", "eu-west-1"]
+      enabled     = true
+    }
+  ]
+
+  # TODO 1: Keep only production application names.
+  # Hint: use [for app in local.applications : app.name if app.environment == "prod"].
+  prod_application_names = []
+
+  # TODO 2: Build a map of enabled applications keyed by name.
+  # Hint: use { for app in local.applications : app.name => app if app.enabled }.
+  enabled_applications = {}
+
+  # TODO 3: Group application names by team.
+  # Hint: use { for app in local.applications : app.team => app.name... }.
+  application_names_by_team = {}
+
+  # TODO 4: Flatten application region pairs into "app:region" labels.
+  # Hint: use flatten with nested for expressions over apps and app.regions.
+  application_region_labels = []
+
+  # TODO 5: Build a map from enabled production app name to its primary region.
+  # Hint: use { for app in local.applications : app.name => app.regions[0] if app.enabled && app.environment == "prod" }.
+  enabled_prod_primary_regions = {}
+
+  # TODO 6: Build a map keyed by "team/name" for every application.
+  # Hint: use { for app in local.applications : "${app.team}/${app.name}" => app.environment }.
+  application_environment_by_path = {}
 }
 
-resource "local_file" "generated" {
-  for_each = local.files
-
-  filename = "${path.module}/output/${each.key}.txt"
-  content  = "${each.value.content}\n"
+resource "terraform_data" "lesson" {
+  input = {
+    topic        = "advanced for expressions"
+    applications = local.applications
+  }
 }
 
-output "generated_files" {
-  value = keys(local_file.generated)
+output "applications" {
+  description = "Input list of application objects."
+  value       = local.applications
+}
+
+output "prod_application_names" {
+  description = "Production application names selected with a for expression filter."
+  value       = local.prod_application_names
+}
+
+output "enabled_applications" {
+  description = "Enabled applications keyed by application name."
+  value       = local.enabled_applications
+}
+
+output "application_names_by_team" {
+  description = "Application names grouped by team."
+  value       = local.application_names_by_team
+}
+
+output "application_region_labels" {
+  description = "Flattened app:region labels generated from nested for expressions."
+  value       = local.application_region_labels
+}
+
+output "enabled_prod_primary_regions" {
+  description = "Primary regions for enabled production applications."
+  value       = local.enabled_prod_primary_regions
+}
+
+output "application_environment_by_path" {
+  description = "Application environment map keyed by team/name path."
+  value       = local.application_environment_by_path
 }
