@@ -1,0 +1,4 @@
+name,direction,protocol,cidr_block,port
+web,in,tcp,0.0.0.0/0,80-100
+web,in,tcp,10.0.0.0/16,443-445
+web,in,tcp,192.168.10.0/24,8443

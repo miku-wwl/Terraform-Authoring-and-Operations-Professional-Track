@@ -1,0 +1,54 @@
+{
+  "exam": {
+    "provider": "HashiCorp Certification",
+    "portal_login_method": "GitHub",
+    "recommended_browser": "Google Chrome"
+  },
+  "identification": {
+    "required_type": "unexpired government-issued physical ID",
+    "digital_id_allowed": false,
+    "name_match_required": true,
+    "name_change_notice_business_days": 3,
+    "backup_id_recommendation": "passport"
+  },
+  "system_rules": [
+    "run preflight system compatibility check before booking",
+    "use Google Chrome browser",
+    "use only one monitor",
+    "close laptop screen when using an external monitor",
+    "disable operating system and application notifications"
+  ],
+  "physical_space_rules": [
+    "no one else in the room",
+    "room must be adequately lit",
+    "desk and work area must be clear",
+    "electronic items must not be operational",
+    "background noise must be limited",
+    "no phone or smartwatch in the room"
+  ],
+  "behavior": {
+    "may_leave_seat_without_permission": false,
+    "must_request_break_from_proctor": true,
+    "talking_or_mouthing_questions_allowed": false,
+    "beverage_rule": "clear container with no writing",
+    "hands_must_remain_visible": true
+  },
+  "scheduling": {
+    "reschedule_cancel_notice_hours": 48
+  },
+  "pre_exam_checklist": [
+    "confirm GitHub login works for the exam portal",
+    "verify account name matches every name on the ID",
+    "test that the ID text is readable on camera",
+    "complete the preflight compatibility check and save evidence",
+    "prepare a clear desk and room scan path",
+    "disable notifications before the exam"
+  ],
+  "risk_controls": {
+    "id_name_mismatch": "contact HashiCorp certification support at least 3 business days before the appointment",
+    "blurry_id_camera": "test ID readability on the webcam and keep passport as backup",
+    "system_failure": "run the compatibility check before booking and keep a screenshot",
+    "unexpected_notification": "disable OS, antivirus, chat, and browser notifications",
+    "room_scan_issue": "clear the desk and prepare to show under the table"
+  }
+}

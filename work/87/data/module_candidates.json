@@ -1,0 +1,82 @@
+{
+  "modules": [
+    {
+      "name": "terraform-aws-modules/ec2-instance/aws",
+      "service": "ec2",
+      "downloads": 14400000,
+      "contributors": 42,
+      "open_issues": 3,
+      "closed_issues": 187,
+      "has_documentation": true,
+      "version_count": 70,
+      "github_stars": 1600,
+      "partner": false,
+      "source_review_required": false
+    },
+    {
+      "name": "hashicorp-partner/network/google",
+      "service": "network",
+      "downloads": 2000000,
+      "contributors": 20,
+      "open_issues": 8,
+      "closed_issues": 140,
+      "has_documentation": true,
+      "version_count": 30,
+      "github_stars": 800,
+      "partner": true,
+      "source_review_required": false
+    },
+    {
+      "name": "solo-dev/ec2/aws",
+      "service": "ec2",
+      "downloads": 5200,
+      "contributors": 1,
+      "open_issues": 0,
+      "closed_issues": 1,
+      "has_documentation": false,
+      "version_count": 1,
+      "github_stars": 0,
+      "partner": false,
+      "source_review_required": true
+    },
+    {
+      "name": "legacy-org/ec2-instance/aws",
+      "service": "ec2",
+      "downloads": 13000,
+      "contributors": 1,
+      "open_issues": 44,
+      "closed_issues": 2,
+      "has_documentation": false,
+      "version_count": 1,
+      "github_stars": 1,
+      "partner": false,
+      "source_review_required": true
+    },
+    {
+      "name": "community/iam/aws",
+      "service": "iam",
+      "downloads": 320000,
+      "contributors": 6,
+      "open_issues": 12,
+      "closed_issues": 40,
+      "has_documentation": true,
+      "version_count": 8,
+      "github_stars": 90,
+      "partner": false,
+      "source_review_required": false
+    },
+    {
+      "name": "shady-lab/ec2/aws",
+      "service": "ec2",
+      "downloads": 900,
+      "contributors": 1,
+      "open_issues": 2,
+      "closed_issues": 0,
+      "has_documentation": false,
+      "version_count": 1,
+      "github_stars": 0,
+      "partner": false,
+      "source_review_required": true
+    }
+  ]
+}

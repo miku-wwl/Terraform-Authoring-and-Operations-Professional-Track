@@ -1,0 +1,64 @@
+{
+  "organization": {
+    "name": "kp-labs",
+    "plan": "free",
+    "resource_limit": 500,
+    "created_by": "admin@kplabs.example"
+  },
+  "teams": [
+    {
+      "name": "owners",
+      "is_default": true,
+      "access_level": "highest",
+      "member_count": 32,
+      "permissions": [
+        "manage_organization",
+        "manage_teams",
+        "manage_projects",
+        "manage_workspaces",
+        "manage_billing"
+      ]
+    },
+    {
+      "name": "platform-engineering",
+      "is_default": false,
+      "access_level": "project-admin",
+      "member_count": 5,
+      "permissions": [
+        "manage_projects",
+        "manage_workspaces",
+        "queue_runs"
+      ]
+    },
+    {
+      "name": "app-developers",
+      "is_default": false,
+      "access_level": "workspace-write",
+      "member_count": 8,
+      "permissions": [
+        "read_workspaces",
+        "queue_runs"
+      ]
+    }
+  ],
+  "invitations": [
+    {
+      "email": "alice@example.com",
+      "team": "owners",
+      "status": "accepted",
+      "invited_by": "admin@kplabs.example"
+    },
+    {
+      "email": "bob@example.com",
+      "team": "platform-engineering",
+      "status": "pending",
+      "invited_by": "admin@kplabs.example"
+    },
+    {
+      "email": "carol@example.com",
+      "team": "app-developers",
+      "status": "pending",
+      "invited_by": "admin@kplabs.example"
+    }
+  ]
+}

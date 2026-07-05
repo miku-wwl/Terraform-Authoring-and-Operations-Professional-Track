@@ -1,0 +1,121 @@
+{
+  "portal": {
+    "official_domain_suffix": "hashicorp.com",
+    "login_provider": "GitHub",
+    "candidate_name_must_match_government_id": true,
+    "exam_platform_required": true
+  },
+  "exams": [
+    {
+      "name": "Terraform Associate",
+      "level": "associate",
+      "relative_price": "lower",
+      "base_duration_minutes": 60,
+      "attempts_included": 1
+    },
+    {
+      "name": "Terraform Authoring and Operations Professional",
+      "level": "professional",
+      "relative_price": "highest",
+      "base_duration_minutes": 240,
+      "attempts_included": 2
+    }
+  ],
+  "system_compatibility_checks": [
+    "webcam",
+    "microphone",
+    "screen_sharing",
+    "browser",
+    "network"
+  ],
+  "accommodations": [
+    {
+      "name": "english_not_first_language_extra_time",
+      "eligible_when": "English is not the candidate's first language",
+      "extra_minutes": 30
+    },
+    {
+      "name": "female_proctor_request",
+      "eligible_when": "Candidate requests a female proctor when available",
+      "extra_minutes": 0
+    },
+    {
+      "name": "disability_accommodation",
+      "eligible_when": "Candidate has a qualifying disability accommodation request",
+      "extra_minutes": 0
+    }
+  ],
+  "booking_steps": [
+    {
+      "order": 1,
+      "name": "verify_official_hashicorp_domain",
+      "stage": "discovery"
+    },
+    {
+      "order": 2,
+      "name": "sign_in_with_github",
+      "stage": "identity"
+    },
+    {
+      "order": 3,
+      "name": "confirm_name_matches_government_id",
+      "stage": "identity"
+    },
+    {
+      "order": 4,
+      "name": "open_exam_platform",
+      "stage": "platform"
+    },
+    {
+      "order": 5,
+      "name": "run_system_compatibility_check",
+      "stage": "preflight"
+    },
+    {
+      "order": 6,
+      "name": "choose_professional_exam",
+      "stage": "selection"
+    },
+    {
+      "order": 7,
+      "name": "request_accommodation_if_eligible",
+      "stage": "accommodation"
+    },
+    {
+      "order": 8,
+      "name": "select_date_time_and_location",
+      "stage": "scheduling"
+    },
+    {
+      "order": 9,
+      "name": "pay_by_card_or_voucher",
+      "stage": "payment"
+    },
+    {
+      "order": 10,
+      "name": "verify_receipt_and_confirmation_email",
+      "stage": "confirmation"
+    },
+    {
+      "order": 11,
+      "name": "start_exam_early_for_proctor_checks",
+      "stage": "exam_day"
+    }
+  ],
+  "payment_options": [
+    {
+      "name": "credit_card",
+      "typical_use": "first_attempt"
+    },
+    {
+      "name": "voucher",
+      "typical_use": "second_attempt_or_discount"
+    }
+  ],
+  "exam_day": {
+    "start_early_min_minutes": 20,
+    "start_early_max_minutes": 30,
+    "preflight_screenshot_recommended": true,
+    "confirmation_email_required": true
+  }
+}

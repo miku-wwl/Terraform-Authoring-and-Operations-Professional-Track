@@ -1,0 +1,4 @@
+name,direction,protocol,cidr_alias,port
+https_app,ingress,tcp,app-1,443
+http_database,ingress,tcp,app-2,80
+metrics_ops,ingress,tcp,ops,9090

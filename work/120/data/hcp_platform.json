@@ -1,0 +1,103 @@
+{
+  "organizations": [
+    {
+      "name": "kp-labs-org",
+      "billing_scope": "organization",
+      "billing_plan": "free",
+      "projects": [
+        {
+          "name": "security-team-project",
+          "team_access_enabled": false,
+          "workspaces": [
+            {
+              "name": "aws-hardening",
+              "vcs_provider": "github",
+              "repository": "kp-labs/aws-hardening",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": [
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY"
+              ]
+            },
+            {
+              "name": "azure-hardening",
+              "vcs_provider": "azure_devops",
+              "repository": "KP-Labs/AzureHardening/_git/terraform",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": [
+                "ARM_CLIENT_SECRET"
+              ]
+            },
+            {
+              "name": "gcp-hardening",
+              "vcs_provider": "gitlab",
+              "repository": "kp-labs/gcp-hardening",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": [
+                "GOOGLE_CREDENTIALS"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "app-team-project",
+          "team_access_enabled": false,
+          "workspaces": [
+            {
+              "name": "demo-workspace",
+              "vcs_provider": "github",
+              "repository": "kp-labs/demo-workspace",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": []
+            },
+            {
+              "name": "local-scratch",
+              "vcs_provider": "none",
+              "repository": "",
+              "variables_location": "tfvars-file",
+              "state_location": "local-disk",
+              "sensitive_variables": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xyz-company-org",
+      "billing_scope": "organization",
+      "billing_plan": "standard",
+      "projects": [
+        {
+          "name": "platform-project",
+          "team_access_enabled": true,
+          "workspaces": [
+            {
+              "name": "hcp-core",
+              "vcs_provider": "bitbucket",
+              "repository": "xyz-company/hcp-core",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": [
+                "HCP_TOKEN"
+              ]
+            },
+            {
+              "name": "network-foundation",
+              "vcs_provider": "github",
+              "repository": "xyz-company/network-foundation",
+              "variables_location": "workspace",
+              "state_location": "hcp-workspace",
+              "sensitive_variables": [
+                "AWS_SECRET_ACCESS_KEY"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

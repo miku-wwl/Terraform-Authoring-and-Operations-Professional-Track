@@ -1,0 +1,60 @@
+{
+  "modules": [
+    {
+      "name": "ec2_instance",
+      "service": "ec2",
+      "source": "terraform-aws-modules/ec2-instance/aws",
+      "version": "5.6.1",
+      "module_path": "root",
+      "creates_resources_without_required_inputs": true,
+      "required_inputs": [],
+      "expected_plan_adds": 1,
+      "submodules": [],
+      "note": "This mock item represents a simple module call that can produce a resource plan without extra required input in the demonstrated version."
+    },
+    {
+      "name": "eks_cluster",
+      "service": "eks",
+      "source": "terraform-aws-modules/eks/aws",
+      "version": "20.0.0",
+      "module_path": "root",
+      "creates_resources_without_required_inputs": false,
+      "required_inputs": ["cluster_name", "subnet_ids"],
+      "expected_plan_adds": 24,
+      "submodules": [],
+      "note": "This mock item represents a larger module that needs account-specific networking and naming input from the caller."
+    },
+    {
+      "name": "iam_root",
+      "service": "iam",
+      "source": "terraform-aws-modules/iam/aws",
+      "version": "5.0.0",
+      "module_path": "root",
+      "creates_resources_without_required_inputs": false,
+      "required_inputs": [],
+      "expected_plan_adds": 0,
+      "submodules": ["iam-account", "iam-assumable-role", "iam-user"],
+      "note": "This mock item represents a root module that mainly points users toward feature-specific submodules."
+    },
+    {
+      "name": "iam_user",
+      "service": "iam",
+      "source": "terraform-aws-modules/iam/aws//modules/iam-user",
+      "version": "5.0.0",
+      "module_path": "modules/iam-user",
+      "creates_resources_without_required_inputs": false,
+      "required_inputs": ["name"],
+      "expected_plan_adds": 3,
+      "submodules": [],
+      "note": "This mock item represents a feature-specific submodule selected through a double-slash source path."
+    }
+  ],
+  "provided_inputs": {
+    "ec2_instance": {},
+    "eks_cluster": {
+      "subnet_ids": ["subnet-11111111", "subnet-22222222"]
+    },
+    "iam_root": {},
+    "iam_user": {}
+  }
+}

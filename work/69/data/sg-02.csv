@@ -1,0 +1,5 @@
+name,direction,from_port,to_port,protocol,cidr_block,description
+web,ingress,80,80,tcp,10.0.0.0/24,HTTP inbound from app subnet
+web,ingress,443,443,tcp,10.0.1.0/24,HTTPS inbound from app subnet
+web,egress,443,443,tcp,0.0.0.0/0,HTTPS outbound to internet
+web,egress,53,53,udp,0.0.0.0/0,DNS outbound to resolver

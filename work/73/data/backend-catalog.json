@@ -1,0 +1,52 @@
+{
+  "backends": [
+    {
+      "name": "local",
+      "kind": "local",
+      "state_location": "local disk terraform.tfstate",
+      "supports_locking": false,
+      "requires_credentials": false,
+      "use_case": "single-user experiments and small local projects"
+    },
+    {
+      "name": "s3",
+      "kind": "remote",
+      "state_location": "Amazon S3 bucket object",
+      "supports_locking": true,
+      "requires_credentials": true,
+      "use_case": "AWS team collaboration"
+    },
+    {
+      "name": "consul",
+      "kind": "remote",
+      "state_location": "Consul KV path",
+      "supports_locking": true,
+      "requires_credentials": true,
+      "use_case": "service-discovery or Consul-based environments"
+    },
+    {
+      "name": "kubernetes",
+      "kind": "remote",
+      "state_location": "Kubernetes Secret",
+      "supports_locking": true,
+      "requires_credentials": true,
+      "use_case": "cluster-managed state storage"
+    },
+    {
+      "name": "http",
+      "kind": "remote",
+      "state_location": "HTTP state endpoint",
+      "supports_locking": false,
+      "requires_credentials": true,
+      "use_case": "custom remote state service"
+    },
+    {
+      "name": "etcd",
+      "kind": "remote",
+      "state_location": "etcd key-value path",
+      "supports_locking": true,
+      "requires_credentials": true,
+      "use_case": "distributed key-value state storage"
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "certification": "HashiCorp Certified: Terraform Authoring and Operations Professional",
+  "exam": {
+    "level": "professional",
+    "format": "lab-based",
+    "duration_hours": 4,
+    "delivery": "online proctored",
+    "remote_workstation_os": "linux",
+    "challenge_style": "scenario challenges",
+    "associate_comparison": {
+      "associate_format": "mcq",
+      "professional_requires_hands_on": true,
+      "professional_is_major_upgrade": true
+    }
+  },
+  "prerequisites": [
+    {
+      "name": "Terraform Associate or equivalent Terraform knowledge",
+      "type": "terraform_knowledge",
+      "recommended": true
+    },
+    {
+      "name": "Linux CLI",
+      "type": "operating_system",
+      "recommended": true
+    },
+    {
+      "name": "YAML",
+      "type": "file_format",
+      "recommended": true
+    },
+    {
+      "name": "JSON",
+      "type": "file_format",
+      "recommended": true
+    },
+    {
+      "name": "CSV",
+      "type": "file_format",
+      "recommended": true
+    }
+  ],
+  "primary_domains": [
+    {
+      "number": 1,
+      "title": "Manage resource lifecycle",
+      "assessment": "lab"
+    },
+    {
+      "number": 2,
+      "title": "Develop and troubleshoot dynamic configuration",
+      "assessment": "lab"
+    },
+    {
+      "number": 3,
+      "title": "Terraform workflows",
+      "assessment": "lab"
+    },
+    {
+      "number": 4,
+      "title": "Terraform modules",
+      "assessment": "lab"
+    },
+    {
+      "number": 5,
+      "title": "Terraform provider",
+      "assessment": "lab"
+    },
+    {
+      "number": 6,
+      "title": "HCP Terraform",
+      "assessment": "mcq"
+    }
+  ],
+  "course_sections": [
+    {
+      "number": 1,
+      "title": "Manage resource lifecycle",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 2,
+      "title": "Develop and troubleshoot dynamic configuration",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 3,
+      "title": "Terraform workflows",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 4,
+      "title": "Terraform modules",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 5,
+      "title": "Terraform provider",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 6,
+      "title": "HCP Terraform",
+      "kind": "exam_domain"
+    },
+    {
+      "number": 7,
+      "title": "AWS Integration Practicals",
+      "kind": "extra_practical"
+    },
+    {
+      "number": 8,
+      "title": "Exam Preparation",
+      "kind": "exam_prep"
+    }
+  ],
+  "cloud_provider": {
+    "current_supported_provider": "aws",
+    "future_expected_providers": [
+      "azure",
+      "gcp"
+    ],
+    "provider_change_rule": "core blueprint stays similar; practical implementation changes by provider",
+    "deep_provider_topics_section": 7
+  }
+}

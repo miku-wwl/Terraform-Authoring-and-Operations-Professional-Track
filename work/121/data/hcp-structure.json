@@ -1,0 +1,64 @@
+{
+  "organization": {
+    "name": "example-kplabs-org",
+    "platform": "HCP Terraform",
+    "plan": "free",
+    "resource_limit": 500
+  },
+  "projects": [
+    {
+      "name": "Default Project",
+      "auto_created": true,
+      "purpose": "initial project created by HCP Terraform"
+    },
+    {
+      "name": "Terraform Learning",
+      "auto_created": false,
+      "purpose": "project used for Terraform practice workspaces"
+    }
+  ],
+  "workspaces": [
+    {
+      "name": "learning-vcs-workspace",
+      "project": "Terraform Learning",
+      "workflow": "version_control",
+      "state_location": "remote"
+    },
+    {
+      "name": "learning-cli-workspace",
+      "project": "Terraform Learning",
+      "workflow": "cli_driven",
+      "state_location": "remote"
+    },
+    {
+      "name": "learning-api-workspace",
+      "project": "Terraform Learning",
+      "workflow": "api_driven",
+      "state_location": "remote"
+    }
+  ],
+  "registry_features": [
+    {
+      "name": "private_modules",
+      "scope": "organization",
+      "enabled": true
+    },
+    {
+      "name": "private_providers",
+      "scope": "organization",
+      "enabled": true
+    }
+  ],
+  "settings": [
+    {
+      "name": "users",
+      "category": "team",
+      "description": "invite multiple users to collaborate"
+    },
+    {
+      "name": "plan_and_billing",
+      "category": "billing",
+      "description": "review free plan limits and upgrade path"
+    }
+  ]
+}
