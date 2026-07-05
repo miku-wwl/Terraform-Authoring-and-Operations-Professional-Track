@@ -2,42 +2,69 @@
 
 ## 1. 背景
 
-本目录是 `work/60` 上机做题环境，来源于 `practice/60.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/60` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform `csvdecode()` 表达式练习。
 
-核心主题：csvdecode 基础
+这个 lab 不需要云资源，只练 Terraform 如何读取 CSV 文件并把记录转换成可用的数据结构。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- `file()`：读取当前模块目录下的数据文件。
+- `csvdecode()`：把 CSV 字符串解码成 list(object)。
+- CSV 字段类型：CSV 解码后的字段都是字符串。
+- list(object) 读取：从 decoded records 中读取字段。
+- 类型转换：用 `tonumber()` 把端口字符串转成数字。
+- 过滤记录：用 `for` 表达式和 `if` 子句筛选 enabled 服务。
+- 派生 map：把 decoded records 转换成按服务名索引的 map。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成七个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 用 `csvdecode(file("${path.module}/data/services.csv"))` 得到 `services`。
+2. 用 `length(local.services)` 得到 `service_count`。
+3. 用 `local.services[0].name` 得到 `first_service_name`。
+4. 用 `for` 表达式和 `tonumber(service.port)` 得到 `service_ports`。
+5. 用 `for` 表达式加 `if service.enabled == "true"` 得到 `enabled_services`。
+6. 用 `{ for service in local.services : service.name => service }` 得到 `service_by_name`。
+7. 用 `tonumber(local.service_by_name["billing"].port)` 得到 `billing_port`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/60/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output services` 显示三条 CSV 记录。
+- `terraform output service_count` 显示 `3`。
+- `terraform output first_service_name` 显示 `api`。
+- `terraform output service_ports` 显示 `8080`、`9000`、`7070`。
+- `terraform output enabled_services` 显示 `api`、`billing`。
+- `terraform output service_by_name` 显示按服务名索引的 decoded CSV map。
+- `terraform output billing_port` 显示 `7070`。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要硬编码输出绕过 `csvdecode()` 练习。
+- 不要把 CSV 字段的端口当数字直接使用；先用 `tonumber()` 转换。
+- 不要修改 `data/services.csv`，除非题目明确要求。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
