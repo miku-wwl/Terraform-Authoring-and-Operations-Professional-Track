@@ -10,32 +10,20 @@ locals {
     { name = "billing", tier = "backend", enabled = true, ports = [7070] }
   ]
 
-  # TODO 1: Keep only enabled service names.
-  # Hint: use [for service in local.services : service.name if service.enabled].
   enabled_service_names = [for service in local.services : service.name if service.enabled]
 
-  # TODO 2: Build a map of enabled services keyed by name.
-  # Hint: use { for service in local.services : service.name => service if service.enabled }.
   enabled_service_by_name = { for service in local.services : service.name => service if service.enabled }
 
-  # TODO 3: Group service names by tier.
-  # Hint: use { for service in local.services : service.tier => service.name... }.
   service_names_by_tier = { for service in local.services : service.tier => service.name... }
 
-  # TODO 4: Flatten all service ports into "service:port" labels.
-  # Hint: use flatten with nested for expressions over services and service.ports.
   service_port_labels = flatten([
     for service in local.services : [
       for port in service.ports : "${service.name}:${port}"
     ]
   ])
 
-  # TODO 5: Build a map from enabled service name to its first port.
-  # Hint: use { for service in local.services : service.name => service.ports[0] if service.enabled }.
   enabled_primary_ports = { for service in local.services : service.name => service.ports[0] if service.enabled }
 
-  # TODO 6: Build labels only for enabled services.
-  # Hint: use [for service in local.services : "${service.tier}:${service.name}" if service.enabled].
   enabled_tier_labels = [for service in local.services : "${service.tier}:${service.name}" if service.enabled]
 }
 
