@@ -6,34 +6,49 @@ locals {
   regions = ["local-a", "local-b"]
   apps    = ["api", "worker"]
 
-  # TODO 1: Build every region/app label with nested for expressions.
-  # Hint: use flatten([for region in local.regions : [for app in local.apps : "${region}-${app}"]]).
-  region_app_labels = []
+  region_app_labels = flatten([
+    for region in local.regions : [
+      for app in local.apps : "${region}-${app}"
+    ]
+  ])
 
-  # TODO 2: Build every region/app object with nested for expressions.
-  # Hint: each object should have region, app, and name = "${region}-${app}".
-  region_app_objects = []
+  region_app_objects = flatten([
+    for region in local.regions : [
+      for app in local.apps : {
+        region = region
+        app    = app
+        name   = "${region}-${app}"
+      }
+    ]
+  ])
 
-  # TODO 3: Build labels only for worker app deployments.
-  # Hint: use nested for expressions and an if clause on app == "worker".
-  worker_region_labels = []
+  worker_region_labels = flatten([
+    for region in local.regions : [
+      for app in local.apps : "${region}-${app}" if app == "worker"
+    ]
+  ])
 
-  # TODO 4: Convert the region/app objects into a map keyed by name.
-  # Hint: use { for item in local.region_app_objects : item.name => item }.
-  region_app_by_name = {}
+  region_app_by_name = { for item in local.region_app_objects : item.name => item }
 
   services_by_region = {
     "local-a" = ["api", "worker"]
     "local-b" = ["api"]
   }
 
-  # TODO 5: Flatten services_by_region into "region:service" labels.
-  # Hint: use nested for expressions over region, services and service.
-  service_labels_by_region = []
+  service_labels_by_region = flatten([
+    for region, services in local.services_by_region : [
+      for service in services : "${region}:${service}"
+    ]
+  ])
 
-  # TODO 6: Convert services_by_region into a flat map keyed by "region/service".
-  # Hint: use merge with a splat expansion over a list of maps.
-  service_map_by_path = {}
+  service_map_by_path = merge([
+    for region, services in local.services_by_region : {
+      for service in services : "${region}/${service}" => {
+        region  = region
+        service = service
+      }
+    }
+  ]...)
 }
 
 resource "terraform_data" "lesson" {
