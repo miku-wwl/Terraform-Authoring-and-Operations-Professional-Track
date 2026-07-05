@@ -1,0 +1,5 @@
+name,direction,cidr_block,from_port,to_port,protocol,description
+rule-01,in,10.0.1.0/24,80,80,tcp,allow_http_from_app_subnet
+rule-02,in,10.0.2.0/24,443,443,tcp,allow_https_from_web_subnet
+rule-03,out,0.0.0.0/0,8443,8443,tcp,allow_app_to_external_api
+rule-04,out,10.10.0.0/16,3306,3306,tcp,allow_app_to_database
