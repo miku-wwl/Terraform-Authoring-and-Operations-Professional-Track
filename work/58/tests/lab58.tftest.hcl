@@ -32,16 +32,16 @@ run "conditional_expressions_are_correct" {
   }
 
   assert {
-    condition     = output.selected_zones == ["az-a", "az-b"]
+    condition     = output.selected_zones == tolist(["az-a", "az-b"])
     error_message = "selected_zones must choose the production zone list."
   }
 
   assert {
-    condition = output.selected_tags == {
+    condition = output.selected_tags == tomap({
       owner    = "platform"
       env      = "prod"
       critical = "true"
-    }
+    })
     error_message = "selected_tags must merge the critical tag for production."
   }
 

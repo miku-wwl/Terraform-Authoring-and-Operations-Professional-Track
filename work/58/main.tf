@@ -3,50 +3,32 @@ terraform {
 }
 
 locals {
-  # TODO 1: Set the active environment.
-  # Hint: use "prod" so the production branches are selected.
-  environment = "dev"
+  environment = "prod"
 
-  # TODO 2: Set whether backups are enabled.
-  # Hint: use true.
-  enable_backups = false
+  enable_backups = true
 
-  # TODO 3: Set the desired replica count.
-  # Hint: use 3.
-  replica_count = 1
+  replica_count = 3
 
-  # TODO 4: Choose an instance size with a conditional expression.
-  # Hint: use local.environment == "prod" ? "large" : "small".
-  instance_size = "TODO-size"
+  instance_size = local.environment == "prod" ? "large" : "small"
 
-  # TODO 5: Choose a backup policy with a boolean conditional.
-  # Hint: use local.enable_backups ? "daily" : "none".
-  backup_policy = "TODO-policy"
+  backup_policy = local.enable_backups ? "daily" : "none"
 
-  # TODO 6: Choose a high availability flag from a number comparison.
-  # Hint: use local.replica_count >= 3 ? true : false.
-  high_availability = false
+  high_availability = local.replica_count >= 3 ? true : false
 
-  # TODO 7: Choose a list of zones based on the environment.
-  # Hint: prod should use ["az-a", "az-b"], otherwise use ["az-a"].
-  selected_zones = []
+  selected_zones = local.environment == "prod" ? ["az-a", "az-b"] : ["az-a"]
 
-  # TODO 8: Choose tags based on whether this is production.
-  # Hint: prod should merge { critical = "true" } into the base tags.
   base_tags = {
     owner = "platform"
     env   = local.environment
   }
-  selected_tags = {}
+  selected_tags = local.environment == "prod" ? merge(local.base_tags, { critical = "true" }) : local.base_tags
 
-  # TODO 9: Keep only enabled features with an if clause in a for expression.
-  # Hint: use [for name, enabled in local.feature_flags : name if enabled].
   feature_flags = {
     metrics = true
     tracing = true
     debug   = false
   }
-  enabled_features = []
+  enabled_features = [for name, enabled in local.feature_flags : name if enabled]
 }
 
 resource "terraform_data" "lesson" {
