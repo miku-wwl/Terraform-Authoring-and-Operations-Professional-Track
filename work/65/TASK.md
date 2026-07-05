@@ -2,42 +2,60 @@
 
 ## 1. 背景
 
-本目录是 `work/65` 上机做题环境，来源于 `practice/65.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/65` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform `templatefile()` 基础练习。
 
-核心主题：templatefile 基础
+这个 lab 会把一组 Terraform 值传入模板文件，渲染出文本内容，并用 `local_file` 写到 `output/service.txt`。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- `templatefile(path, vars)`：读取模板文件，并用 `vars` map 替换模板中的变量。
+- 模板变量：`${name}`、`${environment}`、`${owner}` 这类占位符必须由 `vars` 提供。
+- `path.module`：定位当前 module 目录，避免依赖执行命令时所在目录。
+- 渲染结果复用：同一份渲染文本既可以作为 output，也可以写入文件。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成四个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 定义传入模板的 `service_config`，包含 `name`、`environment`、`owner`。
+2. 用 `templatefile("${path.module}/template.tftpl", local.service_config)` 渲染模板。
+3. 用 `${path.module}/output/service.txt` 构造输出文件路径。
+4. 用 `split()` 和 `trimspace()` 得到渲染结果的第一行 preview。
 
-## 4. 约束
+模板文件 `template.tftpl` 已经给出变量占位符。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/65/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output service_config` 显示传入模板的三个变量。
+- `terraform output rendered_service_config` 显示渲染后的三行文本。
+- `terraform output rendered_preview` 显示 `service=payments`。
+- apply 后会生成 `output/service.txt`，destroy 后该文件资源会被删除。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要把渲染结果硬编码到 output 中绕过 `templatefile()`。
+- 模板中使用的变量名必须和 `service_config` 中的 key 对应。
+- 输出路径必须基于 `path.module` 构造。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
