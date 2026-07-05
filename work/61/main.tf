@@ -3,22 +3,76 @@ terraform {
 }
 
 locals {
-  services         = { api = true, worker = false, billing = true }
-  # TODO 1：将 for 表达式中的 if false 改为 if enabled，使过滤条件由 map 的 value 决定。
-  # 提示：map 中 api=true、billing=true，用 if enabled 筛选出值为 true 的 key。
-  enabled_services = [for name, enabled in local.services : name if false]
+  services = [
+    { name = "api", tier = "frontend", enabled = true, ports = [8080, 9090] },
+    { name = "web", tier = "frontend", enabled = true, ports = [8081] },
+    { name = "worker", tier = "backend", enabled = false, ports = [9000] },
+    { name = "billing", tier = "backend", enabled = true, ports = [7070] }
+  ]
+
+  # TODO 1: Keep only enabled service names.
+  # Hint: use [for service in local.services : service.name if service.enabled].
+  enabled_service_names = []
+
+  # TODO 2: Build a map of enabled services keyed by name.
+  # Hint: use { for service in local.services : service.name => service if service.enabled }.
+  enabled_service_by_name = {}
+
+  # TODO 3: Group service names by tier.
+  # Hint: use { for service in local.services : service.tier => service.name... }.
+  service_names_by_tier = {}
+
+  # TODO 4: Flatten all service ports into "service:port" labels.
+  # Hint: use flatten with nested for expressions over services and service.ports.
+  service_port_labels = []
+
+  # TODO 5: Build a map from enabled service name to its first port.
+  # Hint: use { for service in local.services : service.name => service.ports[0] if service.enabled }.
+  enabled_primary_ports = {}
+
+  # TODO 6: Build labels only for enabled services.
+  # Hint: use [for service in local.services : "${service.tier}:${service.name}" if service.enabled].
+  enabled_tier_labels = []
 }
 
 resource "terraform_data" "lesson" {
-  input = { topic = "for 表达式进阶" }
+  input = {
+    topic    = "advanced for expressions"
+    services = local.services
+  }
 }
 
-output "enabled_services" {
-  value = local.enabled_services
+output "services" {
+  description = "Input list of service objects."
+  value       = local.services
 }
 
-output "enabled_count" {
-  value = length(local.enabled_services)
+output "enabled_service_names" {
+  description = "Names selected with a for expression if clause."
+  value       = local.enabled_service_names
 }
 
+output "enabled_service_by_name" {
+  description = "Map of enabled services keyed by service name."
+  value       = local.enabled_service_by_name
+}
 
+output "service_names_by_tier" {
+  description = "Service names grouped by tier with grouping mode."
+  value       = local.service_names_by_tier
+}
+
+output "service_port_labels" {
+  description = "Flattened service:port labels generated from nested for expressions."
+  value       = local.service_port_labels
+}
+
+output "enabled_primary_ports" {
+  description = "Map of enabled service names to their first port."
+  value       = local.enabled_primary_ports
+}
+
+output "enabled_tier_labels" {
+  description = "Tier:name labels for enabled services."
+  value       = local.enabled_tier_labels
+}

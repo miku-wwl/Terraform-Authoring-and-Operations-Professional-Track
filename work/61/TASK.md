@@ -2,42 +2,66 @@
 
 ## 1. 背景
 
-本目录是 `work/61` 上机做题环境，来源于 `practice/61.md` 的实验设计。这里不是参考答案目录，你需要在当前目录内完成数据结构、表达式或模板练习。
+本目录是 `work/61` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform `for` 表达式进阶练习。
 
-核心主题：for 表达式进阶
+这个 lab 不需要云资源，只练 Terraform 表达式和复杂集合转换。
 
-## 2. 任务目标
+## 2. 核心主题
 
-完成本节 Terraform 数据建模练习，让验收测试通过，并理解输出值如何由 list、map、object、for 表达式、CSV、JSON 或 templatefile 得到。
+- 过滤 list(object)：在 `for` 表达式中用 `if` 子句筛选对象。
+- 生成并过滤 map：使用 `{ for ... : key => value if condition }`。
+- grouping mode：使用 `...` 把多个 value 聚合到同一个 key 下。
+- 嵌套 `for`：遍历对象列表和对象内部的 list。
+- `flatten()`：把嵌套 list 展平成一层 list。
+- 派生索引 map：从对象列表生成更方便查询的 map。
 
-你需要根据测试失败信息修复起始文件中的 `TODO`，让实验通过验收。
+## 3. 任务目标
 
-## 3. 你需要编辑的文件
+请在 `main.tf` 中完成六个 TODO：
 
-- `main.tf`：主要练习文件，包含需要你补齐或修复的 Terraform 表达式。
-- `data/`：如果存在，表示实验输入数据，通常不需要先修改。
-- `template.tftpl`：如果存在，表示模板渲染练习的一部分。
-- `tests/`：验收测试，建议先不要修改，优先让代码满足测试。
+1. 用 `for` 表达式筛选启用服务名，生成 `enabled_service_names`。
+2. 用 map `for` 表达式筛选启用服务，生成 `enabled_service_by_name`。
+3. 用 grouping mode 按 `tier` 分组服务名，生成 `service_names_by_tier`。
+4. 用嵌套 `for` 和 `flatten()` 生成 `service_port_labels`。
+5. 用 map `for` 表达式生成启用服务的 `enabled_primary_ports`。
+6. 用 `for` 表达式生成启用服务的 `enabled_tier_labels`。
 
-## 4. 约束
+TODO 下方已经写了自验证提示。完成后运行 `README.md` 中的命令。
 
-- 不要修改 `practice/labs/61/`。
-- 不要创建真实 AWS 资源。
-- 文档、注释、报告使用中文；命令、参数、文件名可以保留英文。
-- 不要把参考实现直接复制进来，先根据测试和题目自己完成。
+## 4. 验收方式
 
-## 5. 验收命令
+基础检查：
 
-请先阅读 `README.md` 中的 Docker 命令进入容器，再执行对应验收流程。
+```sh
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform test
+```
 
-## 6. 预期输出
+可选观察输出：
 
-`terraform test` 返回 `1 passed, 0 failed`，并能完成本节要求的 plan/apply/output/destroy 或专项验证。
+```sh
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+terraform destroy -auto-approve
+```
 
-## 7. 常见问题
+## 5. 预期结果
 
-1. `terraform test` 失败：先读断言错误，它通常会指出缺少哪个值、字段或表达式结果。
-2. `terraform validate` 失败：先检查 HCL 语法、列表/对象括号、逗号和变量名。
-3. provider 下载失败：重新执行 `terraform init -input=false`。
-4. 格式检查失败：运行 `terraform fmt` 后再验证。
-5. 想重做实验：删除当前目录下 `.terraform`、`*.tfstate*`、`tfplan`、`plan.json`、`output/` 后重新开始。
+- `terraform test` 返回 `1 passed, 0 failed`。
+- `terraform output enabled_service_names` 显示启用服务名。
+- `terraform output enabled_service_by_name` 显示按名称索引的启用服务 map。
+- `terraform output service_names_by_tier` 显示按 tier 分组的服务名。
+- `terraform output service_port_labels` 显示所有 `service:port` 标签。
+- `terraform output enabled_primary_ports` 显示启用服务的首端口 map。
+- `terraform output enabled_tier_labels` 显示启用服务的 `tier:name` 标签。
+
+## 6. 约束
+
+- 不要修改 `practice/` 下的讲义文件。
+- 不要硬编码输出绕过 `for` 表达式练习。
+- 需要分组时使用 grouping mode 的 `...`。
+- 需要展平嵌套 list 时使用 `flatten()`。
+- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
