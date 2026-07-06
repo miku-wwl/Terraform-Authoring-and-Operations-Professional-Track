@@ -27,11 +27,12 @@ run "ec2_module_call_is_correct" {
   }
 
   assert {
-    condition = output.ec2_instance_config.tags == {
-      Environment = "dev"
-      Owner       = "platform"
-      ManagedBy   = "terraform"
-    }
+    condition = (
+      length(keys(output.ec2_instance_config.tags)) == 3 &&
+      output.ec2_instance_config.tags.Environment == "dev" &&
+      output.ec2_instance_config.tags.Owner == "platform" &&
+      output.ec2_instance_config.tags.ManagedBy == "terraform"
+    )
     error_message = "The EC2 blueprint tags must include Environment, Owner, and ManagedBy with the expected values."
   }
 }
