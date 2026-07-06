@@ -2,6 +2,12 @@ terraform {
   required_version = ">= 1.5.0"
 }
 
+# Lab 71 focuses on combining external mock data sources:
+# - csvdecode(file(...)) turns CSV rows into a list of rule objects.
+# - jsondecode(file(...)) turns JSON maps into Terraform objects.
+# - for expressions can convert decoded rows into maps keyed by rule name.
+# - A separate mapping table can translate CSV aliases before looking up values.
+# - for_each can then create one simulated rule resource per generated map entry.
 locals {
   raw_rules = csvdecode(file("${path.module}/data/sg-71.csv"))
 
