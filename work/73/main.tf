@@ -1,67 +1,109 @@
 terraform {
   required_version = ">= 1.5.0"
-}
 
-locals {
-  # TODO 1: Read and decode the backend catalog JSON file.
-  # Hint: use jsondecode(file("${path.module}/data/backend-catalog.json")).backends.
-  backend_catalog = []
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.54"
+    }
+  }
 
-  # TODO 2: Build a map of backends keyed by backend name.
-  # Hint: use { for backend in local.backend_catalog : backend.name => backend }.
-  backends_by_name = {}
+  backend "s3" {
+    # TODO 1: Store this lab's Terraform state in the LocalStack S3 state bucket.
+    # Hint: bootstrap/ creates a bucket named tfstate-lab73.
+    bucket = ""
 
-  # TODO 3: Select names of remote backends.
-  # Hint: use a for expression with if backend.kind == "remote".
-  remote_backend_names = []
+    # TODO 2: Store the state object under lab73/terraform.tfstate.
+    key = ""
 
-  # TODO 4: Select remote backends that support state locking.
-  # Hint: require both backend.kind == "remote" and backend.supports_locking.
-  collaboration_ready_backend_names = []
+    # TODO 3: Use us-east-1 and point the S3 backend at LocalStack.
+    region = ""
 
-  # TODO 5: Select backend names that require access credentials.
-  # Hint: filter by backend.requires_credentials.
-  credential_required_backend_names = []
-
-  # TODO 6: Build an AWS team backend recommendation object from the s3 backend.
-  # Expected keys: name, state_location, locking_note.
-  # Hint: read local.backends_by_name.s3 and create a short locking note.
-  aws_team_backend_recommendation = {}
-}
-
-resource "terraform_data" "lesson" {
-  input = {
-    topic                    = "terraform backend and remote state"
-    recommended_backend_name = try(local.aws_team_backend_recommendation.name, null)
+    # TODO 4: Configure local test credentials and LocalStack-compatible S3 backend flags.
+    # Hint: endpoint is http://localhost:4566 and path-style access must be enabled.
+    endpoint                    = ""
+    access_key                  = ""
+    secret_key                  = ""
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    force_path_style            = true
   }
 }
 
-output "backend_catalog" {
-  description = "Backend catalog decoded from data/backend-catalog.json."
-  value       = local.backend_catalog
+provider "aws" {
+  # TODO 5: Configure the AWS provider to talk to LocalStack S3.
+  region                      = ""
+  access_key                  = ""
+  secret_key                  = ""
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+  s3_use_path_style           = true
+
+  endpoints {
+    s3 = ""
+  }
 }
 
-output "backends_by_name" {
-  description = "Backends keyed by backend name."
-  value       = local.backends_by_name
+locals {
+  # TODO 6: Record the backend settings used above so tests and outputs can audit them.
+  localstack_endpoint = ""
+  backend_region      = ""
+  state_bucket_name   = ""
+  state_key           = ""
+
+  # TODO 7: Name an application bucket and explain what this lab proves.
+  application_bucket_name = ""
+  backend_lesson_summary = {
+    backend_type      = ""
+    state_location    = ""
+    provider_endpoint = local.localstack_endpoint
+    lesson            = ""
+  }
 }
 
-output "remote_backend_names" {
-  description = "Backend names whose kind is remote."
-  value       = local.remote_backend_names
+resource "aws_s3_bucket" "application" {
+  bucket = local.application_bucket_name
 }
 
-output "collaboration_ready_backend_names" {
-  description = "Remote backend names that support state locking."
-  value       = local.collaboration_ready_backend_names
+resource "aws_s3_object" "backend_note" {
+  bucket  = aws_s3_bucket.application.id
+  key     = "backend/remote-state.txt"
+  content = "lab73 stores Terraform state in a LocalStack S3 backend."
 }
 
-output "credential_required_backend_names" {
-  description = "Backend names that require access credentials."
-  value       = local.credential_required_backend_names
+output "localstack_endpoint" {
+  description = "LocalStack endpoint used by the AWS provider and S3 backend."
+  value       = local.localstack_endpoint
 }
 
-output "aws_team_backend_recommendation" {
-  description = "Recommended remote backend object for an AWS team."
-  value       = local.aws_team_backend_recommendation
+output "backend_region" {
+  description = "AWS region used by the LocalStack S3 backend."
+  value       = local.backend_region
+}
+
+output "state_bucket_name" {
+  description = "S3 bucket name used by the Terraform backend."
+  value       = local.state_bucket_name
+}
+
+output "state_key" {
+  description = "S3 object key used by the Terraform backend state file."
+  value       = local.state_key
+}
+
+output "application_bucket_name" {
+  description = "S3 bucket managed by this lab after the remote backend is initialized."
+  value       = aws_s3_bucket.application.bucket
+}
+
+output "backend_note_object_key" {
+  description = "S3 object key created to prove the provider is using LocalStack."
+  value       = aws_s3_object.backend_note.key
+}
+
+output "backend_lesson_summary" {
+  description = "Summary of the LocalStack S3 backend lesson."
+  value       = local.backend_lesson_summary
 }
