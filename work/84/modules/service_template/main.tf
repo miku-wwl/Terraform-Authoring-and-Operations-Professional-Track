@@ -1,16 +1,12 @@
 locals {
-  # TODO 5: Merge common tags from the caller with standard module tags.
-  # Hint: merge(var.extra_tags, {
-  #   service     = var.service_name
-  #   team        = var.team_name
-  #   environment = var.environment
-  #   owner       = var.owner
-  # })
-  standard_tags = {}
+  standard_tags = merge(var.extra_tags, {
+    service     = var.service_name
+    team        = var.team_name
+    environment = var.environment
+    owner       = var.owner
+  })
 
-  # TODO 6: Convert ports into labels like "payments-api:8080".
-  # Hint: [for port in var.ports : "${var.service_name}:${port}"]
-  port_labels = []
+  port_labels = [for port in var.ports : "${var.service_name}:${port}"]
 
   service_record = {
     service_name = var.service_name

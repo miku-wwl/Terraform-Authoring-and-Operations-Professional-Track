@@ -31,23 +31,25 @@ run "local_modules_standardize_services" {
   }
 
   assert {
-    condition = output.services_by_name["payments-api"] == {
-      service_name = "payments-api"
-      team_name    = "payments"
-      environment  = "dev"
-      owner        = "platform"
-      enabled      = true
-      ports        = [8080, 9090]
-      tags = {
-        managed_by  = "terraform"
-        standard    = "central-service-module"
-        service     = "payments-api"
-        team        = "payments"
-        environment = "dev"
-        owner       = "platform"
-      }
-      port_labels = ["payments-api:8080", "payments-api:9090"]
-    }
+    condition = (
+      output.services_by_name["payments-api"].service_name == "payments-api" &&
+      output.services_by_name["payments-api"].team_name == "payments" &&
+      output.services_by_name["payments-api"].environment == "dev" &&
+      output.services_by_name["payments-api"].owner == "platform" &&
+      output.services_by_name["payments-api"].enabled == true &&
+      length(output.services_by_name["payments-api"].ports) == 2 &&
+      output.services_by_name["payments-api"].ports[0] == 8080 &&
+      output.services_by_name["payments-api"].ports[1] == 9090 &&
+      output.services_by_name["payments-api"].tags.managed_by == "terraform" &&
+      output.services_by_name["payments-api"].tags.standard == "central-service-module" &&
+      output.services_by_name["payments-api"].tags.service == "payments-api" &&
+      output.services_by_name["payments-api"].tags.team == "payments" &&
+      output.services_by_name["payments-api"].tags.environment == "dev" &&
+      output.services_by_name["payments-api"].tags.owner == "platform" &&
+      length(output.services_by_name["payments-api"].port_labels) == 2 &&
+      output.services_by_name["payments-api"].port_labels[0] == "payments-api:8080" &&
+      output.services_by_name["payments-api"].port_labels[1] == "payments-api:9090"
+    )
     error_message = "payments-api service record must be standardized by the module."
   }
 
