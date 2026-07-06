@@ -11,25 +11,23 @@ variable "bucket_name" {
 locals {
   bucket_name = var.bucket_name
 
-  # TODO 1: Check whether the bucket name length is between 3 and 63 characters.
-  # Hint: use length(local.bucket_name) >= 3 && length(local.bucket_name) <= 63.
-  has_valid_length = false
+  has_valid_length = length(local.bucket_name) >= 3 && length(local.bucket_name) <= 63
 
-  # TODO 2: Check whether only lowercase letters, numbers, dots, and hyphens are used.
-  # Hint: use can(regex("^[a-z0-9.-]+$", local.bucket_name)).
-  has_allowed_characters = false
+  has_allowed_characters = can(regex("^[a-z0-9.-]+$", local.bucket_name))
 
-  # TODO 3: Check whether the bucket name does not start with the reserved prefix xn--.
-  # Hint: use !startswith(local.bucket_name, "xn--").
-  does_not_start_with_reserved_prefix = false
+  does_not_start_with_reserved_prefix = !startswith(local.bucket_name, "xn--")
 
-  # TODO 4: Build a list of human-readable validation errors.
-  # Hint: use compact([...]) and return an empty string for checks that pass.
-  invalid_reasons = []
+  invalid_reasons = compact([
+    local.has_valid_length ? "" : "bucket name must be between 3 and 63 characters",
+    local.has_allowed_characters ? "" : "bucket name must use lowercase letters, numbers, dots, and hyphens only",
+    local.does_not_start_with_reserved_prefix ? "" : "bucket name must not start with xn--"
+  ])
 
-  # TODO 5: Decide whether the bucket name is valid after all checks.
-  # Hint: use alltrue([...]) or length(local.invalid_reasons) == 0.
-  is_bucket_name_valid = false
+  is_bucket_name_valid = alltrue([
+    local.has_valid_length,
+    local.has_allowed_characters,
+    local.does_not_start_with_reserved_prefix
+  ])
 
   validation_summary = {
     bucket_name     = local.bucket_name
