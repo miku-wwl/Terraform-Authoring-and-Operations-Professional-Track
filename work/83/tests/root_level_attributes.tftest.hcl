@@ -1,16 +1,12 @@
-# TODO 1: Keep this provider block at the root of the test file.
 # This demonstrates that a .tftest.hcl file can declare provider configuration.
 provider "local" {}
 
 variables {
-  # TODO 2: Change this value to "test-firewall".
-  firewall_name = "demo-firewall"
+  firewall_name = "test-firewall"
 
-  # TODO 3: Change this value to "test".
-  environment = "prod"
+  environment = "test"
 
-  # TODO 4: Change this value to "ap-south-1".
-  region_label = "us-east-1"
+  region_label = "ap-south-1"
 }
 
 run "root_variables_override_main_defaults" {
