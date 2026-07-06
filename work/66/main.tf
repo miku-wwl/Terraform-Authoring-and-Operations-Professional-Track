@@ -10,25 +10,18 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define a service port map.
-  # Hint: include api = 8080, worker = 9000, and billing = 7070.
-  service_ports = {}
+  service_ports = { api = 8080, worker = 9000, billing = 7070 }
 
-  # TODO 2: Get service names from the map.
-  # Hint: use keys(local.service_ports).
-  service_names = []
+  service_names = keys(local.service_ports)
 
-  # TODO 3: Render the services template with the map and names.
-  # Hint: pass services = local.service_ports and names = local.service_names.
-  rendered_services = ""
+  rendered_services = templatefile("${path.module}/template.tftpl", {
+    services = local.service_ports
+    names    = local.service_names
+  })
 
-  # TODO 4: Build the output file path.
-  # Hint: use "${path.module}/output/services.txt".
-  rendered_file_path = ""
+  rendered_file_path = "${path.module}/output/services.txt"
 
-  # TODO 5: Read the rendered lines as a list.
-  # Hint: use split("\n", trimspace(local.rendered_services)).
-  rendered_lines = []
+  rendered_lines = split("\n", trimspace(local.rendered_services))
 }
 
 resource "local_file" "rendered" {
@@ -54,6 +47,12 @@ output "rendered_services" {
 output "rendered_file_path" {
   description = "Path where the rendered services file is written."
   value       = local.rendered_file_path
+}
+
+output "rendered_file_content" {
+  description = "Content written by the local_file resource."
+
+  value = local_file.rendered.content
 }
 
 output "rendered_lines" {

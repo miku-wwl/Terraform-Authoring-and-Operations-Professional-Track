@@ -16,13 +16,14 @@
 
 ## 3. 任务目标
 
-请在 `main.tf` 中完成五个 TODO：
+请在 `main.tf` 中完成六个 TODO：
 
 1. 定义 `service_ports` map，包含 `api`、`worker`、`billing` 三个服务端口。
 2. 用 `keys(local.service_ports)` 得到排序后的 `service_names`。
 3. 用 `templatefile()` 渲染 `template.tftpl`，并传入 `services` 与 `names`。
 4. 用 `${path.module}/output/services.txt` 构造输出文件路径。
 5. 用 `split("\n", trimspace(local.rendered_services))` 得到渲染行列表。
+6. 用 `local_file.rendered.content` 输出 `local_file` 写入的内容。
 
 模板文件 `template.tftpl` 已经给出循环结构。完成后运行 `README.md` 中的命令。
 
@@ -51,6 +52,7 @@ terraform destroy -auto-approve
 - `terraform test` 返回 `1 passed, 0 failed`。
 - `terraform output service_names` 显示 `api`、`billing`、`worker`。
 - `terraform output rendered_services` 显示三行服务端口内容。
+- `terraform output rendered_file_content` 显示 `local_file.rendered` 写入的内容。
 - `terraform output rendered_lines` 显示按行拆分后的 list。
 - apply 后会生成 `output/services.txt`，destroy 后该文件资源会被删除。
 

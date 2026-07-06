@@ -11,7 +11,7 @@ run "template_renders_map_with_loop" {
   }
 
   assert {
-    condition     = output.service_names == tolist(["api", "billing", "worker"])
+    condition     = join(",", output.service_names) == "api,billing,worker"
     error_message = "service_names must be the sorted keys from service_ports."
   }
 
@@ -38,5 +38,10 @@ run "template_renders_map_with_loop" {
   assert {
     condition     = strcontains(output.rendered_file_path, "/output/services.txt") || strcontains(output.rendered_file_path, "\\output\\services.txt")
     error_message = "rendered_file_path must point to output/services.txt under the module directory."
+  }
+
+  assert {
+    condition     = output.rendered_file_content == output.rendered_services
+    error_message = "rendered_file_content must come from the local_file resource content."
   }
 }
