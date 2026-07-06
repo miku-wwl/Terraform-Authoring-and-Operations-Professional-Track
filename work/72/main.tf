@@ -1,11 +1,8 @@
 terraform {
-  # TODO 1: Restrict the Terraform CLI version for this module.
-  # Hint: allow Terraform 1.5+ but block Terraform 2.x.
-  required_version = ">= 1.0.0"
+  # Equivalent pessimistic constraint: ~> 1.5.
+  required_version = ">= 1.5.0, < 2.0.0"
 
   required_providers {
-    # TODO 2: Declare the built-in Terraform provider used by terraform_data.
-    # Hint: use the built-in provider source address.
     terraform = {
       source = "terraform.io/builtin/terraform"
     }
@@ -13,23 +10,23 @@ terraform {
 }
 
 locals {
-  # TODO 3: Record the same Terraform CLI version constraint used above.
-  terraform_required_version = ""
+  terraform_required_version = ">= 1.5.0, < 2.0.0"
 
-  # TODO 4: Record the built-in Terraform provider source address.
-  terraform_provider_source = ""
+  terraform_provider_source = "terraform.io/builtin/terraform"
 
-  # TODO 5: Record an external provider pinned-version example from the lesson.
-  # Hint: use the format provider/source:version.
-  pinned_external_provider_example = ""
+  pinned_external_provider_example = "hashicorp/aws:5.54.1"
 
-  # TODO 6: List the Terraform settings features discussed in the lesson.
-  settings_features = []
+  settings_features = [
+    "required_version",
+    "required_providers",
+    "backend",
+    "experiments",
+    "provider_meta"
+  ]
 
-  # TODO 7: Explain which block owns which responsibility.
   block_responsibilities = {
-    provider_block  = ""
-    terraform_block = ""
+    provider_block  = "runtime provider configuration such as region and credentials"
+    terraform_block = "project-level Terraform behavior such as versions, providers, backend and experiments"
   }
 
   settings_summary = {
