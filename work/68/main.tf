@@ -3,25 +3,15 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the CSV rule file.
-  # Hint: use csvdecode(file("${path.module}/data/sg-01.csv")).
-  csv_rules = []
+  csv_rules = csvdecode(file("${path.module}/data/sg-01.csv"))
 
-  # TODO 2: Select inbound rules where direction is "in".
-  # Hint: use a for expression with if rule.direction == "in".
-  inbound_rules = []
+  inbound_rules = [for rule in local.csv_rules : rule if rule.direction == "in"]
 
-  # TODO 3: Select outbound rules where direction is "out".
-  # Hint: use a for expression with if rule.direction == "out".
-  outbound_rules = []
+  outbound_rules = [for rule in local.csv_rules : rule if rule.direction == "out"]
 
-  # TODO 4: Build a map of inbound rules keyed by rule name.
-  # Hint: use { for rule in local.inbound_rules : rule.name => rule }.
-  inbound_rules_by_name = {}
+  inbound_rules_by_name = { for rule in local.inbound_rules : rule.name => rule }
 
-  # TODO 5: Build a map of outbound rules keyed by rule name.
-  # Hint: use { for rule in local.outbound_rules : rule.name => rule }.
-  outbound_rules_by_name = {}
+  outbound_rules_by_name = { for rule in local.outbound_rules : rule.name => rule }
 
   inbound_rule_names  = [for rule in local.inbound_rules : rule.name]
   outbound_rule_names = [for rule in local.outbound_rules : rule.name]
@@ -35,9 +25,7 @@ resource "terraform_data" "security_group" {
 }
 
 resource "terraform_data" "ingress_rule" {
-  # TODO 6: Iterate over the inbound rule map.
-  # Hint: set for_each = local.inbound_rules_by_name.
-  for_each = {}
+  for_each = local.inbound_rules_by_name
 
   input = {
     name                = each.value.name
@@ -52,9 +40,7 @@ resource "terraform_data" "ingress_rule" {
 }
 
 resource "terraform_data" "egress_rule" {
-  # TODO 7: Iterate over the outbound rule map.
-  # Hint: set for_each = local.outbound_rules_by_name.
-  for_each = {}
+  for_each = local.outbound_rules_by_name
 
   input = {
     name                = each.value.name
