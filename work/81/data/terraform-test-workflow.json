@@ -1,0 +1,72 @@
+{
+  "candidate_files": [
+    {
+      "name": "demo.tftest.hcl",
+      "location": "root",
+      "extension": ".tftest.hcl",
+      "discovered": true,
+      "reason": "valid extension in root module"
+    },
+    {
+      "name": "security_group.tftest.hcl",
+      "location": "tests",
+      "extension": ".tftest.hcl",
+      "discovered": true,
+      "reason": "valid extension in tests directory"
+    },
+    {
+      "name": "workflow.tftest.json",
+      "location": "tests",
+      "extension": ".tftest.json",
+      "discovered": true,
+      "reason": "valid JSON test file extension"
+    },
+    {
+      "name": "demo.tf",
+      "location": "root",
+      "extension": ".tf",
+      "discovered": false,
+      "reason": "configuration file, not a Terraform test file"
+    },
+    {
+      "name": "demo.tf.test.hcl",
+      "location": "root",
+      "extension": ".tf.test.hcl",
+      "discovered": false,
+      "reason": "wrong extension spelling"
+    },
+    {
+      "name": "network.tftest.hcl",
+      "location": "test",
+      "extension": ".tftest.hcl",
+      "discovered": false,
+      "reason": "directory must be named tests, not test"
+    }
+  ],
+  "run_blocks": [
+    {
+      "name": "security_group_can_plan",
+      "command": "plan",
+      "creates_real_resources": false,
+      "purpose": "validate planned configuration without creating resources"
+    },
+    {
+      "name": "security_group_can_apply",
+      "command": "apply",
+      "creates_real_resources": true,
+      "purpose": "create resource during test and let Terraform test clean it up"
+    },
+    {
+      "name": "function_outputs_are_correct",
+      "command": "plan",
+      "creates_real_resources": false,
+      "purpose": "validate expressions and outputs at plan stage"
+    },
+    {
+      "name": "resource_lifecycle_works",
+      "command": "apply",
+      "creates_real_resources": true,
+      "purpose": "validate real resource lifecycle behavior"
+    }
+  ]
+}

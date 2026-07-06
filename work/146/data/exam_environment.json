@@ -1,0 +1,130 @@
+{
+  "exam": {
+    "name": "Terraform Authoring and Operations Professional",
+    "duration_hours": 4,
+    "delivery": "browser remote workstation with proctor release"
+  },
+  "exam_flow": {
+    "stages": [
+      {
+        "name": "pre_exam_instructions",
+        "type": "instruction",
+        "order": 1,
+        "recommended_action": "read environment rules before starting"
+      },
+      {
+        "name": "pre_exam_survey",
+        "type": "survey",
+        "order": 2,
+        "recommended_action": "answer employment or partner question quickly"
+      },
+      {
+        "name": "multiple_choice_questions",
+        "type": "mcq",
+        "order": 3,
+        "recommended_action": "answer from memory, flag uncertain questions, avoid spending lab time in docs"
+      },
+      {
+        "name": "lab_scenarios",
+        "type": "lab",
+        "order": 4,
+        "recommended_action": "open scenario links, implement exact task requirements, run validation commands"
+      },
+      {
+        "name": "post_exam_survey",
+        "type": "survey",
+        "order": 5,
+        "recommended_action": "complete final survey and submit exam"
+      }
+    ]
+  },
+  "lab_scenarios": [
+    {
+      "id": "scenario_01",
+      "independent": true,
+      "has_architecture_diagram": true,
+      "links": [
+        "vscode",
+        "cli"
+      ],
+      "right_sidebar_items": [
+        "cloud_console_username",
+        "cloud_console_password",
+        "access_key",
+        "secret_key",
+        "resource_links"
+      ],
+      "validation_commands": [
+        "terraform validate",
+        "./validate.sh"
+      ]
+    },
+    {
+      "id": "scenario_02",
+      "independent": true,
+      "has_architecture_diagram": false,
+      "links": [
+        "vscode",
+        "cli"
+      ],
+      "right_sidebar_items": [
+        "access_key",
+        "secret_key",
+        "resource_links"
+      ],
+      "validation_commands": [
+        "terraform plan -input=false",
+        "./check.sh"
+      ]
+    },
+    {
+      "id": "scenario_03",
+      "independent": true,
+      "has_architecture_diagram": true,
+      "links": [
+        "vscode",
+        "cli"
+      ],
+      "right_sidebar_items": [
+        "resource_links"
+      ],
+      "validation_commands": [
+        "terraform test"
+      ]
+    }
+  ],
+  "resource_policy": [
+    {
+      "name": "HashiCorp Terraform documentation",
+      "allowed": true,
+      "note": "official documentation is expected to be available"
+    },
+    {
+      "name": "Provider documentation",
+      "allowed": true,
+      "note": "scenario links can point to provider resources"
+    },
+    {
+      "name": "YouTube",
+      "allowed": false,
+      "note": "non exam content is denied"
+    },
+    {
+      "name": "HashiCorp tutorials",
+      "allowed": false,
+      "note": "tutorial pages can be blocked even if reached from docs"
+    }
+  ],
+  "strategy": {
+    "time_split_percent": {
+      "mcq": 5,
+      "lab": 90,
+      "review": 5
+    },
+    "copy_paste_methods": [
+      "right_click",
+      "keyboard_shortcut"
+    ],
+    "mcq_tactic": "flag uncertain questions and revisit only after labs"
+  }
+}

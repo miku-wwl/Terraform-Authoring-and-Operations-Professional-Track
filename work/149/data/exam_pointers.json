@@ -1,0 +1,70 @@
+{
+  "hcp_terraform": {
+    "organization": {
+      "shared_space_for": [
+        "projects",
+        "workspaces",
+        "teams"
+      ]
+    },
+    "workspace": {
+      "features": [
+        "git_repository",
+        "workspace_variables",
+        "configuration_code"
+      ]
+    },
+    "project": {
+      "purpose": "organize_workspaces_and_assign_permissions"
+    }
+  },
+  "sentinel": {
+    "policy_set_targets": [
+      "global",
+      "project",
+      "workspace"
+    ],
+    "policy_set_direct_team_attachment": false
+  },
+  "variables": {
+    "variable_set": {
+      "scopes": [
+        "global",
+        "project",
+        "workspace"
+      ],
+      "categories": [
+        "terraform",
+        "environment"
+      ],
+      "db_write_capacity": 10
+    },
+    "workspace_variable_override": {
+      "key": "db_write_capacity",
+      "value": 15
+    }
+  },
+  "state_and_cli": {
+    "vault_secrets_plaintext_in_state": true,
+    "saved_plan_commands": [
+      "terraform plan -out=ec2.plan",
+      "terraform apply ec2.plan"
+    ],
+    "hcp_workspace_outputs_data_source": "tfe_outputs",
+    "cli_flags_for_automation": [
+      "-input=false",
+      "-no-color"
+    ]
+  },
+  "runs": {
+    "run_trigger_behavior": "queue_destination_after_successful_apply_in_source_workspace",
+    "run_task_stages": [
+      "pre-plan",
+      "post-plan",
+      "pre-apply",
+      "post-apply"
+    ],
+    "check_block_failure_behavior": "non_blocking_warning",
+    "vcs_trigger_troubleshooting_reason": "commit_does_not_match_configured_branch_or_tag_trigger"
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "topics": [
+    {
+      "id": "modules.basics",
+      "category": "modules",
+      "name": "Build and use local modules",
+      "priority": 5,
+      "skills": [
+        "root_module",
+        "child_module",
+        "source_path"
+      ]
+    },
+    {
+      "id": "modules.refactor.rename",
+      "category": "modules",
+      "name": "Rename modules safely",
+      "priority": 5,
+      "skills": [
+        "moved_block",
+        "state_refactor"
+      ]
+    },
+    {
+      "id": "modules.refactor.split",
+      "category": "modules",
+      "name": "Split one module into multiple modules",
+      "priority": 5,
+      "skills": [
+        "moved_block",
+        "state_refactor"
+      ]
+    },
+    {
+      "id": "lifecycle.meta",
+      "category": "resource_behavior",
+      "name": "Lifecycle meta-argument",
+      "priority": 4,
+      "skills": [
+        "create_before_destroy",
+        "ignore_changes"
+      ]
+    },
+    {
+      "id": "providers.alias",
+      "category": "providers",
+      "name": "Provider alias and provider meta-argument",
+      "priority": 5,
+      "skills": [
+        "alias",
+        "provider_meta_argument"
+      ]
+    },
+    {
+      "id": "providers.configuration_aliases",
+      "category": "providers",
+      "name": "Pass aliased providers to child modules",
+      "priority": 5,
+      "skills": [
+        "configuration_aliases",
+        "providers_map",
+        "provider_meta_argument"
+      ]
+    },
+    {
+      "id": "data.sources.filters",
+      "category": "data_sources",
+      "name": "AWS data sources with filters",
+      "priority": 4,
+      "skills": [
+        "aws_ami",
+        "aws_subnet",
+        "filters"
+      ]
+    },
+    {
+      "id": "remote_state.s3",
+      "category": "state",
+      "name": "S3 backend and terraform_remote_state",
+      "priority": 4,
+      "skills": [
+        "s3_backend",
+        "terraform_remote_state",
+        "outputs"
+      ]
+    },
+    {
+      "id": "iam.basics",
+      "category": "iam",
+      "name": "IAM role, policy and instance profile",
+      "priority": 4,
+      "skills": [
+        "assume_role_policy",
+        "policy_attachment",
+        "instance_profile"
+      ]
+    },
+    {
+      "id": "aws.provider.credentials",
+      "category": "providers",
+      "name": "AWS config and credentials files",
+      "priority": 4,
+      "skills": [
+        "shared_config_files",
+        "shared_credentials_files",
+        "profile",
+        "source_profile",
+        "assume_role"
+      ]
+    },
+    {
+      "id": "aws.provider.default_tags",
+      "category": "providers",
+      "name": "AWS provider default_tags and versions",
+      "priority": 3,
+      "skills": [
+        "default_tags",
+        "required_providers"
+      ]
+    },
+    {
+      "id": "files.decode",
+      "category": "data_processing",
+      "name": "JSON CSV YAML decode and for_each",
+      "priority": 4,
+      "skills": [
+        "jsondecode",
+        "csvdecode",
+        "yamldecode",
+        "for_each",
+        "for_expression",
+        "count"
+      ]
+    },
+    {
+      "id": "s3.force_destroy",
+      "category": "aws_resources",
+      "name": "Delete non-empty S3 bucket safely",
+      "priority": 3,
+      "skills": [
+        "force_destroy",
+        "s3_object",
+        "bucket_policy"
+      ]
+    },
+    {
+      "id": "security_group.rules",
+      "category": "aws_resources",
+      "name": "Security group ingress and egress rules",
+      "priority": 3,
+      "skills": [
+        "aws_vpc_security_group_ingress_rule",
+        "aws_vpc_security_group_egress_rule"
+      ]
+    },
+    {
+      "id": "import.workflow",
+      "category": "import",
+      "name": "Import existing resources",
+      "priority": 5,
+      "skills": [
+        "import_block",
+        "generate_config_out",
+        "provider_import_id"
+      ]
+    },
+    {
+      "id": "import.conflicts",
+      "category": "import",
+      "name": "Resolve generated config conflicts",
+      "priority": 5,
+      "skills": [
+        "conflicting_arguments",
+        "ipv6_address_count",
+        "name_prefix"
+      ]
+    }
+  ],
+  "provider_alias_workflow": [
+    {
+      "order": 1,
+      "location": "root",
+      "action": "define default aws provider"
+    },
+    {
+      "order": 2,
+      "location": "root",
+      "action": "define aliased aws provider, for example aws.mumbai"
+    },
+    {
+      "order": 3,
+      "location": "child",
+      "action": "declare configuration_aliases in required_providers"
+    },
+    {
+      "order": 4,
+      "location": "root",
+      "action": "pass providers map to module block"
+    },
+    {
+      "order": 5,
+      "location": "child",
+      "action": "set provider meta-argument on resources that need alias"
+    }
+  ],
+  "data_sources": [
+    {
+      "name": "aws_ami",
+      "requires_filters": true
+    },
+    {
+      "name": "aws_subnet",
+      "requires_filters": true
+    },
+    {
+      "name": "aws_availability_zones",
+      "requires_filters": false
+    },
+    {
+      "name": "aws_caller_identity",
+      "requires_filters": false
+    }
+  ],
+  "import_targets": [
+    {
+      "resource_type": "aws_instance",
+      "resource_name": "test",
+      "id_kind": "instance id",
+      "example_id": "i-0123456789abcdef0",
+      "conflicting_arguments": [
+        "ipv6_address_count",
+        "ipv6_addresses"
+      ]
+    },
+    {
+      "resource_type": "aws_iam_policy",
+      "resource_name": "readonly",
+      "id_kind": "policy arn",
+      "example_id": "arn:aws:iam::123456789012:policy/ReadOnlyTeamPolicy",
+      "conflicting_arguments": []
+    },
+    {
+      "resource_type": "aws_security_group",
+      "resource_name": "web",
+      "id_kind": "security group id",
+      "example_id": "sg-0123456789abcdef0",
+      "conflicting_arguments": []
+    }
+  ],
+  "commands": {
+    "generate_config_out": "terraform plan -generate-config-out=generated.tf",
+    "import_block": "import { to = aws_instance.test id = \"i-0123456789abcdef0\" }"
+  }
+}
