@@ -3,29 +3,20 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the JSON mock file.
-  # Hint: use jsondecode(file("${path.module}/data/mock.json")).
-  mock = {}
+  mock = jsondecode(file("${path.module}/data/mock.json"))
 
-  # TODO 2: Read the apps list from the decoded JSON object.
-  # Hint: use local.mock.apps.
-  apps = []
+  apps = local.mock.apps
 
-  # TODO 3: Select the names of backend apps.
-  # Hint: use a for expression with if app.tier == "backend".
-  backend_app_names = []
+  backend_app_names = [for app in local.apps : app.name if app.tier == "backend"]
 
-  # TODO 4: Build a map of enabled apps keyed by app name.
-  # Hint: use { for app in local.apps : app.name => app if app.enabled }.
-  enabled_apps_by_name = {}
+  enabled_apps_by_name = { for app in local.apps : app.name => app if app.enabled }
 
-  # TODO 5: Build app owner labels like "api:platform".
-  # Hint: use [for app in local.apps : "${app.name}:${app.owner}"].
-  app_owner_labels = []
+  app_owner_labels = [for app in local.apps : "${app.name}:${app.owner}"]
 
-  # TODO 6: Flatten every app port into "app:port" labels.
-  # Hint: use flatten with nested for expressions over apps and app.ports.
-  app_port_labels = []
+  app_port_labels = flatten([for app in local.apps : [
+    for port in app.ports : "${app.name}:${port}"
+    ]
+  ])
 }
 
 resource "terraform_data" "lesson" {
