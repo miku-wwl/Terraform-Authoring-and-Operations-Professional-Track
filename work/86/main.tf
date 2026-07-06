@@ -3,41 +3,40 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the module catalog JSON file.
-  # Hint: use jsondecode(file("${path.module}/data/module-catalog.json")).
-  catalog = {}
+  catalog = jsondecode(file("${path.module}/data/module-catalog.json"))
 
-  # TODO 2: Read the modules list from the decoded catalog.
-  # Hint: use local.catalog.modules.
-  modules = []
+  modules = local.catalog.modules
 
-  # TODO 3: Read the provided_inputs map from the decoded catalog.
-  # Hint: use local.catalog.provided_inputs.
-  provided_inputs = {}
+  provided_inputs = local.catalog.provided_inputs
 
-  # TODO 4: Select module names that can create a resource plan without extra required inputs.
-  # Hint: filter on module.creates_resources_without_required_inputs.
-  direct_apply_module_names = []
+  direct_apply_module_names = [for module in local.modules : module.name if module.creates_resources_without_required_inputs]
 
-  # TODO 5: Build a map of modules that require caller-provided inputs.
-  # Hint: { for module in local.modules : module.name => module.required_inputs if length(module.required_inputs) > 0 }.
-  modules_requiring_inputs = {}
+  modules_requiring_inputs = { for module in local.modules : module.name => module.required_inputs if length(module.required_inputs) > 0 }
 
-  # TODO 6: For each module, calculate which required inputs are still missing.
-  # Hint: compare module.required_inputs with keys(try(local.provided_inputs[module.name], {})).
-  missing_inputs_by_module = {}
+  missing_inputs_by_module = {
+    for module in local.modules : module.name => [
+      for input in module.required_inputs : input
+      if !contains(keys(try(local.provided_inputs[module.name], {})), input)
+    ]
+    if length([
+      for input in module.required_inputs : input
+      if !contains(keys(try(local.provided_inputs[module.name], {})), input)
+    ]) > 0
+  }
 
-  # TODO 7a: Select source strings for modules whose module_path is not root.
-  # Hint: this should capture sources that use //modules/....
-  submodule_sources = []
+  submodule_sources = [
+    for module in local.modules : module.source
+    if module.module_path != "root"
+  ]
 
-  # TODO 7b: Select root modules that expose submodule folders.
-  # Hint: filter where length(module.submodules) > 0.
-  container_module_names = []
+  container_module_names = [
+    for module in local.modules : module.name
+    if length(module.submodules) > 0
+  ]
 
-  # TODO 7c: Build a simple plan summary map keyed by module name.
-  # Hint: { for module in local.modules : module.name => module.expected_plan_adds }.
-  plan_adds_by_module = {}
+  plan_adds_by_module = {
+    for module in local.modules : module.name => module.expected_plan_adds
+  }
 }
 
 resource "terraform_data" "lesson" {
