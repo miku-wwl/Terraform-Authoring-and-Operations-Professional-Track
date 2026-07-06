@@ -3,20 +3,21 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the CSV security group rule file.
-  # Hint: use csvdecode(file("${path.module}/data/sg_03.csv")).
-  csv_data = []
+  csv_data = csvdecode(file("${path.module}/data/sg_03.csv"))
 
-  # TODO 2: Build processed ingress rules from the decoded CSV rows.
-  # Hint: use a for expression over local.csv_data.
-  # TODO 3: Keep name, direction, protocol, and cidr_block from each CSV row.
-  # TODO 4: Detect ranged ports with can(regex("-", rule.port)).
-  # TODO 5: Use split("-", rule.port) and tonumber() to produce from_port and to_port.
-  processed_rules = []
+  processed_rules = [
+    for rule in local.csv_data : {
+      name       = rule.name
+      direction  = rule.direction
+      protocol   = rule.protocol
+      cidr_block = rule.cidr_block
 
-  # TODO 6: Build a map that can be used by for_each.
-  # Hint: CSV rule names are not unique, so include index in the key.
-  ingress_rules_by_key = {}
+      from_port = can(regex("-", rule.port)) ? tonumber(split("-", rule.port)[0]) : tonumber(rule.port)
+      to_port   = can(regex("-", rule.port)) ? tonumber(split("-", rule.port)[1]) : tonumber(rule.port)
+    }
+  ]
+
+  ingress_rules_by_key = { for index, rule in local.processed_rules : "${rule.name}-${index}" => rule }
 }
 
 resource "terraform_data" "ingress_rule" {
