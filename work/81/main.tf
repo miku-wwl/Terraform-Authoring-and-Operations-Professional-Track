@@ -3,37 +3,25 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the Terraform test workflow mock file.
-  # Hint: use jsondecode(file("${path.module}/data/terraform-test-workflow.json")).
-  workflow = {}
+  workflow = jsondecode(file("${path.module}/data/terraform-test-workflow.json"))
 
-  # TODO 2: Read the candidate test files list from the decoded JSON object.
-  # Hint: use local.workflow.candidate_files.
-  candidate_files = []
+  candidate_files = local.workflow.candidate_files
 
-  # TODO 3: Read the run block list from the decoded JSON object.
-  # Hint: use local.workflow.run_blocks.
-  run_blocks = []
+  run_blocks = local.workflow.run_blocks
 
-  # TODO 4: Select names of test files that Terraform test will discover.
-  # Hint: use a for expression with if file.discovered.
-  valid_test_file_names = []
+  valid_test_file_names = [for file in local.candidate_files : file.name if file.discovered]
 
-  # TODO 5: Select names of files that Terraform test will ignore.
-  # Hint: use a for expression with if !file.discovered.
-  ignored_test_file_names = []
+  ignored_test_file_names = [for file in local.candidate_files : file.name if !file.discovered]
 
-  # TODO 6: Select run block names that explicitly run at plan stage.
-  # Hint: use a for expression with if run.command == "plan".
-  plan_stage_run_names = []
+  plan_stage_run_names = [for run in local.run_blocks : run.name if run.command == "plan"]
 
-  # TODO 7: Select run block names that represent default apply behavior.
-  # Hint: use a for expression with if run.command == "apply".
-  apply_stage_run_names = []
+  apply_stage_run_names = [for run in local.run_blocks : run.name if run.command == "apply"]
 
-  # TODO 8: Build a map of test file summaries keyed by file name.
-  # Hint: use { for file in local.candidate_files : file.name => { ... } }.
-  test_file_summary_by_name = {}
+  test_file_summary_by_name = { for file in local.candidate_files : file.name => {
+    location   = file.location
+    extension  = file.extension
+    discovered = file.discovered
+  } }
 }
 
 resource "terraform_data" "lesson" {
