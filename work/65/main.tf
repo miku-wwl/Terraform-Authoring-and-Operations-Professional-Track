@@ -10,21 +10,13 @@ terraform {
 }
 
 locals {
-  # TODO 1: Define the values passed into the template.
-  # Hint: include name = "payments", environment = "dev", and owner = "platform".
-  service_config = {}
+  service_config = { name = "payments", environment = "dev", owner = "platform" }
 
-  # TODO 2: Render template.tftpl with templatefile().
-  # Hint: use templatefile("${path.module}/template.tftpl", local.service_config).
-  rendered_service_config = ""
+  rendered_service_config = templatefile("${path.module}/template.tftpl", local.service_config)
 
-  # TODO 3: Build a file path under the module output directory.
-  # Hint: use "${path.module}/output/service.txt".
-  rendered_file_path = ""
+  rendered_file_path = "${path.module}/output/service.txt"
 
-  # TODO 4: Build a short preview from the rendered template lines.
-  # Hint: use split("\n", trimspace(local.rendered_service_config))[0].
-  rendered_preview = ""
+  rendered_preview = split("\n", trimspace(local.rendered_service_config))[0]
 }
 
 resource "local_file" "rendered" {
