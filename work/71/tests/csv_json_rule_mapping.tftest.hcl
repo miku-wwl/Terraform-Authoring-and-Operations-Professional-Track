@@ -67,11 +67,7 @@ run "csv_json_rule_mapping_is_correct" {
   }
 
   assert {
-    condition = output.rule_labels == [
-      "http_database:172.16.0.0/16:80",
-      "https_app:10.70.0.0/16:443",
-      "metrics_ops:192.168.10.0/24:9090"
-    ]
+    condition     = join(",", output.rule_labels) == "http_database:172.16.0.0/16:80,https_app:10.70.0.0/16:443,metrics_ops:192.168.10.0/24:9090"
     error_message = "rule_labels must be sorted rule_name:cidr_ipv4:port labels."
   }
 

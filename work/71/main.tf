@@ -3,35 +3,41 @@ terraform {
 }
 
 locals {
-  # TODO 1: Read and decode the CSV rule file.
-  # Hint: use csvdecode(file("${path.module}/data/sg-71.csv")).
-  raw_rules = []
+  raw_rules = csvdecode(file("${path.module}/data/sg-71.csv"))
 
-  # TODO 2: Read and decode the JSON file whose keys match cidr_alias values.
-  # Hint: use jsondecode(file("${path.module}/data/app.json")).
-  app_cidr_by_alias = {}
+  app_cidr_by_alias = jsondecode(file("${path.module}/data/app.json"))
 
-  # TODO 3: Build ingress rule objects by looking up CIDR from app_cidr_by_alias.
-  # Hint: use { for rule in local.raw_rules : rule.name => { ... } }.
-  # Hint: cidr_ipv4 = local.app_cidr_by_alias[rule.cidr_alias].
-  # Hint: from_port and to_port should be tonumber(rule.port).
-  direct_ingress_rules = {}
+  direct_ingress_rules = {
+    for rule in local.raw_rules : rule.name => {
+      direction  = rule.direction
+      protocol   = rule.protocol
+      cidr_alias = rule.cidr_alias
+      cidr_ipv4  = local.app_cidr_by_alias[rule.cidr_alias]
+      from_port  = tonumber(rule.port)
+      to_port    = tonumber(rule.port)
+    }
+  }
 
-  # TODO 4: Read and decode the second JSON file whose keys do not match cidr_alias values.
-  # Hint: use jsondecode(file("${path.module}/data/app-v2.json")).
-  app_cidr_by_mapped_name = {}
+  app_cidr_by_mapped_name = jsondecode(file("${path.module}/data/app-v2.json"))
 
-  # TODO 5: Map CSV aliases to the keys used by data/app-v2.json.
-  # Hint: app-1 => app, app-2 => database, ops => observability.
-  name_mapping = {}
+  name_mapping = {
+    "app-1" = "app"
+    "app-2" = "database"
+    ops     = "observability"
+  }
 
-  # TODO 6: Build ingress rules by first mapping the CSV alias, then looking up CIDR.
-  # Hint: cidr_ipv4 = local.app_cidr_by_mapped_name[local.name_mapping[rule.cidr_alias]].
-  mapped_ingress_rules = {}
+  mapped_ingress_rules = {
+    for rule in local.raw_rules : rule.name => {
+      direction  = rule.direction
+      protocol   = rule.protocol
+      cidr_alias = rule.cidr_alias
+      cidr_ipv4  = local.app_cidr_by_mapped_name[local.name_mapping[rule.cidr_alias]]
+      from_port  = tonumber(rule.port)
+      to_port    = tonumber(rule.port)
+    }
+  }
 
-  # TODO 7: Build sorted labels like "https_app:10.70.0.0/16:443" from mapped_ingress_rules.
-  # Hint: use sort([for name, rule in local.mapped_ingress_rules : "${name}:${rule.cidr_ipv4}:${rule.from_port}"]).
-  rule_labels = []
+  rule_labels = sort([for name, rule in local.mapped_ingress_rules : "${name}:${rule.cidr_ipv4}:${rule.from_port}"])
 }
 
 resource "terraform_data" "ingress_rule" {
