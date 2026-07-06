@@ -6,25 +6,15 @@ locals {
   security_group_name = "use-case-02-sg"
   rule_file           = "${path.module}/data/sg-02.csv"
 
-  # TODO 1: Read and decode the CSV rule file.
-  # Hint: use csvdecode(file(local.rule_file)).
-  rules = []
+  rules = csvdecode(file(local.rule_file))
 
-  # TODO 2: Keep only ingress rules.
-  # Hint: use a for expression with if rule.direction == "ingress".
-  ingress_rules = []
+  ingress_rules = [for rule in local.rules : rule if rule.direction == "ingress"]
 
-  # TODO 3: Keep only egress rules.
-  # Hint: use a for expression with if rule.direction == "egress".
-  egress_rules = []
+  egress_rules = [for rule in local.rules : rule if rule.direction == "egress"]
 
-  # TODO 4: Build a map of ingress rules keyed by list index.
-  # Hint: use { for index, rule in local.ingress_rules : index => rule }.
-  ingress_rules_by_index = {}
+  ingress_rules_by_index = { for index, rule in local.ingress_rules : index => rule }
 
-  # TODO 5: Build a map of egress rules keyed by list index.
-  # Hint: use { for index, rule in local.egress_rules : index => rule }.
-  egress_rules_by_index = {}
+  egress_rules_by_index = { for index, rule in local.egress_rules : index => rule }
 }
 
 resource "terraform_data" "security_group" {
