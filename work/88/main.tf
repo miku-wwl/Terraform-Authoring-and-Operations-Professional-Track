@@ -1,56 +1,43 @@
+# Lab 88 知识点：组织内部 Terraform module 的基础目录结构。
+#
+# modules/ 表示平台或 SRE 团队维护的可复用 module，例如 ec2、
+# security-group；teams/ 表示业务团队的调用入口示例，例如 team-a、
+# team-b。这个 lab 用 JSON 模拟这种 monorepo 结构，并练习用
+# jsondecode()、for 表达式和 concat() 整理目录、团队和 module 引用关系。
+#
+# 真实企业里不一定把所有 team 都放在同一个 Terraform 仓库；更常见的成熟
+# 做法是平台团队维护 modules 仓，各 team 在自己的 Terraform 仓里通过
+# git source + version tag 引用内部 module。本 lab 只是用单目录模型讲清楚
+# modules 是可复用组件，teams 是消费方。
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1: Read and decode the module structure mock file.
-  # Hint: use jsondecode(file("${path.module}/data/module-structure.json")).
-  structure = {}
+  structure = jsondecode(file("${path.module}/data/module-structure.json"))
 
-  # TODO 2: Read the root folder list from the decoded JSON object.
-  # Hint: use local.structure.root_folders.
-  root_folders = []
+  root_folders = local.structure.root_folders
 
-  # TODO 3: Read the module records from the decoded JSON object.
-  # Hint: use local.structure.modules.
-  modules = []
+  modules = local.structure.modules
 
-  # TODO 4: Read the team records from the decoded JSON object.
-  # Hint: use local.structure.teams.
-  teams = []
+  teams = local.structure.teams
 
-  # TODO 5: Read the planned team-to-module references from the decoded JSON object.
-  # Hint: use local.structure.references.
-  references = []
+  references = local.structure.references
 
-  # TODO 6: Build a list of reusable module paths.
-  # Hint: use [for module in local.modules : module.path].
-  module_paths = []
+  module_paths = [for module in local.modules : module.path]
 
-  # TODO 7: Build a list of team workspace paths.
-  # Hint: use [for team in local.teams : team.path].
-  team_paths = []
+  team_paths = [for team in local.teams : team.path]
 
-  # TODO 8: Build module and team name lists.
-  # Hint: use for expressions over local.modules and local.teams.
-  module_names = []
-  team_names   = []
+  module_names = [for module in local.modules : module.name]
+  team_names   = [for team in local.teams : team.name]
 
-  # TODO 9: Build a map of team name to planned internal module source path.
-  # Hint: use { for ref in local.references : ref.team => ref.source }.
-  team_source_by_team = {}
+  team_source_by_team = { for ref in local.references : ref.team => ref.source }
 
-  # TODO 10: Build a complete list of base structure paths.
-  # Hint: use concat(local.root_folders, local.module_paths, local.team_paths).
-  base_structure_paths = []
+  base_structure_paths = concat(local.root_folders, local.module_paths, local.team_paths)
 
-  # TODO 11: Build a map of team name to planned module names.
-  # Hint: use { for team in local.teams : team.name => team.planned_modules }.
-  planned_modules_by_team = {}
+  planned_modules_by_team = { for team in local.teams : team.name => team.planned_modules }
 
-  # TODO 12: Read the internal module policy object.
-  # Hint: use local.structure.organization_policy.
-  internal_module_policy = {}
+  internal_module_policy = local.structure.organization_policy
 }
 
 resource "terraform_data" "lesson" {
