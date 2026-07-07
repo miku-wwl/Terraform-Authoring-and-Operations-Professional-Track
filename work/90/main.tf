@@ -3,21 +3,13 @@ terraform {
 }
 
 module "service" {
-  # TODO 1: Replace this placeholder source with the real local module path.
-  # Hint: use ./modules/service_blueprint.
-  source = "./modules/placeholder"
+  source = "./modules/service_blueprint"
 
-  # TODO 2: Pass service_name = "payments-api" to the module.
-  # Hint: service_name = "payments-api".
-  service_name = "todo-service"
+  service_name = "payments-api"
 
-  # TODO 3: Pass environment = "prod" to the module.
-  # Hint: environment = "prod".
-  environment = "dev"
+  environment = "prod"
 
-  # TODO 4: Pass owner = "platform" to the module.
-  # Hint: owner = "platform".
-  owner = "unknown"
+  owner = "platform"
 }
 
 locals {
@@ -33,13 +25,9 @@ locals {
     registry_version = "version = 1.2.0"
   }
 
-  # TODO 5: Read service_id from the child module output.
-  # Hint: use module.service.service_id.
-  service_id = ""
+  service_id = module.service.service_id
 
-  # TODO 6: Read module_source_style from the child module output.
-  # Hint: use module.service.module_source_style.
-  module_source_style = ""
+  module_source_style = module.service.module_source_style
 }
 
 resource "terraform_data" "lesson" {
