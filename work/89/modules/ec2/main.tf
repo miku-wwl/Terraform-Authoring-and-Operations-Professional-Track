@@ -4,20 +4,15 @@ terraform {
 
 locals {
   ec2_instance_config = {
-    # TODO 1: Set the simulated instance name to team-a-web.
-    name = "TODO"
+    name = "team-a-web"
 
-    # TODO 2: Set the AMI to ami-0abcdef1234567890.
-    ami = "TODO"
+    ami = "ami-0abcdef1234567890"
 
-    # TODO 3: Set the instance type to t2.micro.
-    instance_type = "TODO"
+    instance_type = "t2.micro"
 
-    # TODO 4: Set the region to us-east-1.
-    region = "TODO"
+    region = "us-east-1"
 
-    # TODO 5: Mark this configuration as managed by terraform-module.
-    managed_by = "TODO"
+    managed_by = "terraform-module"
 
     tags = {
       Environment = "dev"
@@ -26,9 +21,7 @@ locals {
     }
   }
 
-  # TODO 6: Keep this first internal module small.
-  # Hint: supported_options should be ["ami", "instance_type", "region", "tags"].
-  supported_options = []
+  supported_options = ["ami", "instance_type", "region", "tags"]
 }
 
 resource "terraform_data" "ec2_instance" {
@@ -37,7 +30,7 @@ resource "terraform_data" "ec2_instance" {
 
 output "instance_config" {
   description = "Simulated EC2 instance configuration managed by this local module."
-  value       = terraform_data.ec2_instance.output
+  value       = terraform_data.ec2_instance.input
 }
 
 output "module_metadata" {

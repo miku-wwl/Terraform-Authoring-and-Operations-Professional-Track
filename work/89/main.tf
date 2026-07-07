@@ -2,11 +2,10 @@ terraform {
   required_version = ">= 1.5.0"
 }
 
-# TODO 7: Call the local EC2 module from ./modules/ec2.
-# Hint:
-# module "team_a_ec2" {
-#   source = "./modules/ec2"
-# }
+
+module "team_a_ec2" {
+  source = "./modules/ec2"
+}
 
 output "team_a_instance_config" {
   description = "The simulated EC2 instance configuration returned by the local EC2 module."
