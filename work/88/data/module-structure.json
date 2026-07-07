@@ -1,0 +1,53 @@
+{
+  "base_folder": "kp-labs-terraform-modules",
+  "root_folders": [
+    "modules",
+    "teams"
+  ],
+  "organization_policy": {
+    "prefer_internal_modules": true,
+    "reason": "niche requirements and controlled maintenance timeline"
+  },
+  "modules": [
+    {
+      "name": "ec2",
+      "path": "modules/ec2",
+      "purpose": "Reusable EC2 module maintained by the organization",
+      "contains_actual_module_code": true
+    },
+    {
+      "name": "security-group",
+      "path": "modules/security-group",
+      "purpose": "Reusable security group module maintained by the organization",
+      "contains_actual_module_code": true
+    }
+  ],
+  "teams": [
+    {
+      "name": "team-a",
+      "path": "teams/team-a",
+      "planned_modules": [
+        "ec2"
+      ]
+    },
+    {
+      "name": "team-b",
+      "path": "teams/team-b",
+      "planned_modules": [
+        "security-group"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "team": "team-a",
+      "module": "ec2",
+      "source": "../../modules/ec2"
+    },
+    {
+      "team": "team-b",
+      "module": "security-group",
+      "source": "../../modules/security-group"
+    }
+  ]
+}
