@@ -1,37 +1,49 @@
+# 选择 Terraform Registry module 时，不要只看示例能不能复制运行。
+# 真实项目里应先看 Registry/GitHub 上的维护信号：下载量、贡献者数量、
+# open issues、文档是否完整、版本数量，以及源码是否需要额外审查。
+# 本 lab 用 JSON 模拟这些信号，再用 for + if 把 module 分成 trusted、
+# review 和 usable，练的是“选 module 前先评估质量和风险”。
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1: Read and decode the module candidate JSON mock file.
-  # Hint: use jsondecode(file("${path.module}/data/module_candidates.json")).
-  registry_data = {}
+  registry_data = jsondecode(file("${path.module}/data/module_candidates.json"))
 
-  # TODO 2: Read the modules list from the decoded JSON object.
-  # Hint: use local.registry_data.modules.
-  modules = []
+  modules = local.registry_data.modules
 
-  # TODO 3: Select names of modules whose service is ec2.
-  # Hint: use a for expression with if module.service == "ec2".
-  ec2_module_names = []
+  ec2_module_names = [
+    for module in local.modules : module.name
+    if module.service == "ec2"
+  ]
 
-  # TODO 4: Build a map of trusted modules keyed by module name.
-  # Trusted rule: downloads >= 100000, contributors >= 5, open_issues <= 10,
-  # has_documentation, version_count >= 3, and not source_review_required.
-  trusted_modules_by_name = {}
+  trusted_modules_by_name = {
+    for module in local.modules : module.name => module
+    if module.downloads >= 100000 &&
+    module.contributors >= 5 &&
+    module.open_issues <= 10 &&
+    module.has_documentation &&
+    module.version_count >= 3 &&
+    !module.source_review_required
+  }
 
-  # TODO 5: Select module names that require source review or should be avoided.
-  # Review rule: source_review_required, contributors <= 1, missing docs,
-  # version_count <= 1, or downloads < 10000.
-  review_required_module_names = []
+  review_required_module_names = [
+    for module in local.modules : module.name
+    if module.source_review_required ||
+    module.contributors <= 1 ||
+    !module.has_documentation ||
+    module.version_count <= 1 ||
+    module.downloads < 10000
+  ]
 
-  # TODO 6: Build labels like "terraform-aws-modules/ec2-instance/aws:trusted".
-  # Hint: use nested conditional expressions to choose trusted/review/usable.
-  module_quality_labels = []
+  module_quality_labels = [
+    for module in local.modules : "${module.name}:${contains(keys(local.trusted_modules_by_name), module.name) ? "trusted" : contains(local.review_required_module_names, module.name) ? "review" : "usable"}"
+  ]
 
-  # TODO 7: Recommend the first trusted EC2 module name.
-  # Hint: filter trusted module keys or modules, then use try(list[0], "").
-  recommended_ec2_module_name = ""
+  recommended_ec2_module_name = try([
+    for module in local.modules : module.name
+    if module.service == "ec2" && contains(keys(local.trusted_modules_by_name), module.name)
+  ][0], "")
 }
 
 resource "terraform_data" "lesson" {
