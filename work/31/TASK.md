@@ -2,7 +2,7 @@
 
 ## 背景
 
-LocalStack 中已经通过 `scripts/bootstrap.sh` 创建了两台带 `Project=tf-lab-31` 标签的模拟 EC2。
+本实验不会连接真实 AWS。你会先用 Docker 启动 LocalStack，再通过 `scripts/bootstrap.ps1` 或 `scripts/bootstrap.sh` 创建两台带 `Project=tf-lab-31` 标签的模拟 EC2。
 
 ## 任务目标
 
@@ -22,10 +22,28 @@ LocalStack 中已经通过 `scripts/bootstrap.sh` 创建了两台带 `Project=tf
 ## 验收标准
 
 - `terraform validate` 通过。
-- `terraform apply` 后输出实例 ID 列表。
-- `bash scripts/verify.sh` 通过。
+- `terraform apply` 后输出 `lab_instance_ids`。
+- `terraform apply` 后输出 `lab_instance_count`，值应为 `2`。
+- Windows 上 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1` 通过。
+- WSL / Linux / Terraform Sandbox 中 `bash scripts/verify.sh` 通过。
 
-## 建议执行顺序
+## Windows 建议执行顺序
+
+先按 `README.md` 启动 LocalStack，并设置环境变量，然后执行：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+terraform init -input=false
+terraform fmt
+terraform validate
+terraform plan -input=false -no-color -out=tfplan
+terraform apply -auto-approve tfplan
+terraform output
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
+```
+
+## WSL / Linux / Sandbox 建议执行顺序
 
 ```sh
 bash scripts/check-sandbox.sh

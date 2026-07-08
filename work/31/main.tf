@@ -1,2 +1,12 @@
-# TODO：声明 data "aws_instances"，读取 Project=tf-lab-31 的实例。
-# 提示：需要过滤 tag:Project 和 instance-state-name。
+# TODO 1: Read the existing EC2 instances created by scripts/bootstrap.ps1.
+# Hint: use data "aws_instances" "lab" with two filter blocks.
+# Hint:
+#   filter {
+#     name   = "tag:Project"
+#     values = ["tf-lab-31"]
+#   }
+# Hint:
+#   filter {
+#     name   = "instance-state-name"
+#     values = ["running", "pending"]
+#   }

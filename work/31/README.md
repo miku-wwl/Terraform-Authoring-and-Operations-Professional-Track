@@ -4,6 +4,19 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 0. 先确认工具可用
+
+建议使用 PowerShell 7，也就是 `pwsh`。Windows PowerShell 5.1 在读取本实验的 UTF-8 脚本时可能会把中文解析成乱码，导致 `verify.ps1` 报语法错误。
+
+```powershell
+docker version
+terraform version
+aws --version
+pwsh --version
+```
+
+如果 `docker version` 只有 Client、没有 Server，请先启动 Docker Desktop。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -22,6 +35,16 @@ docker run -d --rm --name localstack-tf-labs `
 docker ps --filter "name=localstack-tf-labs"
 ```
 
+如果输出里能看到 `localstack-tf-labs`，说明已经启动，不需要重复执行 `docker run`。
+
+可以用下面的命令确认 LocalStack 是否就绪：
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://localhost:4566/_localstack/health
+```
+
+返回内容中看到 `ec2` 和 `sts` 是 `available` 后，再继续下一步。
+
 ## 2. 进入实验目录
 
 ```powershell
@@ -37,8 +60,8 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 
 terraform init -input=false
 terraform fmt
@@ -47,9 +70,19 @@ terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
 
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+```
+
+`terraform output` 应该能看到类似结果：
+
+```text
+lab_instance_count = 2
+lab_instance_ids = tolist([
+  "i-xxxxxxxxxxxxxxxxx",
+  "i-yyyyyyyyyyyyyyyyy",
+])
 ```
 
 ## 4. 清理 LocalStack
