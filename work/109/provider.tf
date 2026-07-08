@@ -4,9 +4,12 @@ variable "localstack_endpoint" {
 }
 
 provider "aws" {
-  region                   = "us-east-1"
-  profile                  = "lab"
-  shared_config_files      = ["${path.module}/aws-config/config"]
+  region = "us-east-1"
+  # 使用 bootstrap 创建的 lab named profile。
+  profile = "lab"
+  # 指向实验目录中的 AWS CLI config。
+  shared_config_files = ["${path.module}/aws-config/config"]
+  # 指向实验目录中的 credentials。
   shared_credentials_files = ["${path.module}/aws-config/credentials"]
 
   skip_credentials_validation = true
