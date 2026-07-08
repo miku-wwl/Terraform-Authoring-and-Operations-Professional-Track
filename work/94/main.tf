@@ -5,14 +5,11 @@ terraform {
 module "team_app" {
   source = "./modules/ec2"
 
-  # TODO 4: Pass the AMI value selected by the calling team.
-  # Hint: ami = "ami-0123456789abcdef0"
+  ami = "ami-0123456789abcdef0"
 
-  # TODO 5: Pass the instance type selected by the calling team.
-  # Hint: instance_type = "t2.micro"
+  instance_type = "t2.micro"
 
-  # TODO 6: Pass the deployment region selected by the calling team.
-  # Hint: region = "ap-south-1"
+  region = "ap-south-1"
 }
 
 output "team_instance_config" {

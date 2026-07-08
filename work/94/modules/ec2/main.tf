@@ -19,14 +19,11 @@ variable "region" {
 
 locals {
   instance_config = {
-    # TODO 1: Replace this hardcoded AMI with var.ami.
-    ami = "ami-hardcoded-do-not-use"
+    ami = var.ami
 
-    # TODO 2: Replace this hardcoded instance type with var.instance_type.
-    instance_type = "t2.nano"
+    instance_type = var.instance_type
 
-    # TODO 3: Replace this hardcoded region with var.region.
-    region = "us-west-2"
+    region = var.region
   }
 }
 
@@ -36,5 +33,5 @@ resource "terraform_data" "ec2_instance" {
 
 output "instance_config" {
   description = "The simulated EC2 instance configuration after module variable resolution."
-  value       = terraform_data.ec2_instance.output
+  value       = local.instance_config
 }
