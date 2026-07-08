@@ -16,3 +16,10 @@
 - 不要使用真实 AWS。
 - 不要把真实 access key 写入文件。
 - 不要修改 `practice/labs/75/`。
+
+## 验收标准
+
+- `terraform init -backend-config=backend.hcl` 成功。
+- `terraform state list` 能看到 `terraform_data.locking_marker`。
+- LocalStack S3 中存在 `labs/75/terraform.tfstate`。
+- `scripts/verify.ps1` 或 `scripts/verify.sh` 通过。

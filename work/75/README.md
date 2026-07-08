@@ -16,6 +16,12 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
+如果容器已经存在，先确认它是否还在运行：
+
+```powershell
+docker ps --filter "name=localstack-tf-labs"
+```
+
 ## 2. 进入实验目录
 
 ```powershell
@@ -30,8 +36,8 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 Copy-Item backend.hcl.example backend.hcl -Force
 
 terraform init -input=false -backend-config=backend.hcl
@@ -41,10 +47,17 @@ terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform state list
 
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
+
+验收重点：
+
+- `backend.hcl` 中包含 `dynamodb_table = "tf-pro-lock-localstack"`。
+- `terraform state list` 能看到 `terraform_data.locking_marker`。
+- LocalStack S3 bucket 中存在 `labs/75/terraform.tfstate`。
+- Terraform 1.14 关于 `dynamodb_table` 的 deprecated warning 是本实验预期现象。
 
 ## 4. 清理 LocalStack
 
@@ -52,16 +65,18 @@ powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
 docker stop localstack-tf-labs
 ```
 
-## 5. Terraform 官方 Sandbox / Linux 方式
+## 5. Sandbox / Linux 方式
 
 ```sh
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
+
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
 cp backend.hcl.example backend.hcl
+
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
 terraform validate
