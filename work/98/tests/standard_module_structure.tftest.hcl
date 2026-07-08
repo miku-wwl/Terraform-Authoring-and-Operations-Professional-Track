@@ -38,7 +38,7 @@ run "standard_module_structure_is_detected" {
   }
 
   assert {
-    condition = output.module_boundaries == [
+    condition = output.module_boundaries == tolist([
       "compute",
       "database",
       "dns",
@@ -46,12 +46,12 @@ run "standard_module_structure_is_detected" {
       "networking",
       "security",
       "storage"
-    ]
+    ])
     error_message = "module_boundaries must be a sorted unique list inferred from the architecture services."
   }
 
   assert {
-    condition = output.module_catalog == {
+    condition = jsonencode(output.module_catalog) == jsonencode({
       compute    = ["ec2"]
       database   = ["database"]
       dns        = ["route53"]
@@ -59,7 +59,7 @@ run "standard_module_structure_is_detected" {
       networking = ["vpc", "load_balancer"]
       security   = ["firewall"]
       storage    = ["s3"]
-    }
+    })
     error_message = "module_catalog must group service names by module boundary instead of creating one monolithic module."
   }
 

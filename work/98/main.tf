@@ -1,41 +1,34 @@
+# Lab note:
+# - A reusable module should have a small, predictable structure: README.md,
+#   main.tf, variables.tf, and outputs.tf as the minimum useful contract.
+# - versions.tf is commonly used to keep Terraform and provider constraints
+#   separate from resource logic.
+# - fileset() and setsubtract() can validate module structure, while
+#   jsondecode(file(...)) plus for expressions can turn architecture data into
+#   clear module boundaries instead of one large monolithic module.
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1: Read and decode the architecture mock file.
-  # Hint: use jsondecode(file("${path.module}/data/module_architecture.json")).
-  architecture = {}
+  architecture = jsondecode(file("${path.module}/data/module_architecture.json"))
 
-  # TODO 2: Read the services list from requested_architecture.
-  # Hint: use local.architecture.requested_architecture.services.
-  services = []
+  services = local.architecture.requested_architecture.services
 
-  # TODO 3: Define the minimal recommended files for a reusable module.
-  # Hint: use toset(["README.md", "main.tf", "variables.tf", "outputs.tf"]).
-  standard_required_files = toset([])
+  standard_required_files = toset(["README.md", "main.tf", "variables.tf", "outputs.tf"])
 
-  # TODO 4: Detect files inside the local EC2 module directory.
-  # Hint: use toset(fileset("${path.module}/modules/ec2", "*")).
-  ec2_module_files = toset([])
+  ec2_module_files = toset(fileset("${path.module}/modules/ec2", "*"))
 
-  # TODO 5: Calculate which required module files are missing.
-  # Hint: use setsubtract(local.standard_required_files, local.ec2_module_files).
-  missing_required_files = toset([])
+  missing_required_files = setsubtract(local.standard_required_files, local.ec2_module_files)
 
-  # TODO 6: Build a sorted list of unique module boundaries from services.
-  # Hint: use sort(tolist(toset([for service in local.services : service.module_boundary]))).
-  module_boundaries = []
+  module_boundaries = sort(tolist(toset([for service in local.services : service.module_boundary])))
 
-  # TODO 7: Build a catalog where each boundary maps to its service names.
-  # Hint:
-  # {
-  #   for boundary in local.module_boundaries : boundary => [
-  #     for service in local.services : service.name
-  #     if service.module_boundary == boundary
-  #   ]
-  # }
-  module_catalog = {}
+  module_catalog = {
+    for boundary in local.module_boundaries : boundary => [
+      for service in local.services : service.name
+      if service.module_boundary == boundary
+    ]
+  }
 }
 
 module "ec2" {
@@ -51,7 +44,7 @@ module "ec2" {
 
 resource "terraform_data" "lesson" {
   input = {
-    topic                  = "standard module structure"
+    topic                 = "standard module structure"
     standard_required     = local.standard_required_files
     detected_module_files = local.ec2_module_files
     module_boundaries     = local.module_boundaries
