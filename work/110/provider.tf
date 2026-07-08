@@ -4,6 +4,7 @@ variable "localstack_endpoint" {
 }
 
 provider "aws" {
+  # 默认 provider：未显式写 provider 的 AWS resource 会使用这个配置。
   region                      = "ap-southeast-1"
   access_key                  = "test"
   secret_key                  = "test"
@@ -19,6 +20,7 @@ provider "aws" {
 }
 
 provider "aws" {
+  # alias provider：resource 需要写 provider = aws.usa 才会使用这个配置。
   alias                       = "usa"
   region                      = "us-east-1"
   access_key                  = "test"
