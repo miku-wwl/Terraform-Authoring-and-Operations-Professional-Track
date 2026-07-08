@@ -4,6 +4,12 @@
 
 本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- role 负责被服务扮演，policy 负责声明权限。
+- attachment 是独立资源，用来表达“这个 role 绑定了这个 policy”。
+- `role = aws_iam_role.lambda.name`，`policy_arn = aws_iam_policy.logs.arn` 是最常见写法。
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -14,10 +20,10 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，可以先执行：
+如果容器已经存在，先确认它是否还在运行：
 
 ```powershell
-docker rm -f localstack-tf-labs
+docker ps --filter "name=localstack-tf-labs"
 ```
 
 ## 2. 进入实验目录
@@ -34,17 +40,17 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
 
 ## 4. Terraform Sandbox / Linux 方式
