@@ -20,20 +20,15 @@ locals {
 module "s3_bucket" {
   source = "./modules/s3_bucket"
 
-  # TODO 1: Use the exact legacy bucket name here.
-  # Hint: use local.legacy_bucket_name.
-  bucket = "TODO-replace-with-legacy-bucket-name"
+  bucket = local.legacy_bucket_name
 
   # This simulates extra settings that a reusable S3 module may manage.
   block_public_access = true
 }
-
-# TODO 2: Add a moved block for the migration.
-# Hint:
-# moved {
-#   from = terraform_data.legacy_bucket
-#   to   = module.s3_bucket.terraform_data.bucket
-# }
+moved {
+  from = terraform_data.legacy_bucket
+  to   = module.s3_bucket.terraform_data.bucket
+}
 
 locals {
   main_tf = file("${path.module}/main.tf")
