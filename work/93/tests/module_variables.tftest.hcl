@@ -22,10 +22,10 @@ run "module_variables_allow_each_caller_to_override_values" {
   }
 
   assert {
-    condition = output.team_one_profile.tags == {
+    condition = output.team_one_profile.tags == tomap({
       team        = "platform"
       cost_center = "cc-100"
-    }
+    })
     error_message = "team_one_profile.tags must come from var.tags."
   }
 
@@ -50,10 +50,10 @@ run "module_variables_allow_each_caller_to_override_values" {
   }
 
   assert {
-    condition = output.team_two_profile.tags == {
+    condition = output.team_two_profile.tags == tomap({
       team        = "payments"
       cost_center = "cc-200"
-    }
+    })
     error_message = "team_two_profile.tags must come from var.tags."
   }
 

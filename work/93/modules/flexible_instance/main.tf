@@ -1,22 +1,15 @@
 locals {
-  # TODO 1: Replace the hardcoded name with var.name.
-  selected_name = "hardcoded-instance"
+  selected_name = var.name
 
-  # TODO 2: Replace the hardcoded environment with var.environment.
-  selected_environment = "dev"
+  selected_environment = var.environment
 
-  # TODO 3: Replace the hardcoded instance type with var.instance_type.
-  selected_instance_type = "t2.micro"
+  selected_instance_type = var.instance_type
 
-  # TODO 4: Replace the hardcoded hibernation flag with var.enable_hibernation.
-  selected_enable_hibernation = false
+  selected_enable_hibernation = var.enable_hibernation
 
-  # TODO 5: Replace the hardcoded empty map with var.tags.
-  selected_tags = {}
+  selected_tags = var.tags
 
-  # TODO 6: Build this label from the selected variable-backed values.
-  # Expected format: "name:environment:instance_type".
-  selected_label = "hardcoded-instance:dev:t2.micro"
+  selected_label = "${local.selected_name}:${local.selected_environment}:${local.selected_instance_type}"
 
   profile = {
     name               = local.selected_name
