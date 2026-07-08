@@ -1,0 +1,48 @@
+{
+  "requested_architecture": {
+    "description": "A team wants reusable Terraform modules for an AWS-style web application architecture.",
+    "anti_pattern": "single_monolithic_module",
+    "services": [
+      {
+        "name": "route53",
+        "service_type": "dns",
+        "module_boundary": "dns"
+      },
+      {
+        "name": "vpc",
+        "service_type": "network",
+        "module_boundary": "networking"
+      },
+      {
+        "name": "load_balancer",
+        "service_type": "traffic",
+        "module_boundary": "networking"
+      },
+      {
+        "name": "firewall",
+        "service_type": "security",
+        "module_boundary": "security"
+      },
+      {
+        "name": "ec2",
+        "service_type": "compute",
+        "module_boundary": "compute"
+      },
+      {
+        "name": "database",
+        "service_type": "data",
+        "module_boundary": "database"
+      },
+      {
+        "name": "s3",
+        "service_type": "object_storage",
+        "module_boundary": "storage"
+      },
+      {
+        "name": "iam",
+        "service_type": "identity",
+        "module_boundary": "iam"
+      }
+    ]
+  }
+}
