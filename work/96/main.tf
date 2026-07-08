@@ -19,9 +19,7 @@ resource "terraform_data" "elastic_ip_association" {
     allocation_id = local.elastic_ip.allocation_id
     public_ip     = local.elastic_ip.public_ip
 
-    # TODO 2: Attach the Elastic IP to the instance ID exported by the EC2 module.
-    # Hint: instance = module.web_ec2.instance_id
-    instance = "TODO"
+    instance = module.web_ec2.instance_id
   }
 }
 

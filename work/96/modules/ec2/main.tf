@@ -25,9 +25,7 @@ resource "terraform_data" "ec2_instance" {
 output "instance_id" {
   description = "The simulated EC2 instance ID that callers can use for cross-resource configuration."
 
-  # TODO 1: Export the instance ID from terraform_data.ec2_instance.output.id.
-  # Hint: value = terraform_data.ec2_instance.output.id
-  value = "TODO"
+  value = terraform_data.ec2_instance.output.id
 }
 
 output "instance_config" {
