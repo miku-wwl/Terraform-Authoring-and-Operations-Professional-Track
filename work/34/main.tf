@@ -6,15 +6,12 @@
 # - filter name = "name" 表示按 AMI 名称过滤，values 可以使用通配符匹配名称模式。
 # - 查询结果可以通过 data.aws_ami.latest.id 和 data.aws_ami.latest.name 引用。
 
-# TODO：声明 data "aws_ami" "latest"。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# data "aws_ami" "latest" {
-#   most_recent = true
-#   owners      = ["self"]
-#
-#   filter {
-#     name   = "name"
-#     values = ["tf-lab-ubuntu-*-x86_64"]
-#   }
-# }
+data "aws_ami" "latest" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "name"
+    values = ["tf-lab-ubuntu-*-x86_64"]
+  }
+}
