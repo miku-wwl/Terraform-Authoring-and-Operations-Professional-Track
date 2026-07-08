@@ -8,6 +8,12 @@
 
 LocalStack Community 当前不支持真实创建 Auto Scaling Group，`CreateAutoScalingGroup` 会返回 501。因此本题只真实创建 `aws_launch_template`，并用 `local.asg_spec` 建模 ASG 的关键配置。真实 ASG 创建、实例扩缩容和健康检查行为需要在真实 AWS 或支持该 API 的 sandbox 中验证。
 
+## 知识点总结
+
+- Launch Template 定义实例怎么启动，ASG 定义实例组怎么扩缩容。
+- ASG 常见核心字段是最小容量、最大容量、期望容量和启动模板引用。
+- 本 lab 用 `locals` 建模 ASG，重点练结构和引用关系。
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -18,10 +24,10 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，可以先执行：
+如果容器已经存在，先确认它是否还在运行：
 
 ```powershell
-docker rm -f localstack-tf-labs
+docker ps --filter "name=localstack-tf-labs"
 ```
 
 ## 2. 进入实验目录
@@ -38,17 +44,17 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
 
 ## 4. Terraform Sandbox / Linux 方式
