@@ -1,11 +1,9 @@
-# Lab note:
-# - A reusable module should have a small, predictable structure: README.md,
-#   main.tf, variables.tf, and outputs.tf as the minimum useful contract.
-# - versions.tf is commonly used to keep Terraform and provider constraints
-#   separate from resource logic.
-# - fileset() and setsubtract() can validate module structure, while
-#   jsondecode(file(...)) plus for expressions can turn architecture data into
-#   clear module boundaries instead of one large monolithic module.
+# 本节知识点：
+# - 理解 Terraform 可复用 module 的标准目录结构，而不是把所有代码随意堆在一起。
+# - 区分 main.tf、variables.tf、outputs.tf、versions.tf、README.md 各自承担的职责。
+# - 学会从架构职责边界设计 module，例如 compute、networking、database、storage，
+#   避免把 VPC、EC2、S3、IAM、数据库等全部塞进一个巨大的 monolithic module。
+# - 通过 Terraform 内置函数和表达式检查 module 结构，并从外部数据推导推荐的 module 拆分方案。
 terraform {
   required_version = ">= 1.5.0"
 }
