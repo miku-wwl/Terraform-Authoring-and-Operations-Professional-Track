@@ -1,25 +1,10 @@
-# TODO 1: Remove this provider block from the child module.
-# Provider configuration such as region should live in the caller, not inside a reusable module.
-provider "aws" {
-  region = var.region
-}
-
-# TODO 2: Add a terraform block with required_providers.aws here.
-# Required shape:
-# terraform {
-#   required_providers {
-#     aws = {
-#       source  = "hashicorp/aws"
-#       version = ">= 5.5"
-#     }
-#   }
-# }
-
-# TODO 3: Remove this region variable after the provider block is removed.
-variable "region" {
-  description = "AWS region used by the module. This should move to the caller provider block."
-  type        = string
-  default     = "ap-south-1"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.5"
+    }
+  }
 }
 
 variable "name" {

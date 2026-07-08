@@ -1,3 +1,10 @@
+# Lab note:
+# - terraform.required_providers declares which provider plugin a module needs,
+#   where Terraform should get it from, and which versions are allowed.
+# - provider "aws" configures an AWS provider instance at runtime, such as
+#   region, profile, credentials, or default tags.
+# - Reusable child modules should declare required_providers, while the caller
+#   should usually own provider configuration such as region.
 terraform {
   required_version = ">= 1.5.0"
 }
@@ -25,9 +32,9 @@ locals {
   ])
 
   # Caller checks.
-  team_a_has_provider_block          = can(regex("(?m)^\\s*provider\\s+\"aws\"\\s*\\{", local.team_a_main))
-  team_a_provider_uses_region_var    = can(regex("(?m)^\\s*region\\s*=\\s*var\\.aws_region", local.team_a_main))
-  team_a_calls_ec2_module            = can(regex("(?m)^\\s*module\\s+\"ec2\"\\s*\\{", local.team_a_main))
+  team_a_has_provider_block           = can(regex("(?m)^\\s*provider\\s+\"aws\"\\s*\\{", local.team_a_main))
+  team_a_provider_uses_region_var     = can(regex("(?m)^\\s*region\\s*=\\s*var\\.aws_region", local.team_a_main))
+  team_a_calls_ec2_module             = can(regex("(?m)^\\s*module\\s+\"ec2\"\\s*\\{", local.team_a_main))
   team_a_module_uses_local_ec2_source = can(regex("source\\s*=\\s*\"\\.\\./\\.\\./modules/ec2\"", local.team_a_main))
 
   # The starter module call passes a literal region argument. After the fix,
@@ -42,10 +49,10 @@ locals {
   ])
 
   provider_improvement_summary = {
-    child_module_provider_block_removed = !local.ec2_module_has_hardcoded_provider_block
-    child_module_region_variable_removed = !local.ec2_module_has_region_variable
-    child_module_required_provider_ready = local.ec2_module_required_provider_ready
-    caller_provider_ready               = local.team_a_provider_ready
+    child_module_provider_block_removed   = !local.ec2_module_has_hardcoded_provider_block
+    child_module_region_variable_removed  = !local.ec2_module_has_region_variable
+    child_module_required_provider_ready  = local.ec2_module_required_provider_ready
+    caller_provider_ready                 = local.team_a_provider_ready
     caller_module_region_argument_removed = local.team_a_module_region_argument_removed
   }
 }
