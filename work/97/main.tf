@@ -3,30 +3,20 @@ terraform {
 }
 
 locals {
-  # TODO 1: Name the current working directory module as the root module.
-  # Hint: set this to "root-module".
-  root_module_name = ""
+  root_module_name = "root-module"
 
-  # TODO 2: Expose the current root module working directory.
-  # Hint: use path.module.
-  root_working_directory = ""
+  root_working_directory = path.module
 }
 
 module "service_identity" {
   # This local path points from the root module to the child module.
   source = "./modules/service_identity"
 
-  # TODO 3: Pass the service name into the child module.
-  # Hint: use "checkout-api".
-  service_name = ""
+  service_name = "checkout-api"
 
-  # TODO 4: Pass the environment into the child module.
-  # Hint: use "dev".
-  environment = ""
+  environment = "dev"
 
-  # TODO 5: Pass the owner into the child module.
-  # Hint: use "platform".
-  owner = ""
+  owner = "platform"
 }
 
 resource "terraform_data" "lesson" {

@@ -7,7 +7,7 @@ run "root_module_calls_child_module_correctly" {
   }
 
   assert {
-    condition     = basename(output.root_working_directory) == "97"
+    condition     = basename(abspath(output.root_working_directory)) == "97"
     error_message = "root_working_directory must use path.module from the root module."
   }
 
