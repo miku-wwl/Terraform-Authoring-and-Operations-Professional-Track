@@ -14,6 +14,12 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
+如果容器已经存在，先确认它是否还在运行：
+
+```powershell
+docker ps --filter "name=localstack-tf-labs"
+```
+
 ## 2. 进入实验目录
 
 ```powershell
@@ -28,18 +34,25 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
+
+验收重点：
+
+- root module 调用 `modules/iam` 和 `modules/storage`。
+- `moved` block 把 `aws_iam_user.platform` 迁移到 `module.iam.aws_iam_user.platform`。
+- `moved` block 把 `aws_s3_bucket.audit` 迁移到 `module.storage.aws_s3_bucket.audit`。
+- `terraform state list` 能看到资源地址进入 module。
 
 ## 4. Sandbox / Linux 方式
 
