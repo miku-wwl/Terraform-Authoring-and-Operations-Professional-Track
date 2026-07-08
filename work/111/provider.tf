@@ -18,6 +18,7 @@ provider "aws" {
   }
 
   default_tags {
+    # 这些标签会自动合并到该 provider 管理的 AWS 资源上。
     tags = {
       ManagedBy   = "Terraform"
       Environment = "lab"
