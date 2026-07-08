@@ -11,7 +11,8 @@
 ## 你需要编辑的文件
 
 - `main.tf`
-- `outputs.tf`
+
+`outputs.tf` 已经写好，用来显示 data source 的读取结果。你主要练习的是在 `main.tf` 中声明 `data "aws_instances" "lab"`。
 
 ## 禁止事项
 

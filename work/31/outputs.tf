@@ -1,7 +1,9 @@
-# TODO 2: Output the EC2 instance ID list.
-# Output name must be lab_instance_ids.
-# Hint: value should be data.aws_instances.lab.ids.
+output "lab_instance_ids" {
+  description = "LocalStack 中由 bootstrap 创建的 EC2 实例 ID"
+  value       = data.aws_instances.lab.ids
+}
 
-# TODO 3: Output the number of matched EC2 instances.
-# Output name must be lab_instance_count.
-# Hint: value should be length(data.aws_instances.lab.ids).
+output "lab_instance_count" {
+  description = "匹配到的实验实例数量"
+  value       = length(data.aws_instances.lab.ids)
+}
