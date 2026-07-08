@@ -4,6 +4,12 @@
 
 本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- IAM user 可以同时拥有控制台登录配置和 API access key。
+- login profile 和 access key 都属于敏感身份材料。
+- Terraform output 中输出敏感值时要设置 `sensitive = true`。
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -14,11 +20,7 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，可以先执行：
-
-```powershell
-docker rm -f localstack-tf-labs
-```
+如果容器已经存在，先确认它是否还在运行：`r`n`r`n```powershell`r`ndocker ps --filter "name=localstack-tf-labs"`r`n```
 
 ## 2. 进入实验目录
 
@@ -34,17 +36,17 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
 
 ## 4. Terraform Sandbox / Linux 方式
