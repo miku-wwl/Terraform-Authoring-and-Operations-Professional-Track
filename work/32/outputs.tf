@@ -1,11 +1,16 @@
-# TODO 3: Output the current account ID.
-# Output name must be account_id.
-# Hint: value should be data.aws_caller_identity.current.account_id.
+# These outputs are provided so you can focus on the data sources in main.tf.
 
-# TODO 4: Output the current caller ARN.
-# Output name must be caller_arn.
-# Hint: value should be data.aws_caller_identity.current.arn.
+output "account_id" {
+  description = "LocalStack simulated account ID"
+  value       = data.aws_caller_identity.current.account_id
+}
 
-# TODO 5: Output the current provider region.
-# Output name must be current_region.
-# Hint: value should be data.aws_region.current.name.
+output "caller_arn" {
+  description = "Current caller ARN"
+  value       = data.aws_caller_identity.current.arn
+}
+
+output "current_region" {
+  description = "Current provider region"
+  value       = data.aws_region.current.name
+}
