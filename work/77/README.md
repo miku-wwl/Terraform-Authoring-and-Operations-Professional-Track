@@ -1,6 +1,6 @@
 # 第 77 节做题环境
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 practice/labs/77/ 中的参考实现。
+这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 `practice/labs/77/` 中的参考实现。
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS S3、DynamoDB 和 STS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
@@ -8,30 +8,36 @@
 
 在仓库根目录打开 PowerShell：
 
-`powershell
+```powershell
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
   -p 4510-4559:4510-4559 `
   -e SERVICES=s3,dynamodb,sts `
   localstack/localstack:4.2.0
-`
+```
+
+如果容器已经存在，先确认它是否还在运行：
+
+```powershell
+docker ps --filter "name=localstack-tf-labs"
+```
 
 ## 2. 进入实验目录
 
-`powershell
+```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\77
 
 $env:AWS_ACCESS_KEY_ID="test"
 $env:AWS_SECRET_ACCESS_KEY="test"
 $env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-`
+```
 
 ## 3. 开始做题
 
-`powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 Copy-Item backend.hcl.example backend.hcl -Force
 
 terraform init -input=false -backend-config=backend.hcl
@@ -39,58 +45,50 @@ terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
-terraform state list
 
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
+terraform state list
+terraform state show terraform_data.state_audit
+terraform state pull
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
-`
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+```
+
+验收重点：
+
+- `terraform state list` 能看到 `terraform_data.state_audit`。
+- `terraform state show terraform_data.state_audit` 能看到资源当前 state。
+- `terraform state pull` 能从 S3 backend 拉取完整 state JSON。
+- LocalStack S3 bucket 中存在 `labs/77/terraform.tfstate`。
 
 ## 4. 清理 LocalStack
 
-`powershell
+```powershell
 docker stop localstack-tf-labs
-`
+```
 
-## 5. Terraform 官方 Sandbox / Linux 方式
+## 5. Sandbox / Linux 方式
 
-如果你在网页 Sandbox 或 Linux 终端中做题，先启动或进入可访问 LocalStack 的环境，然后执行：
-
-`sh
+```sh
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
+
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
 cp backend.hcl.example backend.hcl
+
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform state list
+terraform state show terraform_data.state_audit
+terraform state pull
 bash scripts/verify.sh
 terraform destroy -auto-approve
 bash scripts/clean.sh
-`
-"@
-W "work/77/TASK.md" @"
-# 第 77 节任务
-
-## 背景
-
-在远端 S3 state 上练习 state list、state show、state pull，避免手工编辑 state 文件。
-
-## 要求
-
-1. 补全 ackend.hcl.example 并复制为 ackend.hcl。
-2. 让 Terraform 使用 S3 backend，state key 必须是 labs/77/terraform.tfstate。
-3. 补全 main.tf 和 outputs.tf，创建一个能进入 state 的 	erraform_data 资源。
-4. 运行 README 中的验证流程，确保 	erraform state list 和 scripts/verify.ps1 通过。
-
-## 限制
-
-- 不要使用真实 AWS。
-- 不要把真实 access key 写入文件。
-- 不要修改 practice/labs/77/。
+```
