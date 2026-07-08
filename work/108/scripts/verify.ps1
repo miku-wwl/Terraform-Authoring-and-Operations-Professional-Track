@@ -3,4 +3,6 @@ $endpoint = if ($env:LOCALSTACK_ENDPOINT) { $env:LOCALSTACK_ENDPOINT } else { "h
 $env:AWS_CONFIG_FILE = "$PWD/aws-config/config"
 $env:AWS_SHARED_CREDENTIALS_FILE = "$PWD/aws-config/credentials"
 aws --profile lab --endpoint-url=$endpoint sts get-caller-identity | Out-Null
+$env:AWS_PROFILE = "lab"
+aws --endpoint-url=$endpoint sts get-caller-identity | Out-Null
 Write-Host "profile verification passed."

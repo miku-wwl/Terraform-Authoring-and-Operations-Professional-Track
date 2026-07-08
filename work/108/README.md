@@ -4,6 +4,14 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- named profile 让你在同一套 AWS config/credentials 文件中保存多套身份配置。
+- 命令行参数 `--profile lab` 会让本次 AWS CLI 调用使用 lab profile。
+- 环境变量 `AWS_PROFILE=lab` 会让当前 shell 中后续 AWS CLI 调用默认使用 lab profile。
+- 如果同时存在 `--profile` 和 `AWS_PROFILE`，通常以命令行上的 `--profile` 更明确、更适合单条命令。
+- 本实验用 `AWS_CONFIG_FILE` 和 `AWS_SHARED_CREDENTIALS_FILE` 指向实验目录中的配置文件，避免污染默认 `~/.aws`。
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -12,6 +20,12 @@ docker run -d --rm --name localstack-tf-labs `
   -p 4510-4559:4510-4559 `
   -e SERVICES=s3,iam,sts `
   localstack/localstack:4.2.0
+```
+
+如果容器已经存在，先确认它是否还在运行：
+
+```powershell
+docker ps --filter "name=localstack-tf-labs"
 ```
 
 ## 2. 进入实验目录
@@ -28,11 +42,18 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ## 3. 开始做题
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
-powershell -ExecutionPolicy Bypass -File scripts\clean.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
+
+验收重点：
+
+- `aws-config/config` 中存在 `[profile lab]`。
+- `aws-config/credentials` 中存在 `[lab]`。
+- `aws --profile lab ...` 能成功。
+- 设置 `AWS_PROFILE=lab` 后，不写 `--profile` 的 AWS CLI 调用也能使用 lab profile。
 
 ## 4. Sandbox / Linux 方式
 
