@@ -13,20 +13,17 @@
 # bucket 名称来自变量 var.bucket_names。
 # provider 选择来自 resource 上是否写 provider = aws.prod。
 
-# TODO: 创建两个 S3 bucket，其中 dev 使用默认 provider，prod 使用 aws.prod。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "aws_s3_bucket" "dev" {
-#   # 没写 provider，所以使用默认 aws provider。
-#   bucket = var.bucket_names.dev
-# }
-#
-# resource "aws_s3_bucket" "prod" {
-#   # 只让这个资源使用 alias provider。
-#   provider = aws.prod
-#   bucket   = var.bucket_names.prod
-# }
-#
-# output "bucket_names" {
-#   value = [aws_s3_bucket.dev.bucket, aws_s3_bucket.prod.bucket]
-# }
+resource "aws_s3_bucket" "dev" {
+  # 没写 provider，所以使用默认 aws provider。
+  bucket = var.bucket_names.dev
+}
+
+resource "aws_s3_bucket" "prod" {
+  # 只让这个资源使用 alias provider。
+  provider = aws.prod
+  bucket   = var.bucket_names.prod
+}
+
+output "bucket_names" {
+  value = [aws_s3_bucket.dev.bucket, aws_s3_bucket.prod.bucket]
+}

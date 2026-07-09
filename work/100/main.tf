@@ -23,18 +23,18 @@ locals {
 # TODO: 调用 modules/buckets，传入 bucket_names，并通过 providers map 传入默认 provider 与 aws.prod。
 # Hint：可以直接参考下面这段，把注释去掉即可。
 #
-# module "buckets" {
-#   source = "./modules/buckets"
-#
-#   bucket_names = local.bucket_names
-#
-#   # 左边是子模块里使用的 provider 名称，右边是 root module 里的 provider 配置。
-#   providers = {
-#     aws      = aws
-#     aws.prod = aws.prod
-#   }
-# }
-#
-# output "bucket_names" {
-#   value = module.buckets.bucket_names
-# }
+module "buckets" {
+  source = "./modules/buckets"
+
+  bucket_names = local.bucket_names
+
+  # 左边是子模块里使用的 provider 名称，右边是 root module 里的 provider 配置。
+  providers = {
+    aws      = aws
+    aws.prod = aws.prod
+  }
+}
+
+output "bucket_names" {
+  value = module.buckets.bucket_names
+}
