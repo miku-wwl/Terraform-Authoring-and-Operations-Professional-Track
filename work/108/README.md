@@ -7,8 +7,9 @@
 ## 知识点总结
 
 - named profile 让你在同一套 AWS config/credentials 文件中保存多套身份配置。
+- 本节生成两个 profile：`lab` 和 `audit`。
 - 命令行参数 `--profile lab` 会让本次 AWS CLI 调用使用 lab profile。
-- 环境变量 `AWS_PROFILE=lab` 会让当前 shell 中后续 AWS CLI 调用默认使用 lab profile。
+- 环境变量 `AWS_PROFILE=audit` 会让当前 shell 中后续 AWS CLI 调用默认使用 audit profile。
 - 如果同时存在 `--profile` 和 `AWS_PROFILE`，通常以命令行上的 `--profile` 更明确、更适合单条命令。
 - 本实验用 `AWS_CONFIG_FILE` 和 `AWS_SHARED_CREDENTIALS_FILE` 指向实验目录中的配置文件，避免污染默认 `~/.aws`。
 
@@ -50,10 +51,11 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- `aws-config/config` 中存在 `[profile lab]`。
-- `aws-config/credentials` 中存在 `[lab]`。
+- `aws-config/config` 中存在 `[profile lab]` 和 `[profile audit]`。
+- `aws-config/credentials` 中存在 `[lab]` 和 `[audit]`。
 - `aws --profile lab ...` 能成功。
-- 设置 `AWS_PROFILE=lab` 后，不写 `--profile` 的 AWS CLI 调用也能使用 lab profile。
+- 设置 `AWS_PROFILE=audit` 后，不写 `--profile` 的 AWS CLI 调用也能使用 audit profile。
+- 当前 shell 默认是 `audit` 时，显式 `--profile lab` 的单条命令也能成功。
 
 ## 4. Sandbox / Linux 方式
 
