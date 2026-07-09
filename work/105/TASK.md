@@ -6,7 +6,7 @@
 
 ## 要求
 
-1. 把 IAM 与 S3 资源拆入不同 child module。
+1. 把 DynamoDB 与 S3 资源拆入不同 child module。
 2. 在 root module 写 moved block。
 3. 验证迁移后 state 地址进入 module。
 
@@ -18,10 +18,10 @@
 
 ## 验收标准
 
-- root module 调用 `modules/iam` 和 `modules/storage`。
-- IAM 子模块创建 `aws_iam_user.platform` 并输出 `user_name`。
+- root module 调用 `modules/database` 和 `modules/storage`。
+- database 子模块创建 `aws_dynamodb_table.platform` 并输出 `table_name`。
 - storage 子模块创建 `aws_s3_bucket.audit` 并输出 `bucket_name`。
-- 使用 `moved` block 表达 `aws_iam_user.platform` 到 `module.iam.aws_iam_user.platform` 的迁移。
+- 使用 `moved` block 表达 `aws_dynamodb_table.platform` 到 `module.database.aws_dynamodb_table.platform` 的迁移。
 - 使用 `moved` block 表达 `aws_s3_bucket.audit` 到 `module.storage.aws_s3_bucket.audit` 的迁移。
 - `terraform state list` 能看到资源地址进入 module。
 - `scripts/verify.ps1` 或 `scripts/verify.sh` 通过。

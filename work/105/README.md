@@ -10,7 +10,7 @@
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
   -p 4510-4559:4510-4559 `
-  -e SERVICES=s3,iam,sts `
+  -e SERVICES=s3,dynamodb,sts `
   localstack/localstack:4.2.0
 ```
 
@@ -49,8 +49,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- root module 调用 `modules/iam` 和 `modules/storage`。
-- `moved` block 把 `aws_iam_user.platform` 迁移到 `module.iam.aws_iam_user.platform`。
+- root module 调用 `modules/database` 和 `modules/storage`。
+- `moved` block 把 `aws_dynamodb_table.platform` 迁移到 `module.database.aws_dynamodb_table.platform`。
 - `moved` block 把 `aws_s3_bucket.audit` 迁移到 `module.storage.aws_s3_bucket.audit`。
 - `terraform state list` 能看到资源地址进入 module。
 

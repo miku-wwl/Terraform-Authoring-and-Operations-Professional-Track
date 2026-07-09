@@ -7,7 +7,7 @@
 # Hint：可以直接参考下面这段，把注释去掉即可。
 #
 # resource "aws_s3_bucket" "audit" {
-#   bucket = "tf-pro-lab-105"
+#   bucket = "tf-pro-lab-105-audit"
 # }
 #
 # output "bucket_name" {
