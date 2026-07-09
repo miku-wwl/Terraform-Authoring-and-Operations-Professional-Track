@@ -10,12 +10,9 @@ terraform {
 # - endpoints 只需要配置 s3，因为本实验不再使用 DynamoDB。
 # - terraform_data 是 Terraform 内置资源，适合在实验中创建一个轻量对象来证明 state 和 locking 流程可用。
 
-# TODO: 创建一个 terraform_data 资源，让它能被写入远端 state。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "terraform_data" "s3_lockfile_marker" {
-#   input = {
-#     lab         = "76"
-#     lock_method = "use_lockfile"
-#   }
-# }
+resource "terraform_data" "s3_lockfile_marker" {
+  input = {
+    lab         = "76"
+    lock_method = "use_lockfile"
+  }
+}
