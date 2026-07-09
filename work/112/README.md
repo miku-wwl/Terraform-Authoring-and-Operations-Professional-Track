@@ -4,13 +4,36 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
-## 知识点总结
+## 本节主旨
 
-- `assume_role` 让 AWS Provider 先通过 STS 获取临时身份，再用这个身份管理资源。
-- 真实 AWS 中常见用途是跨账号部署、CI/CD 临时授权和权限边界隔离。
-- provider 的 `assume_role` block 中通常包含 `role_arn` 和 `session_name`。
-- assume role 需要 STS endpoint；本实验用 LocalStack 模拟 STS 调用路径。
-- 资源不需要直接写 assume role 逻辑，只要使用配置了 assume role 的 provider。
+本节练习 AWS Provider 的 `assume_role`。
+
+重点不是 S3 bucket，而是 provider 的身份获取流程：
+
+```text
+基础凭证 -> STS AssumeRole -> 临时身份 -> 创建资源
+```
+
+在 Terraform 里，这个流程写在 `provider "aws"` 中：
+
+```hcl
+assume_role {
+  role_arn     = "arn:aws:iam::000000000000:role/tf-pro-lab-112"
+  session_name = "tf-pro-lab-112"
+}
+```
+
+资源本身不需要写 `assume_role`。只要资源使用这个 provider，provider 就会先完成 assume role，再创建资源。
+
+## 为什么要学它
+
+真实项目里，`assume_role` 很常见：
+
+- CI/CD 用一个基础身份进入目标账号部署资源。
+- 平台团队跨账号管理 dev/test/prod 环境。
+- Terraform 不长期持有高权限 access key，而是换取短期临时身份。
+
+本实验用 LocalStack 模拟 STS 调用路径，所以不会访问真实 AWS。
 
 ## 1. 启动 LocalStack
 
@@ -32,14 +55,38 @@ docker ps --filter "name=localstack-tf-labs"
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\112
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ```
 
-## 3. 开始做题
+## 3. 边学边练
+
+第一步，先在 `provider.tf` 中补 `assume_role`：
+
+- `endpoints.sts` 指向 LocalStack，因为 assume role 要通过 STS。
+- `assume_role.role_arn` 是要扮演的角色 ARN。
+- `assume_role.session_name` 是本次临时会话的名字，方便审计。
+
+```hcl
+assume_role {
+  role_arn     = "arn:aws:iam::000000000000:role/tf-pro-lab-112"
+  session_name = "tf-pro-lab-112"
+}
+```
+
+第二步，在 `main.tf` 中创建一个 S3 bucket，验证这个 provider 可以工作：
+
+```hcl
+resource "aws_s3_bucket" "assumed" {
+  bucket = "tf-pro-lab-112"
+}
+
+output "bucket_name" {
+  value = aws_s3_bucket.assumed.bucket
+}
+```
+
+## 4. 验收命令
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
@@ -58,17 +105,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 验收重点：
 
 - provider 中配置了 `assume_role`。
-- provider endpoints 中包含 LocalStack `sts` endpoint。
-- `assume_role.role_arn` 使用实验角色 ARN。
+- provider endpoints 中包含 `sts = var.localstack_endpoint`。
+- S3 bucket 不直接写 assume role 逻辑。
 - Terraform 能通过该 provider 创建 `tf-pro-lab-112` S3 bucket。
 
-## 4. Sandbox / Linux 方式
+## 5. Sandbox / Linux 方式
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
+export TF_VAR_localstack_endpoint=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
 terraform init -input=false
@@ -82,7 +127,7 @@ terraform destroy -auto-approve
 bash scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 6. 清理 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
