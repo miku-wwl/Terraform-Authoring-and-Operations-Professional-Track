@@ -33,12 +33,57 @@ $env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 ```
 
-## 3. 开始做题
+## 3. 编写 backend.hcl
+
+`backend.tf` 里只声明 backend 类型：
+
+```hcl
+terraform {
+  backend "s3" {}
+}
+```
+
+真正的 S3 backend 参数放在 `backend.hcl` 中。你可以参考 `backend.hcl.example`，自己新建 `backend.hcl`：
+
+```hcl
+bucket                      = "tf-pro-state-localstack"
+key                         = "labs/74/terraform.tfstate"
+region                      = "us-east-1"
+access_key                  = "test"
+secret_key                  = "test"
+skip_credentials_validation = true
+skip_metadata_api_check     = true
+skip_region_validation      = true
+skip_requesting_account_id  = true
+use_path_style              = true
+
+endpoints = {
+  s3       = "http://localhost:4566"
+  dynamodb = "http://localhost:4566"
+}
+```
+
+这些字段的作用：
+
+- `bucket`：state 要存到哪个 S3 bucket。
+- `key`：state 文件在 bucket 里的路径。
+- `region`：backend 使用的 AWS region。
+- `access_key` / `secret_key`：LocalStack 测试凭证，不要用于真实 AWS。
+- `skip_*`：跳过真实 AWS 校验，方便连接 LocalStack。
+- `use_path_style`：让 S3 请求使用 LocalStack 兼容的 path-style 地址。
+- `endpoints`：把 S3/DynamoDB 请求指向本机 LocalStack。
+
+如果你只是想快速开始，也可以先复制模板：
+
+```powershell
+Copy-Item backend.hcl.example backend.hcl -Force
+```
+
+## 4. 开始做题
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-Copy-Item backend.hcl.example backend.hcl -Force
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -58,13 +103,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 - LocalStack S3 bucket 中存在 `labs/74/terraform.tfstate`。
 - 本地目录不依赖 `terraform.tfstate` 保存最终 state。
 
-## 4. 清理 LocalStack
+## 5. 清理 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
 ```
 
-## 5. Sandbox / Linux 方式
+## 6. Sandbox / Linux 方式
 
 ```sh
 export AWS_ACCESS_KEY_ID=test
@@ -74,7 +119,6 @@ export LOCALSTACK_ENDPOINT=http://localhost:4566
 
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
-cp backend.hcl.example backend.hcl
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt

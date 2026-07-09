@@ -11,14 +11,52 @@ Terraform state 默认保存在本地 `terraform.tfstate`。团队协作时，st
 你需要完成：
 
 - 使用 `backend.tf` 中的 `backend "s3" {}` 声明 S3 backend。
-- 将 `backend.hcl.example` 复制为 `backend.hcl`，作为 `terraform init` 的 backend 配置。
+- 参考 `backend.hcl.example`，自己编写 `backend.hcl`，作为 `terraform init` 的 backend 配置。
 - 在 `main.tf` 中创建一个 `terraform_data` 资源，让它进入 Terraform state。
 - 在 `outputs.tf` 中输出一个能证明实验完成的值。
+
+## backend.hcl 应该怎么写
+
+`backend.tf` 只负责声明 backend 类型：
+
+```hcl
+terraform {
+  backend "s3" {}
+}
+```
+
+`backend.hcl` 负责写这个 backend 的具体参数。本 lab 可以写成：
+
+```hcl
+bucket                      = "tf-pro-state-localstack"
+key                         = "labs/74/terraform.tfstate"
+region                      = "us-east-1"
+access_key                  = "test"
+secret_key                  = "test"
+skip_credentials_validation = true
+skip_metadata_api_check     = true
+skip_region_validation      = true
+skip_requesting_account_id  = true
+use_path_style              = true
+
+endpoints = {
+  s3       = "http://localhost:4566"
+  dynamodb = "http://localhost:4566"
+}
+```
+
+重点记住：
+
+- `bucket` 是 state 存放的 S3 bucket。
+- `key` 是 state 文件在 bucket 里的路径。
+- `backend.hcl` 不会被 Terraform 自动加载，必须通过 `terraform init -backend-config=backend.hcl` 传入。
+- `.example` 文件只是模板，真正使用的是你自己写出来的 `backend.hcl`。
 
 ## 你需要编辑的文件
 
 - `main.tf`
 - `outputs.tf`
+- `backend.hcl`
 
 ## 需要使用的文件
 
