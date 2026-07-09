@@ -7,7 +7,7 @@ Set-Content -Encoding ASCII aws-config/config -Value @(
   "",
   "[profile audit]",
   "region = us-east-1",
-  "output = json"
+  "output = text"
 )
 Set-Content -Encoding ASCII aws-config/credentials -Value @(
   "[lab]",

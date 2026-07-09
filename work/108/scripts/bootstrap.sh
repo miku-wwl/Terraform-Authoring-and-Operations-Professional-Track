@@ -10,7 +10,7 @@ output = json
 
 [profile audit]
 region = us-east-1
-output = json
+output = text
 EOF
 cat > aws-config/credentials <<'EOF'
 [lab]

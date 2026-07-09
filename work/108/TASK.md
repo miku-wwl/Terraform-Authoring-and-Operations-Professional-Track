@@ -16,6 +16,9 @@ AWS CLI Named Profile
 - 如果同时设置了 `AWS_PROFILE=audit`，但命令里写了 `--profile lab`，这一条命令会使用 `lab`。
 - `config` 文件里 profile 名写作 `[profile lab]`。
 - `credentials` 文件里同一个 profile 名写作 `[lab]`。
+- `aws-config-example/` 是可提交的示例目录，用来解释典型配置。
+- `aws-config/` 是脚本生成的运行目录，不需要提交。
+- LocalStack 下两个 profile 使用同样的测试凭证，身份内容可能一样；本节用 `output = json/text` 的差异观察 profile 切换。
 
 ## 要求
 
@@ -26,6 +29,13 @@ AWS CLI Named Profile
 
 ## Hint
 
+先看示例目录：
+
+```text
+aws-config-example/config.example
+aws-config-example/credentials.example
+```
+
 `scripts/bootstrap.ps1` 会生成下面的 `aws-config/config`：
 
 ```ini
@@ -35,7 +45,7 @@ output = json
 
 [profile audit]
 region = us-east-1
-output = json
+output = text
 ```
 
 同时生成下面的 `aws-config/credentials`：

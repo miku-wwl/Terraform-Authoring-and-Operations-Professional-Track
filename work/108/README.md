@@ -12,6 +12,9 @@
 - 环境变量 `AWS_PROFILE=audit` 会让当前 shell 中后续 AWS CLI 调用默认使用 audit profile。
 - 如果同时存在 `--profile` 和 `AWS_PROFILE`，通常以命令行上的 `--profile` 更明确、更适合单条命令。
 - 本实验用 `AWS_CONFIG_FILE` 和 `AWS_SHARED_CREDENTIALS_FILE` 指向实验目录中的配置文件，避免污染默认 `~/.aws`。
+- `aws-config-example/` 是可提交的示例目录，用来解释典型配置。
+- `aws-config/` 是 `bootstrap` 脚本生成的运行目录，不需要提交。
+- LocalStack 下两个 profile 使用同样的测试凭证，身份内容可能一样；本节用 `output = json/text` 的差异观察 profile 切换。
 
 和第 106 节的区别：
 
@@ -45,6 +48,15 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 
 ## 3. 开始做题
 
+先阅读示例文件：
+
+```text
+aws-config-example/config.example
+aws-config-example/credentials.example
+```
+
+它们说明了多 profile 的典型配置方式，以及为什么 `lab` 和 `audit` 用不同的 `output`。
+
 先执行预检。预检脚本会在脚本内部临时使用 LocalStack 的 `test/test` 凭证，不要求你把凭证留在当前 PowerShell 里。
 
 ```powershell
@@ -66,7 +78,7 @@ output = json
 
 [profile audit]
 region = us-east-1
-output = json
+output = text
 ```
 
 `aws-config/credentials` 会包含：
@@ -89,7 +101,7 @@ $env:AWS_SHARED_CREDENTIALS_FILE = "$PWD/aws-config/credentials"
 aws --profile lab --endpoint-url=$env:LOCALSTACK_ENDPOINT sts get-caller-identity
 ```
 
-手动体会 `AWS_PROFILE`：
+手动体会 `AWS_PROFILE`。因为 `audit` 的 `output = text`，输出格式会和 `lab` 的 json 不一样：
 
 ```powershell
 $env:AWS_PROFILE = "audit"

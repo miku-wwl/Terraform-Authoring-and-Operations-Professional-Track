@@ -1,0 +1,14 @@
+# AWS CLI config 示例文件。
+# 真实默认位置通常是 ~/.aws/config。
+# Lab108 中会用 AWS_CONFIG_FILE 指向实验目录中的 config 文件。
+
+# lab profile：用 JSON 输出，方便观察结构化结果。
+[profile lab]
+region = us-east-1 # profile 默认区域；LocalStack lab 统一用 us-east-1。
+output = json      # lab 输出 JSON。
+
+# audit profile：用 text 输出，方便和 lab profile 形成可见差异。
+[profile audit]
+region = us-east-1 # 这里保持同一区域，避免把 region 差异和 profile 差异混在一起。
+output = text      # audit 输出 text，所以 sts get-caller-identity 的格式会不同。
+
