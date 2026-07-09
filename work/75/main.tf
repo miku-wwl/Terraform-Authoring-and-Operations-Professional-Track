@@ -10,12 +10,9 @@ terraform {
 # - 锁表需要有名为 LockID 的字符串主键；本实验由 scripts/bootstrap.ps1 预先创建。
 # - terraform_data 是 Terraform 内置资源，适合在实验中创建一个轻量对象来证明 state 和 locking 流程可用。
 
-# TODO: 创建一个 terraform_data 资源，让它能被写入远端 state。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "terraform_data" "locking_marker" {
-#   input = {
-#     lab   = "75"
-#     topic = "State Locking 基础"
-#   }
-# }
+resource "terraform_data" "locking_marker" {
+  input = {
+    lab   = "75"
+    topic = "State Locking 基础"
+  }
+}
