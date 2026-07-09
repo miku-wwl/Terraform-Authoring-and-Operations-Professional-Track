@@ -6,7 +6,8 @@ terraform {
 # - consumer 配置代表下游安全团队，读取 network 团队的 remote state outputs。
 # - terraform_remote_state 只读取对方显式 output 的值，不会把对方资源纳入当前 state 管理。
 # - config 中的 key 必须指向 network 的 state：labs/79/network/terraform.tfstate。
-# - 下游资源可以引用 data.terraform_remote_state.network.outputs.<NAME> 来消费上游输出。
+# - Lab78 重点是“读到 output”；Lab79 重点是“读到以后，组合成下游自己的安全规则对象”。
+# - 下游资源可以引用 data.terraform_remote_state.network.outputs.<NAME> 来生成自己的配置。
 # - 这种跨配置依赖要求先 apply 上游 network，再 apply 下游 consumer。
 
 # TODO: 使用 data "terraform_remote_state" "network" 读取 network state。
@@ -33,18 +34,21 @@ terraform {
 #   }
 # }
 #
-# TODO: 创建一个 terraform_data 资源，使用 remote state 中的 public_cidr。
+# TODO: 创建一个 terraform_data 资源，把 remote state 中的 public_cidr 和 owner 组合成安全规则说明。
 # Hint：可以直接参考下面这段，把注释去掉即可。
 #
 # resource "terraform_data" "security_rule" {
 #   input = {
-#     lab          = "79"
-#     allowed_cidr = data.terraform_remote_state.network.outputs.public_cidr
-#     source_owner = data.terraform_remote_state.network.outputs.network_owner
-#     managed_by   = "security-team"
+#     lab            = "79"
+#     rule_name      = "allow-network-public-cidr"
+#     action         = "allow"
+#     allowed_cidr   = data.terraform_remote_state.network.outputs.public_cidr
+#     source_owner   = data.terraform_remote_state.network.outputs.network_owner
+#     managed_by     = "security-team"
+#     rule_statement = "Allow security-team managed access from ${data.terraform_remote_state.network.outputs.network_owner} CIDR ${data.terraform_remote_state.network.outputs.public_cidr}"
 #   }
 # }
 #
-# output "allowed_cidr_from_remote_state" {
-#   value = terraform_data.security_rule.output.allowed_cidr
+# output "security_rule_summary" {
+#   value = terraform_data.security_rule.output
 # }

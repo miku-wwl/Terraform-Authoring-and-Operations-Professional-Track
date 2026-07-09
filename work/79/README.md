@@ -4,6 +4,15 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS S3、DynamoDB 和 STS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- Lab78 重点是证明 consumer 能读到 network 的 remote state outputs。
+- Lab79 重点是把读到的 outputs 组合成下游安全团队自己的规则对象。
+- `network/` 负责输出 `public_cidr` 和 `network_owner`。
+- `consumer/` 负责读取这些 outputs，并生成 `security_rule_summary`。
+- `consumer/backend.hcl` 决定 consumer 自己的 state 放哪里。
+- `consumer/main.tf` 里的 `data "terraform_remote_state" "network"` 才决定去哪里读取 network outputs。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -41,7 +50,7 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 
-Copy-Item network\backend.hcl.example network\backend.hcl -Force
+# 先打开 network\backend.hcl，重点看 key = "labs/79/network/terraform.tfstate"。
 Set-Location network
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -54,7 +63,8 @@ Set-Location ..
 再 apply 下游 `consumer`，让它用 `terraform_remote_state` 读取 network outputs：
 
 ```powershell
-Copy-Item consumer\backend.hcl.example consumer\backend.hcl -Force
+# 先打开 consumer\backend.hcl，理解它是 consumer 自己的 state。
+# 再打开 consumer\main.tf，重点看 security_rule_summary 如何使用上游 outputs。
 Set-Location consumer
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -75,6 +85,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 - `network` 的 state 写入 `labs/79/network/terraform.tfstate`。
 - `consumer` 的 state 写入 `labs/79/consumer/terraform.tfstate`。
 - `consumer` 使用 `terraform_remote_state.network.outputs.public_cidr` 生成规则说明。
+- `consumer` 使用 `terraform_remote_state.network.outputs.network_owner` 标记规则来源。
 - 不要手工复制 network 输出到 consumer。
 
 ## 4. 清理 LocalStack
@@ -94,10 +105,8 @@ export LOCALSTACK_ENDPOINT=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
 
-cp network/backend.hcl.example network/backend.hcl
 (cd network && terraform init -input=false -backend-config=backend.hcl && terraform fmt && terraform validate && terraform plan -input=false -no-color -out=tfplan && terraform apply -auto-approve tfplan)
 
-cp consumer/backend.hcl.example consumer/backend.hcl
 (cd consumer && terraform init -input=false -backend-config=backend.hcl && terraform fmt && terraform validate && terraform plan -input=false -no-color -out=tfplan && terraform apply -auto-approve tfplan && terraform output)
 
 bash scripts/verify.sh
