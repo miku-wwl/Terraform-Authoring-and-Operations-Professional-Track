@@ -4,6 +4,10 @@
 
 AWS CLI Named Profile
 
+第 106 节已经解决了“AWS CLI 去哪里读配置文件”。
+
+本节解决另一个问题：配置文件里有多套 profile 时，AWS CLI 这次到底使用哪一套。
+
 ## 知识点总结
 
 - named profile 是 AWS CLI 的命名配置，例如 `lab`、`audit`。
@@ -22,7 +26,7 @@ AWS CLI Named Profile
 
 ## Hint
 
-可以直接参考下面的 `aws-config/config`：
+`scripts/bootstrap.ps1` 会生成下面的 `aws-config/config`：
 
 ```ini
 [profile lab]
@@ -34,7 +38,7 @@ region = us-east-1
 output = json
 ```
 
-可以直接参考下面的 `aws-config/credentials`：
+同时生成下面的 `aws-config/credentials`：
 
 ```ini
 [lab]
@@ -44,6 +48,13 @@ aws_secret_access_key = test
 [audit]
 aws_access_key_id = test
 aws_secret_access_key = test
+```
+
+先让 AWS CLI 使用实验目录里的配置文件：
+
+```powershell
+$env:AWS_CONFIG_FILE = "$PWD/aws-config/config"
+$env:AWS_SHARED_CREDENTIALS_FILE = "$PWD/aws-config/credentials"
 ```
 
 单条命令指定 profile：

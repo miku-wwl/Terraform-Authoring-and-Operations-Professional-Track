@@ -13,6 +13,13 @@
 - 如果同时存在 `--profile` 和 `AWS_PROFILE`，通常以命令行上的 `--profile` 更明确、更适合单条命令。
 - 本实验用 `AWS_CONFIG_FILE` 和 `AWS_SHARED_CREDENTIALS_FILE` 指向实验目录中的配置文件，避免污染默认 `~/.aws`。
 
+和第 106 节的区别：
+
+```text
+第 106 节：AWS CLI 去哪里读 config/credentials 文件。
+第 108 节：读到文件后，AWS CLI 使用哪个 named profile。
+```
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -33,18 +40,71 @@ docker ps --filter "name=localstack-tf-labs"
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\108
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-$env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ```
 
 ## 3. 开始做题
 
+先执行预检。预检脚本会在脚本内部临时使用 LocalStack 的 `test/test` 凭证，不要求你把凭证留在当前 PowerShell 里。
+
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
+```
+
+再生成实验专用 AWS 配置文件：
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+```
+
+此时 `aws-config/config` 会包含：
+
+```ini
+[profile lab]
+region = us-east-1
+output = json
+
+[profile audit]
+region = us-east-1
+output = json
+```
+
+`aws-config/credentials` 会包含：
+
+```ini
+[lab]
+aws_access_key_id = test
+aws_secret_access_key = test
+
+[audit]
+aws_access_key_id = test
+aws_secret_access_key = test
+```
+
+手动体会 `--profile`：
+
+```powershell
+$env:AWS_CONFIG_FILE = "$PWD/aws-config/config"
+$env:AWS_SHARED_CREDENTIALS_FILE = "$PWD/aws-config/credentials"
+aws --profile lab --endpoint-url=$env:LOCALSTACK_ENDPOINT sts get-caller-identity
+```
+
+手动体会 `AWS_PROFILE`：
+
+```powershell
+$env:AWS_PROFILE = "audit"
+aws --endpoint-url=$env:LOCALSTACK_ENDPOINT sts get-caller-identity
+```
+
+当前 shell 默认是 `audit` 时，单条命令仍然可以显式使用 `lab`：
+
+```powershell
+aws --profile lab --endpoint-url=$env:LOCALSTACK_ENDPOINT sts get-caller-identity
+```
+
+最后跑脚本验收和清理：
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
@@ -60,9 +120,6 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ## 4. Sandbox / Linux 方式
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
