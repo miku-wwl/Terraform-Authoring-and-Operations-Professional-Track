@@ -32,6 +32,11 @@ use_path_style = true
 
 # endpoints：把 Terraform backend 的 AWS API 请求指向本机 LocalStack。
 # 如果是真实 AWS backend，这一段通常不需要写。
+# LocalStack Community 本地容器没有内置 AWS Console 式网页界面。
+# 查看 S3 里的远端 state，通常用 AWS CLI 或支持 S3 endpoint 的客户端。
+# 常用命令：
+# aws --endpoint-url=http://localhost:4566 s3 ls s3://tf-pro-state-localstack --recursive
+# aws --endpoint-url=http://localhost:4566 s3 cp s3://tf-pro-state-localstack/labs/74/terraform.tfstate -
 endpoints = {
   s3       = "http://localhost:4566"
   dynamodb = "http://localhost:4566"
