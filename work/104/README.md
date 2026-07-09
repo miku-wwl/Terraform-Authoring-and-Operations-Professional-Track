@@ -10,7 +10,7 @@
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
   -p 4510-4559:4510-4559 `
-  -e SERVICES=s3,iam,sts `
+  -e SERVICES=s3,sts `
   localstack/localstack:4.2.0
 ```
 
@@ -49,9 +49,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- root module 调用 `modules/iam`，并设置 `user_count = 3`。
-- 子模块内部 `aws_iam_user.this` 使用 `count = var.user_count`。
-- root module 的 `moved` block 从 `module.iam_user.aws_iam_user.this` 迁移到 `module.iam_user.aws_iam_user.this[1]`。
+- root module 调用 `modules/buckets`，并设置 `bucket_count = 3`。
+- 子模块内部 `aws_s3_bucket.this` 使用 `count = var.bucket_count`。
+- root module 的 `moved` block 从 `module.buckets.aws_s3_bucket.this` 迁移到 `module.buckets.aws_s3_bucket.this[1]`。
 - `terraform state list` 能看到带 index 的模块资源地址。
 
 ## 4. Sandbox / Linux 方式

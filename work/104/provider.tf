@@ -21,7 +21,6 @@ provider "aws" {
 
   endpoints {
     s3  = var.localstack_endpoint
-    iam = var.localstack_endpoint
     sts = var.localstack_endpoint
   }
 }

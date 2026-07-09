@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 ENDPOINT="${LOCALSTACK_ENDPOINT:-http://localhost:4566}"
-for bucket in tf-pro-lab-104 tf-pro-lab-104-a tf-pro-lab-104-b tf-pro-lab-104-dev tf-pro-lab-104-prod; do
+for bucket in tf-pro-lab-104-bucket-0 tf-pro-lab-104-bucket-1 tf-pro-lab-104-bucket-2; do
   aws --endpoint-url="$ENDPOINT" s3 rm s3://$bucket --recursive 2>/dev/null || true
   aws --endpoint-url="$ENDPOINT" s3api delete-bucket --bucket $bucket 2>/dev/null || true
 done
