@@ -1,25 +1,62 @@
 # 第 111 节任务
 
-## 背景
+## 主题
 
-AWS Provider Default Tags
+AWS Provider `default_tags`：在 provider 层统一给资源加默认标签。
+
+## 这节真正要练什么
+
+本节核心不是 S3 bucket，而是 `provider.tf` 里的：
+
+```hcl
+default_tags {
+  tags = {
+    ManagedBy   = "Terraform"
+    Environment = "lab"
+    Team        = "platform"
+  }
+}
+```
+
+S3 bucket 只是用来验证 provider default tags 是否生效。
 
 ## 知识点总结
 
 - `default_tags` 写在 AWS provider 中，对该 provider 管理的资源生效。
-- 资源自己的 `tags` 会与默认标签合并。
-- 同名 tag key 冲突时，资源级 `tags` 优先。
-- `tags_all` 可以查看合并后的最终标签。
+- resource 自己的 `tags` 会与 provider 默认标签合并。
+- 同名 tag key 冲突时，resource 自己的 `tags` 优先。
+- `tags` 表示 resource 显式写的标签。
+- `tags_all` 表示 resource 标签和 provider default tags 合并后的最终标签。
+
+## 对照表
+
+| Resource | Resource tags | Final `tags_all` |
+| --- | --- | --- |
+| `aws_s3_bucket.default` | 无 | `ManagedBy=Terraform`、`Environment=lab`、`Team=platform` |
+| `aws_s3_bucket.override` | `Team=network` | `ManagedBy=Terraform`、`Environment=lab`、`Team=network` |
 
 ## 要求
 
-1. 在 provider 中配置 default_tags。
-2. 创建一个继承默认标签的资源。
-3. 创建一个覆盖 Team 标签的资源。
+1. 在 `provider.tf` 中配置 `default_tags`。
+2. 创建一个不写 `tags` 的 S3 bucket，观察它继承默认标签。
+3. 创建一个写 `Team = "network"` 的 S3 bucket，观察它覆盖默认 `Team`。
+4. 输出两个 bucket 的 `tags_all`。
 
 ## Hint
 
-可以直接参考下面的资源完成 `main.tf`：
+先在 `provider.tf` 中取消注释：
+
+```hcl
+default_tags {
+  tags = {
+    ManagedBy   = "Terraform"
+    Environment = "lab"
+    Team        = "platform"
+  }
+}
+```
+
+再在 `main.tf` 中取消注释：
 
 ```hcl
 resource "aws_s3_bucket" "default" {
@@ -53,7 +90,7 @@ output "override_tags" {
 
 - provider 中存在 `default_tags`。
 - 默认标签包含 `ManagedBy = "Terraform"`、`Environment = "lab"`、`Team = "platform"`。
-- 一个 bucket 不写资源级 tags，用来继承默认标签。
-- 一个 bucket 写 `Team = "network"`，用来覆盖默认 Team。
+- `aws_s3_bucket.default` 不写资源级 `tags`，用来继承默认标签。
+- `aws_s3_bucket.override` 写 `Team = "network"`，用来覆盖默认 `Team`。
 - `terraform output` 能看到两个资源的 `tags_all`。
 - `scripts/verify.ps1` 或 `scripts/verify.sh` 通过。

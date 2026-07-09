@@ -4,13 +4,43 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
-## 知识点总结
+## 本节主旨
 
-- AWS Provider 的 `default_tags` 可以给资源统一附加默认标签。
-- resource 自己的 `tags` 会和 provider 的 `default_tags` 合并。
-- 如果同一个 tag key 同时出现在默认标签和资源标签中，资源标签会覆盖默认标签。
-- `tags_all` 是最终合并后的标签，适合用来验证 default tags 是否生效。
-- default tags 常用于治理标签，例如 `ManagedBy`、`Environment`、`Team`。
+本节练习 AWS Provider 的 `default_tags`。
+
+重点是：**在 provider 层统一给资源加默认标签**。
+
+```hcl
+default_tags {
+  tags = {
+    ManagedBy   = "Terraform"
+    Environment = "lab"
+    Team        = "platform"
+  }
+}
+```
+
+S3 bucket 只是验证工具，用来观察：
+
+```text
+provider default_tags + resource tags = tags_all
+```
+
+## tags 和 tags_all
+
+| 字段 | 含义 |
+| --- | --- |
+| `tags` | resource 自己显式声明的标签 |
+| `tags_all` | provider default_tags 和 resource tags 合并后的最终标签 |
+
+## 预期结果
+
+| Resource | Resource tags | Final `tags_all` |
+| --- | --- | --- |
+| `aws_s3_bucket.default` | 无 | `ManagedBy=Terraform`、`Environment=lab`、`Team=platform` |
+| `aws_s3_bucket.override` | `Team=network` | `ManagedBy=Terraform`、`Environment=lab`、`Team=network` |
+
+同名 key 冲突时，resource 自己的 `tags` 优先。
 
 ## 1. 启动 LocalStack
 
@@ -18,7 +48,7 @@
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
   -p 4510-4559:4510-4559 `
-  -e SERVICES=s3,iam,sts `
+  -e SERVICES=s3,sts `
   localstack/localstack:4.2.0
 ```
 
@@ -32,14 +62,43 @@ docker ps --filter "name=localstack-tf-labs"
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\111
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ```
 
-## 3. 开始做题
+## 3. 边学边练
+
+第一步，先在 `provider.tf` 里补 `default_tags`。
+
+第二步，在 `main.tf` 里创建两个 bucket：
+
+```hcl
+resource "aws_s3_bucket" "default" {
+  bucket = "tf-pro-lab-111-a"
+}
+
+resource "aws_s3_bucket" "override" {
+  bucket = "tf-pro-lab-111-b"
+
+  tags = {
+    Team = "network"
+  }
+}
+```
+
+第三步，输出 `tags_all`：
+
+```hcl
+output "default_tags" {
+  value = aws_s3_bucket.default.tags_all
+}
+
+output "override_tags" {
+  value = aws_s3_bucket.override.tags_all
+}
+```
+
+## 4. 验收命令
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
@@ -57,17 +116,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- provider 中配置了 `default_tags`。
-- `aws_s3_bucket.default` 继承默认标签。
-- `aws_s3_bucket.override` 用资源级 `Team = "network"` 覆盖默认 `Team = "platform"`。
-- `terraform output` 能看到 `tags_all` 的最终标签。
+- `default_tags` 在 provider 中配置。
+- `default_tags` output 中能看到 `Team = "platform"`。
+- `override_tags` output 中能看到 `Team = "network"`。
+- 两个 output 都应该包含 `ManagedBy = "Terraform"` 和 `Environment = "lab"`。
 
-## 4. Sandbox / Linux 方式
+## 5. Sandbox / Linux 方式
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
@@ -82,7 +138,7 @@ terraform destroy -auto-approve
 bash scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 6. 清理 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
