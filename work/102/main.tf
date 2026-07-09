@@ -6,24 +6,21 @@
 # - moved block 只迁移 Terraform state 地址，不会修改真实云资源本身。
 # - 这类重构的验收重点是 plan 中不出现非预期 destroy/create。
 
-# TODO: 使用课程要求的 moved block 完成重构，避免资源销毁重建。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "aws_s3_bucket" "instances" {
-#   count  = 2
-#   bucket = "tf-pro-lab-102-${count.index}"
-# }
-#
-# moved {
-#   from = aws_s3_bucket.a
-#   to   = aws_s3_bucket.instances[0]
-# }
-#
-# moved {
-#   from = aws_s3_bucket.b
-#   to   = aws_s3_bucket.instances[1]
-# }
-#
-# output "bucket_names" {
-#   value = aws_s3_bucket.instances[*].bucket
-# }
+resource "aws_s3_bucket" "instances" {
+  count  = 2
+  bucket = "tf-pro-lab-102-${count.index}"
+}
+
+moved {
+  from = aws_s3_bucket.a
+  to   = aws_s3_bucket.instances[0]
+}
+
+moved {
+  from = aws_s3_bucket.b
+  to   = aws_s3_bucket.instances[1]
+}
+
+output "bucket_names" {
+  value = aws_s3_bucket.instances[*].bucket
+}
