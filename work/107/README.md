@@ -11,6 +11,9 @@
 - `config` 文件保存 `[profile lab]` 下的 region/output 等配置。
 - `credentials` 文件保存 `[lab]` 下的 access key/secret key。
 - 这种写法适合实验、CI 或多账号场景中隔离 AWS 配置来源。
+- `aws-config-example/` 是讲解用示例目录，可以提交到 Git。
+- `aws-config/` 是脚本生成的运行目录，provider 实际读取它。
+- 真实项目不要提交真正的 credentials；本实验只使用 LocalStack 的 `test/test`。
 
 ## 1. 启动 LocalStack
 
@@ -41,9 +44,32 @@ $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 
 ## 3. 开始做题
 
+先阅读示例文件：
+
+```text
+aws-config-example/config.example
+aws-config-example/credentials.example
+```
+
+它们解释了 `config` 和 `credentials` 的典型写法。
+
+然后执行 bootstrap，让当前目录出现 provider 实际读取的文件：
+
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+```
+
+此时会生成：
+
+```text
+aws-config/config
+aws-config/credentials
+```
+
+确认目录出现后，再执行 Terraform：
+
+```powershell
 terraform init -input=false
 terraform fmt
 terraform validate
@@ -57,6 +83,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
+- `aws-config-example/` 解释典型配置。
+- `aws-config/` 由 `scripts\bootstrap.ps1` 生成。
 - `provider "aws"` 中配置了 `profile = "lab"`。
 - `shared_config_files` 指向 `${path.module}/aws-config/config`。
 - `shared_credentials_files` 指向 `${path.module}/aws-config/credentials`。

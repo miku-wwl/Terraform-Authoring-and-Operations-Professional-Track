@@ -1,0 +1,16 @@
+# AWS CLI config 示例文件。
+# 真实默认位置通常是 ~/.aws/config。
+# Lab107 中 provider.tf 使用 shared_config_files 指向实验目录中的 config 文件。
+
+# config 文件里的 profile 名要写成 [profile <name>]。
+# 这里的 profile 名是 lab。
+[profile lab]
+
+# region：这个 profile 默认使用的 AWS 区域。
+# LocalStack lab 统一使用 us-east-1。
+region = us-east-1
+
+# output：AWS CLI 默认输出格式。
+# 常见值有 json、text、table。
+output = json
+

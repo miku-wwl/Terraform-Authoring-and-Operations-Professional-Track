@@ -22,13 +22,10 @@
 # 如果没有先生成 aws-config，provider.tf 里的 shared_config_files 和
 # shared_credentials_files 会指向不存在的文件。
 
-# TODO: 使用指定 shared files 的 provider 创建一个 S3 bucket。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "aws_s3_bucket" "shared_files" {
-#   bucket = "tf-pro-lab-107"
-# }
-#
-# output "bucket_name" {
-#   value = aws_s3_bucket.shared_files.bucket
-# }
+resource "aws_s3_bucket" "shared_files" {
+  bucket = "tf-pro-lab-107"
+}
+
+output "bucket_name" {
+  value = aws_s3_bucket.shared_files.bucket
+}

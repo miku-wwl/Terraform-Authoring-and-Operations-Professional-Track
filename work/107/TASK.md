@@ -10,6 +10,9 @@ AWS Provider 指定 shared config/credentials 路径
 - `shared_credentials_files` 用来指定 AWS credentials 文件路径。
 - `profile = "lab"` 会让 provider 从这些文件中读取 `lab` profile。
 - 这和设置全局 `AWS_CONFIG_FILE` 不同：路径写在 Terraform provider 配置里，作用范围更明确。
+- `aws-config-example/` 是可提交的示例目录，用来学习典型写法。
+- `aws-config/` 是本 lab 运行时生成的目录，provider 会实际读取它。
+- 真实项目不要提交真正的 credentials，本 lab 只使用 LocalStack 的 `test/test`。
 
 ## 要求
 
@@ -18,6 +21,26 @@ AWS Provider 指定 shared config/credentials 路径
 3. 创建一个 S3 bucket 验证 provider 能读取这些文件。
 
 ## Hint
+
+先看示例目录：
+
+```text
+aws-config-example/config.example
+aws-config-example/credentials.example
+```
+
+再执行脚本生成 provider 实际读取的目录：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+```
+
+脚本会生成：
+
+```text
+aws-config/config
+aws-config/credentials
+```
 
 provider 的关键配置如下：
 
@@ -51,6 +74,7 @@ output "bucket_name" {
 ## 验收标准
 
 - 实验目录下存在 `aws-config/config` 和 `aws-config/credentials`。
+- `aws-config-example/config.example` 和 `aws-config-example/credentials.example` 用来解释典型配置。
 - provider 使用 `profile = "lab"`。
 - provider 使用 `shared_config_files` 和 `shared_credentials_files`。
 - `terraform output` 能看到 bucket 名称。
