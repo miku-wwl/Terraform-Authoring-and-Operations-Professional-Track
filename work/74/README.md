@@ -4,6 +4,14 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS S3、DynamoDB 和 STS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- `backend.tf` 只声明 backend 类型：`backend "s3" {}`。
+- `backend.hcl` 提供 S3 backend 的具体参数，例如 `bucket`、`key`、`region`。
+- `terraform init -backend-config=backend.hcl` 会把当前目录连接到指定 backend。
+- state 写入 S3 backend 后，项目根目录不再依赖本地 `terraform.tfstate` 保存最终状态。
+- `backend-projects/s3-only/` 演示了 remote backend 背后的 S3 bucket 可以如何提前创建。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -78,6 +86,8 @@ endpoints = {
 ```powershell
 Copy-Item backend.hcl.example backend.hcl -Force
 ```
+
+本目录已经提供带注释的 `backend.hcl`，第一次学习时建议直接打开它逐行读一遍。
 
 ## 4. 开始做题
 

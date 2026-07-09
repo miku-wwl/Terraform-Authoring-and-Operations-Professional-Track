@@ -4,6 +4,14 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS S3、DynamoDB 和 STS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- Lab77 的主题是查看远端 state，不是 state locking。
+- `terraform state list` 列出当前 state 里的资源地址。
+- `terraform state show <address>` 查看某个资源保存在 state 里的详细属性。
+- `terraform state pull` 从当前 backend 拉取完整 state JSON，适合只读审计。
+- `backend-projects/s3-for-state-audit/` 演示了远端 state 所需的 S3 bucket 如何提前创建。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -38,7 +46,8 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-Copy-Item backend.hcl.example backend.hcl -Force
+
+# 先打开 backend.hcl，重点看 state list/show/pull 的说明。
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -78,7 +87,6 @@ export LOCALSTACK_ENDPOINT=http://localhost:4566
 
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
-cp backend.hcl.example backend.hcl
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt

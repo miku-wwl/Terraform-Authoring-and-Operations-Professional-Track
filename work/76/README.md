@@ -4,6 +4,14 @@
 
 本实验训练新式 S3 backend locking：S3 保存 state，并通过 `use_lockfile = true` 使用 S3 lockfile。这个方式不需要 DynamoDB table，更适合新 Terraform 项目。
 
+## 知识点总结
+
+- Lab75 使用 DynamoDB 锁表；Lab76 使用新式 S3 lockfile。
+- `use_lockfile = true` 是 backend 配置，不是 S3 bucket 资源上的开关。
+- Lab74 和 Lab76 提前创建的 S3 bucket 可以一样，差异在 backend 怎么使用它。
+- `.tflock` 只在 Terraform 持锁期间短暂存在，apply 结束后会被删除。
+- `backend-projects/s3-with-lockfile/` 演示了这种方式只需要提前准备 S3 bucket。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -38,7 +46,8 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-Copy-Item backend.hcl.example backend.hcl -Force
+
+# 先打开 backend.hcl，重点看 use_lockfile = true。
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -75,7 +84,6 @@ export LOCALSTACK_ENDPOINT=http://localhost:4566
 
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
-cp backend.hcl.example backend.hcl
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt

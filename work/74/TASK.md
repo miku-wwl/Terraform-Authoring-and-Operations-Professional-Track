@@ -6,6 +6,13 @@ Terraform state 默认保存在本地 `terraform.tfstate`。团队协作时，st
 
 本实验使用 LocalStack 模拟 S3，把 Terraform state 写入 S3 backend。
 
+## 知识点总结
+
+- `backend "s3" {}` 只说明使用 S3 backend。
+- `backend.hcl` 才写具体的 bucket、key、region 和 LocalStack endpoint。
+- `backend.hcl` 不会自动加载，必须通过 `terraform init -backend-config=backend.hcl` 传入。
+- `backend-projects/s3-only/` 是一个独立小项目，用来理解 state bucket 从哪里来。
+
 ## 任务目标
 
 你需要完成：
@@ -62,6 +69,7 @@ endpoints = {
 
 - `backend.tf`
 - `backend.hcl.example`
+- `backend-projects/s3-only/`
 
 ## 禁止事项
 

@@ -4,6 +4,14 @@
 
 本实验训练旧式 S3 backend locking：S3 保存 state，DynamoDB table 保存锁信息。Terraform 1.14 会提示 `dynamodb_table` deprecated，这是预期现象；老系统仍然常见。
 
+## 知识点总结
+
+- Lab74 只把 state 放到 S3；Lab75 增加旧式 DynamoDB state locking。
+- `dynamodb_table = "tf-pro-lock-localstack"` 让 Terraform 使用 DynamoDB 表协调并发操作。
+- 锁表主键必须是字符串类型的 `LockID`。
+- Terraform 1.14 会提示 `dynamodb_table` deprecated，这是本实验预期现象。
+- `backend-projects/s3-with-dynamodb-lock/` 演示了 S3 bucket 和 DynamoDB lock table 如何提前创建。
+
 ## 1. 启动 LocalStack
 
 在仓库根目录打开 PowerShell：
@@ -38,7 +46,8 @@ $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-Copy-Item backend.hcl.example backend.hcl -Force
+
+# 先打开 backend.hcl，重点看 dynamodb_table。
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt
@@ -75,7 +84,6 @@ export LOCALSTACK_ENDPOINT=http://localhost:4566
 
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
-cp backend.hcl.example backend.hcl
 
 terraform init -input=false -backend-config=backend.hcl
 terraform fmt

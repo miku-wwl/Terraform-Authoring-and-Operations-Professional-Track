@@ -4,13 +4,21 @@
 
 你需要为新项目配置 S3 backend state locking。这个项目不再使用 DynamoDB lock table，而是使用 Terraform S3 backend 的新式 `use_lockfile`。
 
+## 知识点总结
+
+- `use_lockfile = true` 让 Terraform 使用 S3 lockfile 做 state locking。
+- 这种方式不需要 DynamoDB table。
+- S3 bucket 本身不需要特殊 state-lock 开关；锁由 Terraform backend 通过 S3 object 管理。
+- `.tflock` 是过程文件，通常只在 Terraform 正在持锁时短暂出现。
+
 ## 要求
 
-1. 复制 `backend.hcl.example` 为 `backend.hcl`。
-2. 确认 backend 使用 `use_lockfile = true`。
+1. 阅读 `backend.hcl`，确认 backend 使用 `use_lockfile = true`。
+2. 对照 `backend.hcl.example`，理解它和 Lab75 的 `dynamodb_table` 差异。
 3. 不要配置 `dynamodb_table`。
 4. 补全 `main.tf` 和 `outputs.tf`，创建一个能进入 state 的 `terraform_data` 资源。
-5. 按 README 执行验证流程，确保 `terraform state list` 和 `scripts/verify.ps1` 通过。
+5. 查看 `backend-projects/s3-with-lockfile/`，理解这种方式只需要提前准备 S3 bucket。
+6. 按 README 执行验证流程，确保 `terraform state list` 和 `scripts/verify.ps1` 通过。
 
 ## 限制
 
