@@ -6,10 +6,13 @@
 
 ## 知识点总结
 
-- AWS Provider 可以通过 `profile = "lab"` 使用 named profile。
+- AWS Provider 可以通过 `profile = "audit"` 使用 named profile。
 - named profile 的具体 region 和 credentials 存在 AWS shared config/credentials 文件中。
 - `shared_config_files` 和 `shared_credentials_files` 可以把 provider 限定到实验目录里的配置文件。
 - 这样 Terraform 配置不需要直接写 access key，只需要指定使用哪个 profile。
+- 和第 107 节不同：第 107 节重点是 provider 到哪里读 shared files；第 109 节重点是 provider 从多个 profile 里选哪一个。
+- 本实验故意让 `lab` 使用 `us-east-1`，让 `audit` 使用 `us-west-2`。
+- provider 不写 `region`，而是通过 `profile = "audit"` 从 config 里读取 `us-west-2`。
 - 本实验用 LocalStack 测试凭证验证 provider 能通过 profile 创建 S3 bucket。
 
 ## 1. 启动 LocalStack
@@ -32,14 +35,27 @@ docker ps --filter "name=localstack-tf-labs"
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\109
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ```
 
 ## 3. 开始做题
+
+先看示例文件：
+
+```text
+aws-config-example/config.example
+aws-config-example/credentials.example
+```
+
+示例里有两个 profile：
+
+```text
+lab   -> region = us-east-1
+audit -> region = us-west-2
+```
+
+本实验 provider 使用 `profile = "audit"`，所以输出里应该看到 `provider_region = "us-west-2"`。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
@@ -57,17 +73,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- `provider "aws"` 中配置了 `profile = "lab"`。
+- `provider "aws"` 中配置了 `profile = "audit"`。
 - provider 使用实验目录中的 `aws-config/config` 和 `aws-config/credentials`。
+- Terraform 输出里能看到 `provider_region = "us-west-2"`。
 - Terraform 能创建 `tf-pro-lab-109` S3 bucket。
-- `terraform output` 能看到 bucket 名称。
 
 ## 4. Sandbox / Linux 方式
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh

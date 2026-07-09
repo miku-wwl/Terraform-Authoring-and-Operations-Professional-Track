@@ -4,9 +4,9 @@ variable "localstack_endpoint" {
 }
 
 provider "aws" {
-  region = "us-east-1"
-  # 使用 bootstrap 创建的 lab named profile。
-  profile = "lab"
+  # Lab109 的重点是 profile 选择：这里故意使用 audit，而不是 lab。
+  # region 不在 provider 中写死，而是从 audit profile 的 config 里读取。
+  profile = "audit"
   # 指向实验目录中的 AWS CLI config。
   shared_config_files = ["${path.module}/aws-config/config"]
   # 指向实验目录中的 credentials。

@@ -1,0 +1,15 @@
+# AWS CLI config 示例文件。
+# Lab109 用两个 profile 来体现 Terraform provider 的 profile 选择。
+
+# lab profile 使用 us-east-1。
+[profile lab]
+region = us-east-1
+output = json
+
+# audit profile 使用 us-west-2。
+# provider.tf 中 profile = "audit"，并且不写 region，
+# 所以 Terraform provider 会从这里读到 us-west-2。
+[profile audit]
+region = us-west-2
+output = json
+
