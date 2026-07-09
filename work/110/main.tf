@@ -3,10 +3,17 @@
 # - 没有 alias 的 provider 是默认 provider，资源不写 provider 时会使用它。
 # - 带 alias 的 provider 通过 provider = aws.<ALIAS> 显式选择。
 # - 本实验中默认 provider 表示 ap-southeast-1，alias provider aws.usa 表示 us-east-1。
-# - provider meta argument 只影响当前 resource，不会改变其他资源的默认 provider。
+# - data source 和 resource 都可以通过 provider meta argument 选择 provider。
+# - 本实验会输出两个 provider 的实际 region，直观看到 alias 是否生效。
 
-# TODO: 创建两个 S3 bucket，其中一个使用默认 provider，另一个使用 aws.usa。
+# TODO: 读取两个 provider 的 region，并创建两个 S3 bucket。
 # Hint：可以直接参考下面这段，把注释去掉即可。
+#
+# data "aws_region" "default" {}
+#
+# data "aws_region" "usa" {
+#   provider = aws.usa
+# }
 #
 # resource "aws_s3_bucket" "singapore" {
 #   bucket = "tf-pro-lab-110-a"
@@ -17,6 +24,11 @@
 #   bucket   = "tf-pro-lab-110-b"
 # }
 #
-# output "bucket_names" {
-#   value = [aws_s3_bucket.singapore.bucket, aws_s3_bucket.usa.bucket]
+# output "provider_alias_summary" {
+#   value = {
+#     default_region = data.aws_region.default.name
+#     usa_region     = data.aws_region.usa.name
+#     singapore      = aws_s3_bucket.singapore.bucket
+#     usa            = aws_s3_bucket.usa.bucket
+#   }
 # }

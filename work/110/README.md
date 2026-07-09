@@ -4,13 +4,25 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
-## 知识点总结
+## 本节主旨
 
-- 一个 Terraform 配置可以声明多个同类型 provider。
-- 没有 `alias` 的 provider 是默认 provider。
-- 带 `alias = "usa"` 的 provider 在资源中通过 `provider = aws.usa` 使用。
-- `provider` 是 resource 的 meta argument，用来指定当前资源使用哪个 provider 配置。
-- 这种模式常用于多 region、多账号或迁移场景。
+本节练习 provider alias。
+
+你要观察的是：
+
+```text
+默认 provider        -> resource/data source 不写 provider 时使用
+alias provider aws.usa -> resource/data source 写 provider = aws.usa 时使用
+```
+
+本实验故意让两个 provider 使用不同 region：
+
+```text
+默认 provider：ap-southeast-1
+aws.usa：us-east-1
+```
+
+然后用 `data "aws_region"` 输出实际 region，让 alias 是否生效变得可见。
 
 ## 1. 启动 LocalStack
 
@@ -18,7 +30,7 @@
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
   -p 4510-4559:4510-4559 `
-  -e SERVICES=s3,iam,sts `
+  -e SERVICES=s3,sts `
   localstack/localstack:4.2.0
 ```
 
@@ -32,14 +44,51 @@ docker ps --filter "name=localstack-tf-labs"
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\110
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 $env:TF_VAR_localstack_endpoint="http://localhost:4566"
 ```
 
-## 3. 开始做题
+## 3. 边学边练
+
+先看 `provider.tf`：
+
+```hcl
+provider "aws" {
+  region = "ap-southeast-1"
+}
+
+provider "aws" {
+  alias  = "usa"
+  region = "us-east-1"
+}
+```
+
+然后在 `main.tf` 里完成：
+
+```hcl
+data "aws_region" "default" {}
+
+data "aws_region" "usa" {
+  provider = aws.usa
+}
+```
+
+这两个 data source 用来观察两个 provider 的实际 region。
+
+再创建两个 bucket：
+
+```hcl
+resource "aws_s3_bucket" "singapore" {
+  bucket = "tf-pro-lab-110-a"
+}
+
+resource "aws_s3_bucket" "usa" {
+  provider = aws.usa
+  bucket   = "tf-pro-lab-110-b"
+}
+```
+
+## 4. 验收命令
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
@@ -57,18 +106,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
-- 默认 provider 没有 alias。
-- 第二个 provider 配置了 `alias = "usa"`。
-- 一个 bucket 使用默认 provider。
-- 另一个 bucket 显式写 `provider = aws.usa`。
-- `terraform output` 能看到两个 bucket 名称。
+- `default_region` 应该是 `ap-southeast-1`。
+- `usa_region` 应该是 `us-east-1`。
+- `aws_s3_bucket.singapore` 使用默认 provider。
+- `aws_s3_bucket.usa` 显式使用 `provider = aws.usa`。
 
-## 4. Sandbox / Linux 方式
+## 5. Sandbox / Linux 方式
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
@@ -83,7 +128,7 @@ terraform destroy -auto-approve
 bash scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 6. 清理 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
