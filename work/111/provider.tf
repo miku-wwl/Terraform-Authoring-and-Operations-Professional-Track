@@ -17,15 +17,12 @@ provider "aws" {
     sts = var.localstack_endpoint
   }
 
-  # TODO: 在 provider 中配置 default_tags。
-  # Hint：把下面这段取消注释即可。
-  #
-  # default_tags {
-  #   # 这些标签会自动合并到该 provider 管理的 AWS 资源上。
-  #   tags = {
-  #     ManagedBy   = "Terraform"
-  #     Environment = "lab"
-  #     Team        = "platform"
-  #   }
-  # }
+  default_tags {
+    # 这些标签会自动合并到该 provider 管理的 AWS 资源上。
+    tags = {
+      ManagedBy   = "Terraform"
+      Environment = "lab"
+      Team        = "platform"
+    }
+  }
 }
