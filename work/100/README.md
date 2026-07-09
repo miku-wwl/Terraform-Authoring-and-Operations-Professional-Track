@@ -4,6 +4,15 @@
 
 本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
 
+## 知识点总结
+
+- `provider.tf` 练习定义两个 AWS provider：默认 `aws` 和 alias `aws.prod`。
+- root `main.tf` 练习把业务参数 `bucket_names` 和 provider 配置一起传给子模块。
+- `modules/buckets/versions.tf` 练习用 `configuration_aliases = [aws.prod]` 声明子模块允许接收 alias provider。
+- `modules/buckets/variables.tf` 练习子模块通过变量接收 bucket 名称，而不是写死业务值。
+- `modules/buckets/main.tf` 练习 dev bucket 使用默认 provider，prod bucket 使用 `provider = aws.prod`。
+- provider 配置由 root module 定义；子模块只接收和使用 provider，不应该在子模块里重新写凭证/endpoint。
+
 ## 1. 启动 LocalStack
 
 ```powershell
@@ -49,6 +58,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 
 验收重点：
 
+- `provider.tf` 中有默认 `provider "aws"` 和 `alias = "prod"` 的第二个 provider。
+- root module 通过 `bucket_names = local.bucket_names` 给子模块传参。
 - root module 通过 `providers` map 把默认 `aws` 和 `aws.prod` 都传入 `modules/buckets`。
 - 子模块声明 `configuration_aliases = [aws.prod]`。
 - 子模块中一个 bucket 使用默认 provider，另一个 bucket 显式使用 `provider = aws.prod`。
