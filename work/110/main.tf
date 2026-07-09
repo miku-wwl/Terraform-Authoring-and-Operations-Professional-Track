@@ -6,29 +6,26 @@
 # - data source 和 resource 都可以通过 provider meta argument 选择 provider。
 # - 本实验会输出两个 provider 的实际 region，直观看到 alias 是否生效。
 
-# TODO: 读取两个 provider 的 region，并创建两个 S3 bucket。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# data "aws_region" "default" {}
-#
-# data "aws_region" "usa" {
-#   provider = aws.usa
-# }
-#
-# resource "aws_s3_bucket" "singapore" {
-#   bucket = "tf-pro-lab-110-a"
-# }
-#
-# resource "aws_s3_bucket" "usa" {
-#   provider = aws.usa
-#   bucket   = "tf-pro-lab-110-b"
-# }
-#
-# output "provider_alias_summary" {
-#   value = {
-#     default_region = data.aws_region.default.name
-#     usa_region     = data.aws_region.usa.name
-#     singapore      = aws_s3_bucket.singapore.bucket
-#     usa            = aws_s3_bucket.usa.bucket
-#   }
-# }
+data "aws_region" "default" {}
+
+data "aws_region" "usa" {
+  provider = aws.usa
+}
+
+resource "aws_s3_bucket" "singapore" {
+  bucket = "tf-pro-lab-110-a"
+}
+
+resource "aws_s3_bucket" "usa" {
+  provider = aws.usa
+  bucket   = "tf-pro-lab-110-b"
+}
+
+output "provider_alias_summary" {
+  value = {
+    default_region = data.aws_region.default.name
+    usa_region     = data.aws_region.usa.name
+    singapore      = aws_s3_bucket.singapore.bucket
+    usa            = aws_s3_bucket.usa.bucket
+  }
+}
