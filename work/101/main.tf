@@ -6,19 +6,34 @@
 # - moved block 只迁移 Terraform state 地址，不会修改真实云资源本身。
 # - 这类重构的验收重点是 plan 中不出现非预期 destroy/create。
 
-# TODO: 使用课程要求的 moved block 完成重构，避免资源销毁重建。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "aws_s3_bucket" "renamed" {
+# 做题流程：
+# 1. 先保留下面的旧代码，执行 terraform init / apply，让 state 里真的出现旧地址。
+# 2. 执行 terraform state list，观察旧地址：
+#    aws_s3_bucket.original[0]
+#    aws_s3_bucket.original[1]
+# 3. 然后把旧 resource 注释掉，改用下面 Hint 里的 renamed resource。
+# 4. 同时写 moved block，把旧 state 地址迁移到新代码地址。
+# 5. 最后执行 terraform plan，确认没有非预期 destroy/create。
+
+# resource "aws_s3_bucket" "original" {
 #   count  = 2
 #   bucket = "tf-pro-lab-101-${count.index}"
 # }
-#
-# moved {
-#   from = aws_s3_bucket.original
-#   to   = aws_s3_bucket.renamed
-# }
-#
+
 # output "bucket_names" {
-#   value = aws_s3_bucket.renamed[*].bucket
+#   value = aws_s3_bucket.original[*].bucket
 # }
+
+resource "aws_s3_bucket" "renamed" {
+  count  = 2
+  bucket = "tf-pro-lab-101-${count.index}"
+}
+
+moved {
+  from = aws_s3_bucket.original
+  to   = aws_s3_bucket.renamed
+}
+
+output "bucket_names" {
+  value = aws_s3_bucket.renamed[*].bucket
+}
