@@ -10,12 +10,9 @@ terraform {
 # - remote backend 改变的是 state 存放位置；state 命令仍然通过 Terraform CLI 访问当前 backend。
 # - terraform_data 是 Terraform 内置资源，适合在实验中创建一个轻量对象来观察 state 内容。
 
-# TODO: 创建一个 terraform_data 资源，让它能被写入远端 state。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "terraform_data" "state_audit" {
-#   input = {
-#     lab   = "77"
-#     topic = "Terraform State 管理命令"
-#   }
-# }
+resource "terraform_data" "state_audit" {
+  input = {
+    lab   = "77"
+    topic = "Terraform State 管理命令"
+  }
+}
