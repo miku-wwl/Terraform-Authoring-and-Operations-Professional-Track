@@ -9,29 +9,29 @@
 # - 套餐名称、美元单价、免费额度和 feature matrix 都可能变化，不能把课程截图当永久事实。
 # - 考试应记“计费与能力分类原则”；做采购预算时必须查看当前官方 pricing 页面。
 #
-# 本 Lab 不连接 HCP Terraform，也不要求购买套餐。请完成四组概念与场景判断。
-# 每个 TODO 都有可以直接替换的完整答案级 Hint。
+# 本 Lab 不连接 HCP Terraform，也不要求购买套餐。
+# 四组概念与场景判断均已完成，下面保留参考答案供复习。
 
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1：区分 HCP Terraform 与 Terraform Enterprise。
-  # 答案级 Hint：完整答案如下：
+  # 已完成 1：区分 HCP Terraform 与 Terraform Enterprise。
+  # 参考答案如下：
   # delivery_models = {
   #   hcp_terraform       = "managed_saas"
   #   terraform_enterprise = "self_hosted"
   #   air_gapped_direction = "terraform_enterprise"
   # }
   delivery_models = {
-    hcp_terraform        = "self_hosted"
-    terraform_enterprise = "managed_saas"
-    air_gapped_direction = "hcp_terraform"
+    hcp_terraform        = "managed_saas"
+    terraform_enterprise = "self_hosted"
+    air_gapped_direction = "terraform_enterprise"
   }
 
-  # TODO 2：判断当前 managed resource 计费原则。
-  # 答案级 Hint：完整答案如下：
+  # 已完成 2：判断当前 managed resource 计费原则。
+  # 参考答案如下：
   # billing_facts = {
   #   primary_usage_unit             = "hourly_peak_managed_resources"
   #   plan_apply_count_is_main_unit  = false
@@ -39,24 +39,29 @@ locals {
   #   partial_hour_rounds_to_full    = true
   # }
   billing_facts = {
-    primary_usage_unit            = "number_of_cli_commands"
-    plan_apply_count_is_main_unit = true
-    repeated_change_counts_as_new = true
-    partial_hour_rounds_to_full   = false
+    primary_usage_unit            = "hourly_peak_managed_resources"
+    plan_apply_count_is_main_unit = false
+    repeated_change_counts_as_new = false
+    partial_hour_rounds_to_full   = true
   }
 
-  # TODO 3：为采购/架构场景选择正确方向。
-  # 答案级 Hint：可以直接参考下面整段：
+  # 已完成 3：为采购/架构场景选择正确方向。
+  # 参考答案如下：
   # scenario_answers = {
   #   learn_with_small_team       = "check_current_free_or_trial_options"
   #   need_audit_drift_validation = "check_standard_or_higher_current_matrix"
   #   need_air_gapped_install     = "terraform_enterprise"
   #   need_exact_monthly_budget   = "use_current_official_pricing_and_usage"
   # }
-  scenario_answers = {}
+  scenario_answers = {
+    learn_with_small_team       = "check_current_free_or_trial_options"
+    need_audit_drift_validation = "check_standard_or_higher_current_matrix"
+    need_air_gapped_install     = "terraform_enterprise"
+    need_exact_monthly_budget   = "use_current_official_pricing_and_usage"
+  }
 
-  # TODO 4：区分应记忆的原则与必须实时核对的信息。
-  # 答案级 Hint：完整答案如下：
+  # 已完成 4：区分应记忆的原则与必须实时核对的信息。
+  # 参考答案如下：
   # study_strategy = {
   #   memorize_billing_basis       = true
   #   memorize_saas_vs_self_hosted = true
@@ -65,11 +70,11 @@ locals {
   #   verify_current_free_limits   = true
   # }
   study_strategy = {
-    memorize_billing_basis       = false
-    memorize_saas_vs_self_hosted = false
-    memorize_fixed_usd_prices    = true
-    verify_current_plan_matrix   = false
-    verify_current_free_limits   = false
+    memorize_billing_basis       = true
+    memorize_saas_vs_self_hosted = true
+    memorize_fixed_usd_prices    = false
+    verify_current_plan_matrix   = true
+    verify_current_free_limits   = true
   }
 }
 
