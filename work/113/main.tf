@@ -3,36 +3,31 @@
 # - provider alias 让同一份配置可以同时观察这两个身份。
 # - data.aws_caller_identity 会返回当前 provider 实际使用的 account_id、arn 和 user_id。
 # - resource 中写 provider = aws.assumed，资源才会使用扮演后的身份创建。
-# - 真实跨账号场景还需要：目标 Role 的 trust policy 允许来源身份执行 sts:AssumeRole。
+# - 真实跨账号场景需要双向授权：
+#   1. A 账号身份的 IAM policy 允许对 B 账号目标 Role 执行 sts:AssumeRole。
+#   2. B 账号目标 Role 的 trust policy 信任 A 账号身份，允许它扮演该 Role。
+# - 本实验的 bootstrap 脚本会创建目标 Role 和 trust policy。
+# - LocalStack 使用测试基础身份，因此本实验没有单独创建 A 账号的 IAM policy。
 
-# TODO 1：分别读取基础 provider 和 assumed provider 的调用者身份。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# data "aws_caller_identity" "base" {}
-#
-# data "aws_caller_identity" "assumed" {
-#   provider = aws.assumed
-# }
+data "aws_caller_identity" "base" {}
 
-# TODO 2：明确使用 aws.assumed provider 创建 S3 bucket。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# resource "aws_s3_bucket" "assumed" {
-#   provider = aws.assumed
-#   bucket   = "tf-pro-lab-113"
-# }
+data "aws_caller_identity" "assumed" {
+  provider = aws.assumed
+}
 
-# TODO 3：输出身份对比和 bucket 名称，观察 AssumeRole 的结果。
-# Hint：可以直接参考下面这段，把注释去掉即可。
-#
-# output "identity_comparison" {
-#   value = {
-#     base_arn    = data.aws_caller_identity.base.arn
-#     assumed_arn = data.aws_caller_identity.assumed.arn
-#     changed     = data.aws_caller_identity.base.arn != data.aws_caller_identity.assumed.arn
-#   }
-# }
-#
-# output "bucket_name" {
-#   value = aws_s3_bucket.assumed.bucket
-# }
+resource "aws_s3_bucket" "assumed" {
+  provider = aws.assumed
+  bucket   = "tf-pro-lab-113"
+}
+
+output "identity_comparison" {
+  value = {
+    base_arn    = data.aws_caller_identity.base.arn
+    assumed_arn = data.aws_caller_identity.assumed.arn
+    changed     = data.aws_caller_identity.base.arn != data.aws_caller_identity.assumed.arn
+  }
+}
+
+output "bucket_name" {
+  value = aws_s3_bucket.assumed.bucket
+}
