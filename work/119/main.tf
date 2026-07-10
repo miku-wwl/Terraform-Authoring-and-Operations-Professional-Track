@@ -21,7 +21,8 @@ locals {
   # 答案级 Hint：直接用下面这行替换空列表：
   # object_hierarchy = ["user_account", "organization", "project", "workspace"]
   # 注意：user 可以加入多个 organization，因此这里表达的是学习路径，不是唯一所有权树。
-  object_hierarchy = []
+  object_hierarchy = ["user_account", "organization", "project", "workspace"]
+
 
   # TODO 2：判断“只完成注册”以后已经具备什么。
   # 答案级 Hint：完整答案如下：
@@ -33,11 +34,11 @@ locals {
   #   can_join_multiple_orgs    = true
   # }
   signup_facts = {
-    personal_identity_exists = false
-    remote_state_ready       = true
-    workspace_already_exists = true
-    cloud_credentials_ready  = true
-    can_join_multiple_orgs   = false
+    personal_identity_exists = true
+    remote_state_ready       = false
+    workspace_already_exists = false
+    cloud_credentials_ready  = false
+    can_join_multiple_orgs   = true
   }
 
   # TODO 3：排列从注册到可运行 workspace 的概念步骤。
@@ -50,7 +51,14 @@ locals {
   #   "create_project_or_use_default",
   #   "create_and_configure_workspace",
   # ]
-  onboarding_sequence = []
+  onboarding_sequence = [
+    "open_hcp_terraform",
+    "create_or_link_account",
+    "verify_identity",
+    "create_or_join_organization",
+    "create_project_or_use_default",
+    "create_and_configure_workspace",
+  ]
 
   # TODO 4：判断账号与 token 的安全做法。
   # 答案级 Hint：完整答案如下：
@@ -62,11 +70,11 @@ locals {
   #   redact_verification_links    = true
   # }
   security_practices = {
-    commit_password_to_git       = true
-    output_api_token             = true
-    use_short_token_expiration   = false
-    enable_strong_authentication = false
-    redact_verification_links    = false
+    commit_password_to_git       = false
+    output_api_token             = false
+    use_short_token_expiration   = true
+    enable_strong_authentication = true
+    redact_verification_links    = true
   }
 }
 
