@@ -34,11 +34,11 @@ locals {
   #   multiple_teams     = true
   # }
   membership_model = {
-    user_account   = "shared_department_login"
-    invitation     = "grant_owners_access"
-    team           = "terraform_provider"
-    permission     = "email_delivery_setting"
-    multiple_teams = false
+    user_account   = "individual_identity"
+    invitation     = "join_organization"
+    team           = "group_users_by_responsibility"
+    permission     = "authorize_actions_on_scopes"
+    multiple_teams = true
   }
 
   # TODO 2：判断 Owners Team 的能力和使用边界。
@@ -51,11 +51,11 @@ locals {
   #   membership_should_be_small  = true
   # }
   owners_judgements = {
-    maximum_organization_access = false
-    maximum_workspace_access    = false
-    default_for_all_users       = true
-    last_owner_can_leave        = true
-    membership_should_be_small  = false
+    maximum_organization_access = true
+    maximum_workspace_access    = true
+    default_for_all_users       = false
+    last_owner_can_leave        = false
+    membership_should_be_small  = true
   }
 
   # TODO 3：判断权限范围、叠加规则与最小权限。
@@ -69,12 +69,12 @@ locals {
   #   read_only_auditor_can_apply     = false
   # }
   permission_judgements = {
-    available_scopes              = "workspace_only"
-    multiple_grants_are_additive  = false
-    effective_access_uses_highest = false
-    low_role_revokes_high_role    = true
-    prefer_role_based_teams       = false
-    read_only_auditor_can_apply   = true
+    available_scopes              = "organization_project_workspace"
+    multiple_grants_are_additive  = true
+    effective_access_uses_highest = true
+    low_role_revokes_high_role    = false
+    prefer_role_based_teams       = true
+    read_only_auditor_can_apply   = false
   }
 
   # TODO 4：为企业成员管理场景选择正确做法。
@@ -87,11 +87,11 @@ locals {
   #   hcp_europe_membership     = "hcp_groups_and_roles"
   # }
   access_scenarios = {
-    app_developer_one_project     = "owners_team"
-    contractor_read_one_workspace = "shared_owner_account"
-    suspicious_excess_access      = "add_another_read_only_team"
-    automation_identity           = "personal_owner_token"
-    hcp_europe_membership         = "traditional_owners_team_only"
+    app_developer_one_project     = "developer_team_with_project_scope"
+    contractor_read_one_workspace = "read_only_team_with_workspace_scope"
+    suspicious_excess_access      = "review_all_team_and_scope_grants"
+    automation_identity           = "least_privilege_team_token"
+    hcp_europe_membership         = "hcp_groups_and_roles"
   }
 }
 
