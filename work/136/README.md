@@ -1,80 +1,134 @@
-# 第 136 节做题环境：aws_iam_policy_document 策略文档数据源
+# Lab 136：aws_iam_policy_document 策略文档数据源
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/136/` 中的参考实现。
+本实验使用 `aws_iam_policy_document` 生成 CloudWatch Logs 权限 JSON，再通过 Terraform AWS Provider 在 LocalStack IAM 中创建 customer managed policy。
 
-本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
+你会练到：
 
-## 知识点总结
-
-- `aws_iam_policy_document` 是数据源，用 HCL 结构生成 IAM policy JSON。
-- 生成的 `.json` 可以直接传给 `aws_iam_policy.policy`。
-- 这种写法比手写 JSON 更容易维护、组合和减少格式错误。
+- 用 HCL statement 构造 IAM JSON；
+- `effect` 默认值和策略语言 Version；
+- `.json` 如何流入 `aws_iam_policy.policy`；
+- Action 与 Resource 的权限语义；
+- `jsondecode` 如何进行稳定的策略测试；
+- data source 与 managed resource 的职责差异。
 
 ## 1. 启动 LocalStack
+
+本 Lab 只需要 IAM。Policy 中出现 Logs Action 不代表 Terraform 会调用 Logs API：
 
 ```powershell
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
-  -p 4510-4559:4510-4559 `
-  -e SERVICES=ec2,iam,sts,s3,autoscaling `
+  -e SERVICES=iam `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，先确认它是否还在运行：
+如果同名容器没有启用 IAM，先停止再重建：
 
 ```powershell
-docker ps --filter "name=localstack-tf-labs"
+docker stop localstack-tf-labs
 ```
 
-## 2. 进入实验目录
+## 2. 准备安全环境
+
+bootstrap 必须在当前 PowerShell 进程执行：
 
 ```powershell
-cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\136
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
-$env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-$env:TF_VAR_localstack_endpoint="http://localhost:4566"
+cd D:\workshop\Codex\Terraform-Authoring-and-Operations-Professional-Track\work\136
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+& .\scripts\bootstrap.ps1
+& .\scripts\check-sandbox.ps1
 ```
 
-## 3. 开始做题
+脚本强制使用 `test/test` 和 `http://localhost:4566`；Provider 只配置 IAM endpoint。
+
+## 3. 边学边练
+
+### TODO 1：生成 Policy Document
+
+阅读 `main.tf` 顶部总结，完成两条 statement 后运行：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform plan -input=false -no-color
+```
+
+此时 `aws_iam_policy_document` 负责本地生成 JSON。第一条省略 `effect`，最终结果仍应出现 `"Effect":"Allow"`。
+
+同时观察一个细节：HCL 写的是 `actions = ["..."]`，但单元素集合在最终 JSON 中可能显示为 `"Action":"..."`。这不是权限变化，只是 Provider 对等价 IAM JSON 的规范化。
+
+### TODO 2：创建 Managed Policy
+
+把：
+
+```hcl
+data.aws_iam_policy_document.read_logs.json
+```
+
+传给 `aws_iam_policy.read_logs.policy`。再次 plan，应看到 1 个待创建 IAM Policy，而不是 CloudWatch Logs 资源。
+
+### TODO 3：观察并测试语义
+
+输出 policy summary、解码后的 document 和原始 JSON，然后运行：
+
+```powershell
+terraform fmt -check
+terraform validate
+terraform test
+```
+
+预期：
+
+```text
+Success! 1 passed, 0 failed.
+```
+
+测试会创建并自动清理测试 Policy。
+
+## 4. Apply 与验证
+
+```powershell
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
-terraform destroy -auto-approve
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+& .\scripts\verify.ps1
 ```
 
-## 4. Terraform Sandbox / Linux 方式
+验证脚本按 JSON 语义检查两条 statement，不会依赖空格、换行或 key 顺序。
+
+## 5. Destroy 与清理
+
+```powershell
+terraform destroy -auto-approve
+& .\scripts\clean.ps1
+```
+
+## Linux / Sandbox
+
+必须 source bootstrap：
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
-export LOCALSTACK_ENDPOINT=http://localhost:4566
-export TF_VAR_localstack_endpoint=http://localhost:4566
-bash scripts/check-sandbox.sh
-bash scripts/bootstrap.sh
+cd work/136
+. ./scripts/bootstrap.sh
+sh scripts/check-sandbox.sh
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform test
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-bash scripts/verify.sh
+sh scripts/verify.sh
 terraform destroy -auto-approve
-bash scripts/clean.sh
+sh scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 能验证什么，不能验证什么
+
+本实验能确认 HCL block 合法、生成 JSON 结构正确、IAM Policy 能在 LocalStack 创建和销毁。它不能确认 Action 名称一定真实存在，也不能模拟 SCP、permission boundary、显式 Deny 或 IAM Access Analyzer 的全部判断。
+
+## 停止 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
