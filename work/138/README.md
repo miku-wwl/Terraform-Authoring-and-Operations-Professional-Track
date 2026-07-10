@@ -1,80 +1,124 @@
-# 第 138 节做题环境：IAM Role Policy Attachment
+# Lab 138：IAM Role Policy Attachment
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/138/` 中的参考实现。
+本实验使用 LocalStack IAM，实际创建 Lambda Role、customer managed policy 和它们之间的 attachment。
 
-本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
+你会练到：
 
-## 知识点总结
-
-- role 负责被服务扮演，policy 负责声明权限。
-- attachment 是独立资源，用来表达“这个 role 绑定了这个 policy”。
-- `role = aws_iam_role.lambda.name`，`policy_arn = aws_iam_policy.logs.arn` 是最常见写法。
+- trust policy 与 permissions policy 的不同职责；
+- `aws_iam_role_policy_attachment` 的两个参数；
+- Role name 与 Policy ARN 的类型边界；
+- resource reference、创建顺序和销毁顺序；
+- 单条 attachment 与独占附件管理的区别。
 
 ## 1. 启动 LocalStack
+
+本 Lab 只需要 IAM：
 
 ```powershell
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
-  -p 4510-4559:4510-4559 `
-  -e SERVICES=ec2,iam,sts,s3,autoscaling `
+  -e SERVICES=iam `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，先确认它是否还在运行：
+如果同名容器没有启用 IAM，先停止再重建。
+
+## 2. 准备安全环境
 
 ```powershell
-docker ps --filter "name=localstack-tf-labs"
+cd D:\workshop\Codex\Terraform-Authoring-and-Operations-Professional-Track\work\138
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+& .\scripts\bootstrap.ps1
+& .\scripts\check-sandbox.ps1
 ```
 
-## 2. 进入实验目录
+bootstrap 必须在当前进程执行。脚本强制使用 `test/test` 和 `http://localhost:4566`。
+
+## 3. 边学边练
+
+### 先理解 Starter
+
+`data.aws_iam_policy_document.lambda_trust` 和 `aws_iam_role.lambda` 已提供，这是对 Lab 137 的最小复习。先运行：
 
 ```powershell
-cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\138
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
-$env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-$env:TF_VAR_localstack_endpoint="http://localhost:4566"
-```
-
-## 3. 开始做题
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform plan -input=false -no-color
+```
+
+此时只有 Lambda Role，没有 permissions policy attachment。
+
+### TODO 1：创建 Managed Policy
+
+按答案级 Hint 创建 `aws_iam_policy.logs`。再次 plan 后，应同时看到 Role 和 Policy，但 Role 尚未获得该权限。
+
+这里使用 `jsonencode`，因此单元素 `Action` 和 `Resource` 会保留为 JSON array；不要套用 Lab 136 `aws_iam_policy_document` 的单元素规范化结果。
+
+### TODO 2：建立 Attachment
+
+引用 Role name 和 Policy ARN。运行：
+
+```powershell
+terraform graph
+terraform plan -input=false -no-color
+```
+
+计划最终应为 3 个资源；graph 应显示 Attachment 依赖 Role 与 Policy。
+
+### TODO 3：输出并测试关系
+
+```powershell
+terraform fmt -check
+terraform validate
+terraform test
+```
+
+预期：`Success! 1 passed, 0 failed.`
+
+## 4. Apply 与独立验证
+
+```powershell
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
-terraform destroy -auto-approve
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+& .\scripts\verify.ps1
 ```
 
-## 4. Terraform Sandbox / Linux 方式
+验证脚本会检查 attachment 两端、Lambda trust service 和 permissions policy 的 Action/Resource。
+
+## 5. Destroy 与清理
+
+```powershell
+terraform destroy -auto-approve
+& .\scripts\clean.ps1
+```
+
+观察 destroy：Attachment 应先解除，之后 Role 和 Policy 才能安全删除。
+
+## Linux / Sandbox
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
-export LOCALSTACK_ENDPOINT=http://localhost:4566
-export TF_VAR_localstack_endpoint=http://localhost:4566
-bash scripts/check-sandbox.sh
-bash scripts/bootstrap.sh
+cd work/138
+. ./scripts/bootstrap.sh
+sh scripts/check-sandbox.sh
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform test
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-bash scripts/verify.sh
+sh scripts/verify.sh
 terraform destroy -auto-approve
-bash scripts/clean.sh
+sh scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 实验边界
+
+Policy 里出现 CloudWatch Logs Action 只是权限文档内容，不会调用 Logs API。本实验也不运行 Lambda，因此只能验证 IAM attachment 闭环，不能证明真实 workload 已获得预期访问能力。
+
+## 停止 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs
