@@ -29,7 +29,13 @@ locals {
   #   "terraform_plan",
   #   "terraform_apply_if_approved",
   # ]
-  workflow_sequence = []
+  workflow_sequence = [
+    "configure_cloud_target",
+    "terraform_login",
+    "terraform_init",
+    "terraform_plan",
+    "terraform_apply_if_approved",
+  ]
 
   # TODO 2：为 cloud/login/init/plan 匹配职责。
   # 答案级 Hint：完整答案如下：
@@ -41,11 +47,11 @@ locals {
   #   terraform_apply = "start_remote_standard_run_for_non_vcs_workspace"
   # }
   step_responsibilities = {
-    cloud_block     = "authenticate_to_aws"
-    terraform_login = "select_workspace"
-    terraform_init  = "apply_infrastructure"
-    terraform_plan  = "create_local_state_only"
-    terraform_apply = "trigger_git_pull_request"
+    cloud_block     = "select_organization_and_workspace"
+    terraform_login = "authenticate_local_cli_to_hcp"
+    terraform_init  = "initialize_or_reconfigure_cloud_integration"
+    terraform_plan  = "start_remote_speculative_plan"
+    terraform_apply = "start_remote_standard_run_for_non_vcs_workspace"
   }
 
   # TODO 3：根据报错或变化选择优先检查项。
@@ -58,11 +64,11 @@ locals {
   #   no_remote_run_visible        = "execution_mode_and_workspace_run_history"
   # }
   troubleshooting_choices = {
-    missing_hcp_credentials      = "aws_provider_block"
-    wrong_remote_workspace       = "terraform_fmt"
-    cloud_block_recently_changed = "terraform_destroy"
-    remote_provider_auth_failed  = "local_laptop_aws_profile_only"
-    no_remote_run_visible        = "local_tfstate_file"
+    missing_hcp_credentials      = "terraform_login_or_cli_credentials"
+    wrong_remote_workspace       = "cloud_block_organization_and_workspace"
+    cloud_block_recently_changed = "rerun_terraform_init"
+    remote_provider_auth_failed  = "workspace_dynamic_provider_credentials"
+    no_remote_run_visible        = "execution_mode_and_workspace_run_history"
   }
 
   # TODO 4：判断凭据和远端执行证据的安全做法。
@@ -76,12 +82,12 @@ locals {
   #   local_aws_creds_auto_upload = false
   # }
   safety_and_evidence = {
-    commit_cli_credentials_file = true
-    put_token_in_tf_code        = true
-    prefer_short_token_expiry   = false
-    run_url_is_remote_evidence  = false
-    version_difference_required = true
-    local_aws_creds_auto_upload = true
+    commit_cli_credentials_file = false
+    put_token_in_tf_code        = false
+    prefer_short_token_expiry   = true
+    run_url_is_remote_evidence  = true
+    version_difference_required = false
+    local_aws_creds_auto_upload = false
   }
 }
 
