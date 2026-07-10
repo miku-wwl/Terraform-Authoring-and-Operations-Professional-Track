@@ -11,37 +11,45 @@
 # - HCP Terraform 还提供远程 state、敏感变量、权限控制、private registry 和审计历史等能力。
 #
 # 本 Lab 是概念与场景判断题，不连接 HCP Terraform，也不创建任何资源。
-# 你只需根据上面的知识点完成四个 locals。每个 TODO 都提供可直接替换的完整答案。
+# 四个 locals 练习均已完成，下面保留参考答案和相关知识点供复习。
 
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1：判断 HCP Terraform 的定位。
-  # 把下面四个 false 替换成正确答案。
-  # 答案级 Hint：完整答案如下：
+  # 已完成 1：判断 HCP Terraform 的定位。
+  # 参考答案如下：
   # platform_facts = {
   #   replaces_terraform_language      = false
   #   terraform_cli_still_useful       = true
+  #
+  #   Terraform CLI Workspace 知识点：
+  #   - CLI workspace 不切换代码，只切换当前配置使用的 state。
+  #   - 同一份代码可以通过不同 state 和变量分别管理 dev、test、prod 等多套资源。
+  #   - workspace 不会自动加载同名 tfvars；仍需显式使用 -var-file，或在代码中读取 terraform.workspace。
+  #   - 常用命令：terraform workspace list / show / new <name> / select <name> / delete <name>。
+  #   - terraform workspace select dev 之后，plan/apply 只会读取 dev workspace 对应的 state。
+  #   - CLI workspace 主要隔离 state；HCP workspace 还管理变量、远程运行、权限、审批和 run 历史。
+  #
   #   hcp_workspace_equals_cli_workspace = false
   #   vcs_connection_is_required       = false
   # }
   platform_facts = {
     replaces_terraform_language        = false
-    terraform_cli_still_useful         = false
-    hcp_workspace_equals_cli_workspace = true
-    vcs_connection_is_required         = true
+    terraform_cli_still_useful         = true
+    hcp_workspace_equals_cli_workspace = false
+    vcs_connection_is_required         = false
   }
 
-  # TODO 2：排列一个“启用了成本估算、强制策略、关闭 auto-apply”的典型 run。
-  # 答案级 Hint：直接用下面这行替换空列表：
+  # 已完成 2：排列一个“启用了成本估算、强制策略、关闭 auto-apply”的典型 run。
+  # 参考答案如下：
   # governed_run_phases = ["vcs_change", "plan", "cost_estimation", "policy_check", "manual_approval", "apply"]
   # 注意：这是本场景的完整流程；不同套餐、设置或 run 类型不一定包含全部阶段。
-  governed_run_phases = []
+  governed_run_phases = ["vcs_change", "plan", "cost_estimation", "policy_check", "manual_approval", "apply"]
 
-  # TODO 3：为团队问题选择最合适的 HCP Terraform 能力。
-  # 答案级 Hint：可以直接参考下面整段：
+  # 已完成 3：为团队问题选择最合适的 HCP Terraform 能力。
+  # 参考答案如下：
   # scenario_answers = {
   #   preserve_plan_apply_history = "run_history"
   #   share_and_version_state     = "remote_state"
@@ -50,10 +58,17 @@ locals {
   #   protect_variable_values     = "sensitive_variables"
   #   trigger_runs_from_commits   = "vcs_integration"
   # }
-  scenario_answers = {}
+  scenario_answers = {
+    preserve_plan_apply_history = "run_history"
+    share_and_version_state     = "remote_state"
+    block_untagged_resources    = "policy_enforcement"
+    share_internal_modules      = "private_registry"
+    protect_variable_values     = "sensitive_variables"
+    trigger_runs_from_commits   = "vcs_integration"
+  }
 
-  # TODO 4：判断失败策略与人工审批的影响。
-  # 答案级 Hint：完整答案如下：
+  # 已完成 4：判断失败策略与人工审批的影响。
+  # 参考答案如下：
   # run_decisions = {
   #   mandatory_policy_failed          = true
   #   failed_policy_blocks_apply       = true
@@ -61,10 +76,10 @@ locals {
   #   manual_confirmation_if_eligible  = true
   # }
   run_decisions = {
-    mandatory_policy_failed         = false
-    failed_policy_blocks_apply      = false
-    auto_apply                      = true
-    manual_confirmation_if_eligible = false
+    mandatory_policy_failed         = true
+    failed_policy_blocks_apply      = true
+    auto_apply                      = false
+    manual_confirmation_if_eligible = true
   }
 }
 
