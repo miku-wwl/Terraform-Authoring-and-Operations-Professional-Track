@@ -34,11 +34,11 @@ locals {
   #   runs_before_apply = true
   # }
   policy_model = {
-    sentinel          = "terraform_provider"
-    policy            = "workspace_state_backend"
-    policy_set        = "collection_of_variables"
-    primary_input     = "cloud_console_events_only"
-    runs_before_apply = false
+    sentinel          = "policy_as_code_framework"
+    policy            = "single_governance_rule"
+    policy_set        = "collection_and_scope_assignment"
+    primary_input     = "terraform_run_data"
+    runs_before_apply = true
   }
 
   # TODO 2：为三种 Sentinel enforcement level 选择正确行为。
@@ -50,10 +50,10 @@ locals {
   #   configured_in  = "policy_deployment"
   # }
   enforcement_choices = {
-    advisory       = "always_block_apply"
-    soft_mandatory = "ignore_failure"
-    hard_mandatory = "any_user_can_override"
-    configured_in  = "terraform_provider_block"
+    advisory       = "warn_and_continue"
+    soft_mandatory = "pause_until_authorized_override_or_discard"
+    hard_mandatory = "must_pass_and_cannot_be_overridden"
+    configured_in  = "policy_deployment"
   }
 
   # TODO 3：判断 Policy Set 的作用域、框架和交付方式。
@@ -67,12 +67,12 @@ locals {
   #   sentinel_always_requires_paid  = false
   # }
   policy_set_judgements = {
-    can_apply_globally             = false
-    can_target_projects_workspaces = false
-    can_target_workspace_tags      = false
-    one_framework_per_policy_set   = false
-    vcs_recommended_for_audit      = false
-    sentinel_always_requires_paid  = true
+    can_apply_globally             = true
+    can_target_projects_workspaces = true
+    can_target_workspace_tags      = true
+    one_framework_per_policy_set   = true
+    vcs_recommended_for_audit      = true
+    sentinel_always_requires_paid  = false
   }
 
   # TODO 4：根据运行阶段和治理边界判断处理方式。
@@ -85,11 +85,11 @@ locals {
   #   hard_mandatory_policy_failed    = "run_cannot_continue_to_apply"
   # }
   governance_scenarios = {
-    plan_failed_before_policy      = "run_policy_against_failed_plan"
-    missing_required_resource_tags = "terraform_fmt"
-    manual_cloud_console_resource  = "sentinel_automatically_deletes_it"
-    advisory_policy_failed         = "run_is_permanently_blocked"
-    hard_mandatory_policy_failed   = "let_workspace_admin_override"
+    plan_failed_before_policy      = "policy_check_does_not_run"
+    missing_required_resource_tags = "sentinel_pre_apply_policy"
+    manual_cloud_console_resource  = "cloud_side_compliance_control"
+    advisory_policy_failed         = "run_continues_with_warning"
+    hard_mandatory_policy_failed   = "run_cannot_continue_to_apply"
   }
 }
 
