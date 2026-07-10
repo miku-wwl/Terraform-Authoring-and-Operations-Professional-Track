@@ -1,76 +1,105 @@
-# Terraform 实操训练 129：HCP Terraform Team 与 Workspace Permission 建模
+# Terraform 实操训练 129：HCP Terraform Workspace Permissions
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/129` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 本地数据建模练习。
+Workspace role 是一组预先组合好的权限，能力逐级增加：
 
-这个 lab 对应 HCP Terraform 中的权限管理概念：organization 默认存在 `owners` team，owners 拥有非常高的组织级权限；新用户不应该随便加入 owners，而应该加入 developers、security 等更小权限的 team。team 可以在 project、workspace、private registry 等层面获得不同权限。workspace 级别还可以细分 run 权限、variable 权限、state 权限、Sentinel mocks、run tasks 等控制项。
+```text
+Read
+  └─ Plan
+       └─ Write
+            └─ Admin
 
-为了避免真实 HCP Terraform 账号和付费功能依赖，本 lab 使用 `data/permissions.json` 模拟 HCP Terraform 的 team、workspace access 和 invitation 配置。
+Custom：按任务单独组合非 Admin-only 权限
+```
 
-## 2. 核心主题
+本 Lab 只考授权含义。你不需要连接 HCP Terraform、创建真实 Team Access，或用 JSON 模拟权限对象。
 
-- HCP Terraform `owners` team 拥有最高权限，应谨慎使用。
-- 新用户应按职责加入最小权限 team，例如 developers 或 security。
-- Team permission 可以出现在 organization、project、workspace、private registry 等层面。
-- Workspace access 支持 `read`、`plan`、`write`、`admin`、`custom` 等权限级别。
-- Custom workspace permission 可以细化 run、variables、state、Sentinel mocks、run tasks 等权限。
-- 用 `jsondecode(file(...))` 读取权限 mock 数据。
-- 用 `for` 表达式、过滤条件、map 构造和排序完成权限信息整理。
+## 阶段 1：选择 Workspace Role
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1。
 
-请在 `main.tf` 中完成十个 TODO：
+| 角色 | 典型职责 |
+|---|---|
+| Read | 查看 runs、variables 和 state |
+| Plan | 发起 plan，但不能 apply |
+| Write | 日常 plan/apply 和 variables/state 维护 |
+| Admin | 管理 workspace 设置、Team Access 和删除 workspace |
+| Custom | 只组合某个任务真正需要的细粒度权限 |
 
-1. 用 `jsondecode(file("${path.module}/data/permissions.json"))` 读取并解析 JSON。
-2. 从解析后的对象中读取 `organization`。
-3. 从解析后的对象中读取 `teams` list。
-4. 构造 `teams_by_name` map，key 使用 team name。
-5. 找出拥有 full organization access 的 owner team。
-6. 生成适合新普通用户加入的 safe invite team name list，排除 `owners`。
-7. 从解析后的对象中读取 `workspaces` list，并构造 `workspaces_by_name` map。
-8. 选中 `dev-web-app` workspace。
-9. 构造该 workspace 的 `workspace_access_by_team` map。
-10. 读取 developers 的 custom workspace permission、生成权限标签，并把 pending invitation 整理成 email => team map。
+注意：内置 Read role 包含完整 state read。如果审计员只需看 run history、不应读完整 state，应使用 Custom role，而不是看到“只读”二字就直接选择 Read。
 
-完成后运行 `README.md` 中的命令。
+## 阶段 2：Run 与管理权限
 
-## 4. 验收方式
+完成 TODO 2。
 
-基础检查：
+- Read：可以读 runs，不能 plan/apply。
+- Plan：可以读和发起 plan，不能 apply。
+- Write：可以 plan/apply，但不能修改 workspace settings 或 Team Access。
+- Admin：包含所有 workspace permissions，以及 Admin-only 管理能力。
 
-```sh
-terraform init -input=false
+“能提出变更”和“能批准执行变更”应在生产环境中有意识地分离。
+
+## 阶段 3：State 权限
+
+完成 TODO 3。
+
+| State 权限 | 能力 |
+|---|---|
+| No access | 不访问 state |
+| Read outputs only | 读取显式公开的 root outputs |
+| Read | 下载完整 state，并隐含 outputs-only |
+| Read and write | 读取并创建 state versions |
+
+`read and write` 还用于 Local execution mode，以及 `terraform import`、`terraform taint`、`terraform state` 等 state 维护命令。
+
+完整 state 可能包含资源属性和敏感数据。因此“只需要 subnet ID”通常应考虑 outputs-only，而不是完整 state read。
+
+## 阶段 4：Custom 与敏感权限
+
+完成 TODO 4。
+
+Custom role 可以细分：
+
+- Read/plan/apply runs；
+- Variable no access/read/read-write；
+- State no access/outputs-only/read/read-write；
+- Download Sentinel mocks；
+- Lock/unlock workspace；
+- Manage Workspace Run Tasks。
+
+Custom 不能授予修改 workspace settings、管理 Team Access 或删除 workspace等 Admin-only 权限。
+
+Sentinel mocks 可能包含未脱敏数据；Run Tasks 会把 run 信息发送给外部服务。这些都不是普通“只读”功能，应限制给可信人员和集成。
+
+## 一个重要安全边界
+
+限制用户通过 UI/API 下载 state，并不等于他绝对无法让 Terraform 读取 state。能够上传恶意配置并发起 run 的用户，可能通过 Terraform 执行间接接触 workspace state。因此设计权限时要同时考虑 configuration upload、run 和 state 能力，而不能只看一个复选框。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `organization_name` 输出 `example-kplabs-org`。
-- `owner_team_names` 只包含 `owners`。
-- `safe_invite_team_names` 包含 `developers` 和 `security`，不包含 `owners`。
-- `developer_workspace_access_level` 输出 `custom`。
-- `developer_permission_labels` 能体现 read/plan/apply、variables write、state outputs-only、run tasks read 等细粒度权限。
-- `invite_team_assignments` 能把 pending invitation 解析为 email 到 team 的映射。
+1. Plan role 能否 apply？
+2. Write 与 Admin 的核心差别是什么？
+3. Read role 是否只允许读取 outputs？
+4. 审计员只看 runs、不看完整 state 时为什么需要 Custom？
+5. 为什么 Sentinel mock download 是敏感权限？
 
-## 6. 约束
+## 官方参考
 
-- 不要连接真实 HCP Terraform。
-- 不要硬编码最终输出绕过 `jsondecode()` 和 `for` 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- safe invite team 必须从 JSON team 数据中过滤得出，不能包含 `owners`。
-- workspace access 必须从 `dev-web-app.team_access` 中筛选/映射得出。
-- developer custom permission 必须从 developers team 的 workspace access 中读取。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Workspace roles and permissions](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/permissions/workspace)
+- [Permission model and effective permissions](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/permissions)
+- [HCP Terraform security model](https://developer.hashicorp.com/terraform/cloud-docs/architectural-details/security-model)

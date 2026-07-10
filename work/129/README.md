@@ -1,21 +1,30 @@
-# 第 129 节做题环境
+# Lab 129：HCP Terraform Workspace Permissions
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 `practice/` 下的参考实现或讲义文件。
+本节只学习 Read、Plan、Write、Admin、Custom workspace 权限，以及 runs、variables、state 和敏感数据边界，不连接真实 HCP Terraform，也不做 JSON 数据处理题。
 
-本 lab 使用本地 JSON mock 数据模拟 HCP Terraform organization、team、workspace access、workspace variables/state 权限和邀请用户加入 team 的流程。你不需要 HCP Terraform 账号，也不需要付费 tier。
+请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成。每个 TODO 都提供完整答案级 Hint。
 
-## 本地执行
+学习路径：
+
+1. 根据职责选择预设角色或 Custom role。
+2. 判断 Read、Plan、Write、Admin 的关键能力。
+3. 区分 outputs-only、完整 state 和 state write。
+4. 处理审计、Sensitive variables、Sentinel mocks 和 Run Tasks 权限。
+
+每完成一段，可以运行：
 
 ```powershell
 cd work/129
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+全部完成后验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
+本 Lab 没有资源，不需要执行 `apply` 或 `destroy`。

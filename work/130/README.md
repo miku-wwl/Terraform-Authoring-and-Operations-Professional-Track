@@ -1,38 +1,30 @@
-# 第 130 节做题环境
+# Lab 130：HCP Terraform Health Assessments
 
-这是你的上机做题目录。请编辑当前目录下的文件，不要修改 `tests/` 下的测试文件。
+本节只学习 Drift Detection、Continuous Validation、check block、评估条件与 drift 响应，不连接真实 HCP Terraform，也不执行 HTTP 或定时脚本。
 
-本节练习的目标是理解 HCP Terraform Health Assessments：它可以在 workspace 里做自动健康评估，核心包括 drift detection 和 continuous validation。由于该能力不是免费基础层可用的能力，本 lab 不会真的连接 HCP Terraform，也不会要求你开通付费 tier；你只需要完成静态说明、check block 示例和替代自动化命令。
+请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成。每个 TODO 都提供完整答案级 Hint。
 
-## 本地执行
+学习路径：
+
+1. 根据场景区分 Drift Detection 与 Continuous Validation。
+2. 判断 Health Assessment 是否会修改基础设施或自动修复。
+3. 理解 check/precondition/postcondition 的持续验证边界。
+4. 判断 workspace 条件、权限和 drift 处理方式。
+
+每完成一段，可以运行：
 
 ```powershell
 cd work/130
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+全部完成后验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
-
-## 目录说明
-
-```text
-130/
-├── main.tf                                      # 测试辅助代码：读取 hcp/、examples/、commands/ 下的文件并输出检查结果
-├── hcp/
-│   └── health_assessments.md                    # 需要你补全的 HCP Terraform Health Assessments 说明
-├── examples/
-│   └── continuous_validation_check.tf           # 需要你补全的 Terraform check block 示例
-├── commands/
-│   └── health_assessment_alternatives.sh        # 需要你补全的自定义 drift/check 自动化命令
-└── tests/
-    └── health_assessments.tftest.hcl
-```
-
-> 注意：本 lab 不会真的调用 HCP Terraform Health Assessments。根目录 `main.tf` 只做静态文本检查，用来练习 exam 视角下的关键概念。
+本 Lab 没有资源，不需要执行 `apply` 或 `destroy`。

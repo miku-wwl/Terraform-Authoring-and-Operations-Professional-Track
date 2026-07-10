@@ -1,79 +1,117 @@
 # Terraform 实操训练 131：迁移 Local State 到 HCP Terraform
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/131` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform state migration 的概念建模练习。
+State migration 只是改变 state 的可信存储位置：
 
-这一节的重点是理解：当项目一开始使用本地 `terraform.tfstate`，后续要迁移到 HCP Terraform workspace 时，需要先准备 cloud integration，再完成认证，然后通过 `terraform init` 触发 state migration。HCP Terraform 会把 state 存在 workspace 中，保留 historical state version，便于团队协作、审计变更和必要时回滚。
+```text
+Local terraform.tfstate
+        │
+        │ terraform init 迁移
+        ▼
+HCP Terraform Workspace State
 
-为了避免真实 HCP token、真实 workspace 和外部 provider 依赖，本 lab 使用 `data/state_migration.json` 模拟迁移场景。你需要用 Terraform 表达式读取 mock 数据，生成 cloud block 片段、迁移命令、版本处理策略、state 迁移契约和备份要求。
+真实云资源：保持原样，不应重建
+```
 
-## 2. 核心主题
+本 Lab 只考迁移概念，不连接 HCP Terraform，也不操作任何真实 state。
 
-- Local state：初始 state 存在当前工作目录的 `terraform.tfstate`。
-- HCP Terraform remote state：state 迁移后存储在 HCP Terraform workspace。
-- Cloud block：`terraform { cloud { organization = ... workspaces { name = ... } } }`。
-- `terraform login`：迁移前需要 CLI 完成 HCP Terraform 认证。
-- `terraform init`：加入 cloud block 后，init 会提示是否迁移现有 state。
-- `-ignore-remote-version`：本地 Terraform 版本和 remote workspace 版本不一致且确认兼容时使用。
-- `-migrate-state`：自动化/CI 场景下避免交互确认，直接迁移 state。
-- State safety：迁移前额外备份 `terraform.tfstate`，不能只依赖自动生成的 backup。
+## 阶段 1：迁移前准备
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1。
 
-请在 `main.tf` 中完成十个 TODO：
+生产迁移前应完成：
 
-1. 用 `jsondecode(file("${path.module}/data/state_migration.json"))` 读取并解析 mock 数据。
-2. 从解析后的对象中读取 `migration`。
-3. 读取 migration 中的 `commands` list。
-4. 生成按顺序排列的 command name list。
-5. 构造 cloud target map，包含 `organization`、`workspace` 和 `state_workspace_specific`。
-6. 渲染 cloud block HCL 字符串，展示迁移前需要加入本地配置的 cloud block。
-7. 构造 migration commands map，包含 interactive 和 automated 两种迁移命令。
-8. 构造 version strategy，判断本地版本和 remote workspace 版本是否不一致，以及是否可以使用 `-ignore-remote-version`。
-9. 构造 state migration contract，表达迁移前后 state 位置、历史版本、回滚能力、备份要求、迁移后本地 state 文件状态。
-10. 构造 migration prompt object，表达 `terraform init` 期间出现的迁移确认问题和答案。
+1. 暂停 CI 和所有可能写入该 state 的 Terraform 操作。
+2. 通知相关团队进入迁移窗口。
+3. 制作独立 state 备份并安全保存。
+4. 记录 Terraform CLI 和 provider versions。
+5. 确认目标 organization、workspace 和权限。
+6. 如果目标 workspace 已存在，确认它没有 state 和已管理资源。
 
-完成后运行 `README.md` 中的命令。
+State 可能包含密码、连接字符串和资源属性，所以备份不能提交 Git 或放入公开 artifact。
 
-## 4. 验收方式
+## 阶段 2：三个组件的职责
 
-基础检查：
+完成 TODO 2。
 
-```sh
-terraform init -input=false
+- `cloud` block：选择 HCP hostname、organization 和 workspace。
+- `terraform login`：让本地 CLI 获得访问 HCP Terraform 的 token。
+- `terraform init`：重新初始化 backend/cloud integration，并在发现已有 state 时提出迁移。
+
+推荐顺序：
+
+```text
+冻结写入 → 备份 → 添加 cloud block → terraform login
+→ terraform init 并确认迁移 → 验证远端 state 和 plan
+```
+
+迁移 state 不会主动销毁或重建资源。如果迁移后的 plan 显示大规模重建，应停止并调查 target、state 和 provider/configuration 是否一致。
+
+## 阶段 3：Init 参数陷阱
+
+完成 TODO 3。
+
+| 方式 | 行为 |
+|---|---|
+| `terraform init` | 检测变化并交互式询问是否迁移 |
+| `terraform init -migrate-state` | 尝试复制 state，但某些情况仍会询问确认 |
+| `terraform init -force-copy` | 自动回答 yes，并隐含 `-migrate-state` |
+| `terraform init -reconfigure` | 忽略旧 backend 记录，不迁移已有 state |
+
+因此旧讲义里“`-migrate-state` 就能保证 CI 无交互”的说法不准确。真正抑制迁移确认的是 `-force-copy`，但它也更危险：目标配置错误时会自动复制，所以必须先做审批和校验。
+
+## 阶段 4：迁移后验证
+
+完成 TODO 4。
+
+迁移成功提示出现后仍应检查：
+
+1. HCP Terraform States 页面能看到迁移的 resources 和 state version。
+2. `terraform plan` 不应提议意外创建或销毁资源。
+3. Workspace variables、environment variables 和 provider authentication 已单独配置。
+4. HCP Terraform workspace 的 Terraform version 与本地/迁移版本兼容。
+5. 团队权限、state access 和执行模式符合设计。
+
+State migration 不会自动搬运本地 shell credentials、`.tfvars` 或环境变量。
+
+## 关于 `-ignore-remote-version`
+
+该参数用于某些会在本地修改并推送 remote state 的命令。它绕过保护检查，可能生成远端执行版本无法读取的新 state snapshot。
+
+正确顺序是：
+
+1. 优先让 local 和 remote Terraform version 兼容。
+2. 查明不一致原因并备份 state。
+3. 只有绝对必要、确认兼容并有恢复方案时才使用 `-ignore-remote-version`。
+
+它不是普通迁移命令的默认参数。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output command_names` 显示本地 apply、添加 cloud block、login、interactive init、automated init 的顺序。
-- `terraform output cloud_target` 显示组织名、workspace 名，并确认 state 是 workspace-specific。
-- `terraform output cloud_block_hcl` 显示可复制到 Terraform 配置中的 cloud block 片段。
-- `terraform output migration_commands` 显示交互式迁移命令和自动化迁移命令。
-- `terraform output version_strategy` 显示版本不一致时的处理逻辑。
-- `terraform output state_migration_contract` 显示 state 从 local 迁移到 HCP Terraform workspace 的安全契约。
-- `terraform output backup_files` 显示迁移前建议保留的备份文件。
-- `terraform output migration_prompt` 显示 init 迁移确认提示。
+1. 迁移 state 前为什么必须暂停 CI？
+2. `cloud`、`login`、`init` 各自负责什么？
+3. `-migrate-state` 是否保证完全无交互？
+4. `-force-copy` 和 `-reconfigure` 有什么风险？
+5. 迁移后 plan 显示资源全部重建时应该继续吗？
 
-## 6. 约束
+## 官方参考
 
-- 不要硬编码输出绕过 `jsondecode()` 和 Terraform 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 不要把真实 HCP Terraform token 写入任何文件。
-- 不要在本 lab 中添加真实 `terraform { cloud { ... } }` block，否则会要求真实 HCP 登录和 workspace。
-- 不要引入 `random`、`aws`、`time` 或其他外部 provider；本 lab 必须可离线初始化和测试。
-- 迁移前必须表达额外备份 state 的要求，不要只依赖 `terraform.tfstate.backup`。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Migrate state to HCP Terraform](https://developer.hashicorp.com/terraform/tutorials/cloud/cloud-migrate)
+- [Connect the CLI and migrate state](https://developer.hashicorp.com/terraform/cli/cloud/settings)
+- [terraform init command](https://developer.hashicorp.com/terraform/cli/commands/init)
+- [-ignore-remote-version](https://developer.hashicorp.com/terraform/cli/cloud/command-line-arguments)

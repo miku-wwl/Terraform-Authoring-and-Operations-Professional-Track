@@ -1,125 +1,112 @@
-# Terraform 实操训练 130：HCP Terraform Health Assessments 基础
+# Terraform 实操训练 130：HCP Terraform Health Assessments
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/130` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform Health Assessments 的概念整理练习。
+Health Assessments 周期性回答两个不同问题：
 
-HCP Terraform 的 Health Assessments 可以在 workspace 里做自动健康评估，目标是判断真实基础设施和 Terraform 期望状态、以及持续健康条件是否仍然一致。这个能力在企业环境很有用，但不是免费基础层的完整可测能力，所以本节用静态文件练习核心概念。
+```text
+真实资源是否仍符合 Terraform configuration？
+  └─ Drift Detection
 
-## 2. 核心主题
+部署后的自定义健康条件是否仍成立？
+  └─ Continuous Validation
+```
 
-- Health Assessments：workspace 级别的自动健康评估。
-- Drift detection：判断真实基础设施是否仍然匹配 Terraform configuration。
-- Configuration drift：常见原因是有人在云控制台手工修改资源。
-- Continuous validation：资源 provision 之后，持续检查自定义条件是否仍然通过。
-- Terraform `check` block：CLI 免费版本也可以表达类似健康检查逻辑，例如 HTTP status code 是否为 `200`。
-- 版本层级限制：Health Assessments 不是 Essentials/free 基础能力，通常需要 Standard / Premium / Enterprise 等付费层级。
-- 替代思路：自建 `terraform plan -detailed-exitcode` drift check，配合 `terraform test`、cron 和 Slack 告警。
+本 Lab 只考平台概念。你不需要连接 HCP Terraform、创建真实资源、请求网站或编写 cron 脚本。
 
-## 3. 任务目标
+## 阶段 1：两类 Health Assessment
 
-请完成下面十个 TODO：
+完成 `main.tf` 的 TODO 1。
 
-1. 在 `hcp/health_assessments.md` 的 Feature purpose 中写入：
+| 场景 | 类型 |
+|---|---|
+| 控制台手工增加安全组规则 | Drift Detection |
+| Bucket 设置偏离 Terraform configuration | Drift Detection |
+| 网站不再返回 HTTP 200 | Continuous Validation |
+| 证书过期 | Continuous Validation |
 
-   ```text
-   HCP Terraform health assessments evaluate whether real infrastructure matches Terraform configuration.
-   ```
+当前官方文档还区分 configuration drift 与 state drift。Health Drift Detection 检测的是使真实资源不再符合 configuration 的偏离，不应把所有 state 差异都笼统归入它。
 
-2. 在 Drift detection 中写入：
+## 阶段 2：检测不等于修复
 
-   ```text
-   Drift detection determines whether real infrastructure matches Terraform configuration.
-   ```
+完成 TODO 2。
 
-3. 在 Drift detection 中补充常见原因：
+Health Assessments 是周期性、非 actionable 的评估。它可以显示健康状态并触发通知，但不会：
 
-   ```text
-   Manual changes can cause configuration drift.
-   ```
+- 自动修改云资源；
+- 自动更新 Terraform state；
+- 自动改写 Terraform configuration；
+- 为团队决定哪一边才是正确状态。
 
-4. 在 Continuous validation 中写入：
+评估不会打断正常 workspace run。如果新 run 在评估期间开始，当前评估会取消并在后续周期重新安排。
 
-   ```text
-   Continuous validation checks whether custom conditions continue to pass after Terraform provisions the resource.
-   ```
+## 阶段 3：Continuous Validation
 
-5. 在 Tier availability 中写入：
+完成 TODO 3。
 
-   ```text
-   Health assessments are available in Standard and Premium tiers, and are not available in Essentials.
-   ```
+Continuous Validation 会定期重新评估：
 
-6. 在 `examples/continuous_validation_check.tf` 中补全 HTTP data source：
+- `check` blocks；
+- resource/data source/output 的 preconditions；
+- postconditions。
 
-   ```hcl
-   data "http" "website" {
-     url = "https://example.com"
-   }
-   ```
+HashiCorp 推荐使用 `check` block 做 post-apply monitoring。普通 Terraform plan/apply 中，check assertion 失败产生 warning，但不会阻断当前操作；HCP Health Assessment 会把失败记录为健康问题并可触发通知。
 
-7. 在同一个文件中补全 check block 名称：
+## 阶段 4：条件、权限与处理
 
-   ```hcl
-   check "website_health" {
-   ```
+完成 TODO 4。
 
-8. 在 assert condition 中检查 HTTP 状态码：
+符合评估条件的 workspace 需要：
 
-   ```hcl
-   condition = data.http.website.status_code == 200
-   ```
+- Remote 或 Agent execution mode；
+- 至少一次成功 apply；
+- 最新 run 成功；
+- Drift Detection 使用 Terraform 0.15.4+；
+- Continuous Validation 使用 Terraform 1.3.0+。
 
-9. 在 error message 中写入：
+最新 run errored、canceled 或 discarded 时，Health Assessments 会暂停，直到再次出现成功 run。
 
-   ```hcl
-   error_message = "Website returned an unhealthy status code."
-   ```
+权限边界：
 
-10. 在 `commands/health_assessment_alternatives.sh` 中补全替代自动化命令和说明：
+- 查看 health status：workspace read；
+- 修改 workspace Health 设置：workspace admin；
+- 触发 on-demand assessment：workspace admin；
+- 强制 organization 范围启用：organization owner。
 
-    ```sh
-    terraform plan -detailed-exitcode
-    terraform test
-    # Run this from cron every 3 minutes and send failed results to Slack.
-    ```
+## 两种 Drift 响应
 
-完成后运行 `README.md` 中的命令。
+发现 drift 后不能机械地“永远以某一边为准”：
 
-## 4. 验收方式
+1. 外部修改不应保留：执行 plan/apply，让真实资源恢复到 configuration。
+2. 外部修改已经被认可：先把修改写进 Terraform configuration，再运行 Terraform，让代码重新成为 source of truth。
 
-基础检查：
+直接忽略 drift 或手工编辑 state 通常都不是正确的常规处理方式。
 
-```sh
-terraform init -input=false
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `output.health_assessments_summary_is_complete` 为 `true`。
-- `output.drift_detection_is_described` 为 `true`。
-- `output.continuous_validation_is_described` 为 `true`。
-- `output.tier_limitation_is_documented` 为 `true`。
-- `output.check_block_example_is_present` 为 `true`。
-- `output.alternative_workflow_is_documented` 为 `true`。
+1. 控制台手工修改资源属于哪类 assessment？
+2. 网站返回 500 属于 drift 还是 validation failure？
+3. Health Assessment 会自动修复资源或更新 state 吗？
+4. `check` 失败是否会阻断普通 Terraform apply？
+5. 团队决定接受 drift 时应修改 infrastructure、state 还是 configuration？
 
-## 6. 约束
+## 官方参考
 
-- 不要修改 `tests/` 下的测试文件。
-- 不要把 `examples/continuous_validation_check.tf` 移到根目录；否则 Terraform 会尝试加载 HTTP provider。
-- 本 lab 不要求真实连接 HCP Terraform，也不要求启用付费功能。
-- `check` block 示例必须保留为静态示例文件。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [HCP Terraform Health Assessments](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/health)
+- [Detect infrastructure drift](https://developer.hashicorp.com/terraform/tutorials/cloud/drift-detection)
+- [Terraform check block](https://developer.hashicorp.com/terraform/language/block/check)
+- [Workspace health notifications](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/settings/notifications)

@@ -1,81 +1,107 @@
-# Terraform 实操训练 127：HCP Terraform Run Triggers 与远程输出依赖
+# Terraform 实操训练 127：Run Triggers 与 Workspace 输出依赖
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/127` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform run triggers 的建模练习。
+两个 workspace 之间的依赖包含两条不同通道：
 
-这节课的核心场景是：
+```text
+Source / Upstream workspace
+  ├─ Root outputs ────────► Target / Downstream 读取数据
+  │
+  └─ Successful apply ───► Run Trigger 排队下游 run
+```
 
-- `network-project` workspace 发布组织的公网 IP 列表。
-- `security-project` workspace 需要读取这些公网 IP，并生成防火墙白名单规则。
-- 如果 network workspace 的输出变化，security workspace 应该自动排队运行。
-- HCP Terraform 中这个自动化关系可以通过 run triggers 配置。
-- 为了让下游 workspace 读取上游输出，上游 workspace 还需要配置 remote state sharing。
+输出访问回答“下游读取什么”，Run Trigger 回答“下游何时重新评估”。只有其中一条通道，依赖关系都可能不完整。
 
-本 lab 用 `data/hcp_workspaces.json` 模拟这些配置，不要求真实 HCP Terraform 账号。
+## 阶段 1：数据与触发分离
 
-## 2. 核心主题
+完成 `main.tf` 的 TODO 1。
 
-- HCP Terraform organization：多个 workspace 的协作边界与计费边界。
-- Workspace：一组 Terraform 配置、state、variables、secrets 的运行单元。
-- Remote state sharing：允许指定 workspace 读取当前 workspace 的输出。
-- Run triggers：当 source workspace 更新后，自动触发 dependent workspace 的 run。
-- `terraform_remote_state` 与 `tfe_outputs` 思路差异：生产中更推荐只读取输出而不是暴露完整 state。
-- 用 Terraform expression 建模 workspace 之间的依赖关系。
+- `terraform_remote_state` 或 `tfe_outputs`：读取上游 root outputs。
+- Run Trigger：上游成功 apply 后，给下游排队一个新 run。
+- Source：产生输出并完成 apply 的上游 workspace。
+- Target/Dependent：读取输出、被排队运行的下游 workspace。
 
-## 3. 任务目标
+仅读取输出不会自动产生下游 run；仅配置 trigger 也不会自动赋予读取上游 state/output 的权限。
 
-请在 `main.tf` 中完成八个 TODO：
+## 阶段 2：触发条件与 Auto Apply
 
-1. 用 `jsondecode(file("${path.module}/data/hcp_workspaces.json"))` 读取并解析 mock 数据。
-2. 把 workspace list 转换成以 workspace name 为 key 的 map。
-3. 从 map 中取出 `network-project` 和 `security-project` 两个 workspace。
-4. 从 network workspace 的 outputs 中读取 `public_ips`。
-5. 判断 network workspace 是否把 remote state 分享给 security workspace。
-6. 判断 security workspace 是否配置了来自 network workspace 的 run trigger。
-7. 生成 run trigger 摘要对象，包含 source、target、auto_apply、output_name、datasource。
-8. 基于 network public IPs 生成防火墙白名单标签，例如 `allow:8.8.8.8`。
+完成 TODO 2。
 
-完成后运行 `README.md` 中的命令。
+Run Trigger 的触发条件是 source workspace **成功完成 apply**：
 
-## 4. 验收方式
+| Source 结果 | 是否触发下游 |
+|---|---|
+| Speculative plan | 否 |
+| Plan/apply 失败 | 否 |
+| Apply 成功 | 是，排队一个 run |
 
-基础检查：
+“自动排队 run”不等于“自动 apply”。由 Run Trigger 创建的下游 run 默认仍需要确认；若团队确实需要，可以单独启用针对 Run Trigger 的 auto-apply 设置。
 
-```sh
-terraform init -input=false
+## 阶段 3：State Sharing 与权限
+
+完成 TODO 3。
+
+新 workspace 默认不允许其他 workspace 读取其 state。可以分享给整个 organization、同一 project 或指定 workspaces，但生产环境应遵循最小权限，优先只授权必要的消费者。
+
+创建 Run Trigger 时，需要：
+
+- 对下游 target workspace 具有 admin access；
+- 对上游 source workspace 具有读取 runs 的权限。
+
+这再次说明 Run Trigger 与 state access 是两套独立权限。
+
+## 阶段 4：依赖场景判断
+
+完成 TODO 4。
+
+典型网络依赖：
+
+1. `network` workspace 输出 subnet IDs。
+2. `application` workspace 获得读取这些 outputs 的权限。
+3. 在 `application` 上建立来自 `network` 的 inbound Run Trigger。
+4. `network` 成功 apply 后，`application` 自动排队 run 并重新读取 outputs。
+
+在 API/UI 术语中：target 上看到的是 inbound trigger，source 上看到的是 outbound trigger。
+
+Run Trigger 只观察 HCP Terraform 的成功 apply。有人直接在云控制台修改资源时，需要 drift detection、scheduled runs、provider data source 或云侧审计等机制，而不是期待 Run Trigger 自动响应。
+
+## 为什么不合并成巨大 Workspace
+
+为了避免依赖而把网络、安全、数据库和应用全部放入一个 workspace，通常会带来：
+
+- 更大的 blast radius；
+- 更长、更嘈杂的 plan；
+- 团队权限和责任边界模糊；
+- 任一变更都锁住同一个 state/run queue。
+
+合理拆分 workspace，再明确输出接口和触发方向，通常更容易治理。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output organization` 显示 `kp-labs-org`。
-- `terraform output workspaces_by_name` 显示两个 workspace：`network-project` 和 `security-project`。
-- `terraform output network_public_ips` 显示三个公网 IP。
-- `terraform output network_shares_state_with_security` 为 `true`。
-- `terraform output security_has_run_trigger_from_network` 为 `true`。
-- `terraform output run_trigger_summary` 显示 security workspace 依赖 network workspace。
-- `terraform output firewall_allowlist_rules` 显示三个 `allow:<ip>` 标签。
+1. Remote outputs 与 Run Trigger 分别解决什么问题？
+2. Source workspace 只有 plan 成功但没有 apply，会触发下游吗？
+3. 下游 run 被自动排队，是否等于一定自动 apply？
+4. 配置 Run Trigger 是否自动授予 remote state 读取权？
+5. Inbound 和 outbound trigger 分别从哪个 workspace 观察？
 
-## 6. 约束
+## 官方参考
 
-- 不要修改 `data/hcp_workspaces.json`。
-- 不要硬编码最终输出绕过 JSON 解析练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- workspace map 必须从 JSON 中的 `workspaces` list 派生。
-- 判断 run trigger 时应检查 `security-project.run_triggers.source_workspaces`。
-- 判断 state sharing 时应检查 `network-project.remote_state_sharing.shared_with`。
-- 这是 HCP Terraform 概念建模 lab，不需要真实 HCP token，也不要连接真实 HCP Terraform。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [HCP Terraform Run Triggers API](https://developer.hashicorp.com/terraform/cloud-docs/api-docs/run-triggers)
+- [Manage workspace state and output access](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/state)
+- [Connect workspaces with Run Triggers](https://developer.hashicorp.com/terraform/tutorials/cloud/cloud-run-triggers)
+- [Workspace Run Trigger settings](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/settings#run-triggers)

@@ -1,69 +1,103 @@
-# Terraform 实操训练 128：HCP Terraform Teams 与用户邀请建模
+# Terraform 实操训练 128：HCP Terraform Teams 与最小权限
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/128` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform 数据处理练习。
+HCP Terraform 使用 Team 把“谁”与“可以做什么”连接起来：
 
-本节对应 HCP Terraform 的 Teams 功能：组织可以邀请用户加入，用户会收到邀请链接；组织内可以有多个 team；默认会有 `owners` team；`owners` team 拥有最高权限。为了避免真实调用 HCP Terraform API，本 lab 使用 `data/hcp-teams.json` 作为 mock 数据。
+```text
+User ──接受邀请──► Organization
+  └─加入一个或多个 Team
+       └─获得 Permission
+            ├─ Organization scope
+            ├─ Project scope
+            └─ Workspace scope
+```
 
-## 2. 核心主题
+本 Lab 只考身份和授权概念。你不需要连接 HCP Terraform、邀请真实用户，或用 JSON 模拟成员数据。
 
-- `file()`：读取当前 module 下的 mock JSON 文件。
-- `jsondecode()`：把 HCP Terraform 组织、team、邀请数据转换成 Terraform 值。
-- `for` 表达式：从 team list 中提取 name、默认 team、member count。
-- `if` 过滤：筛选 pending invitations 和最高权限 team。
-- map 构造：把 invitation list 转换成按 email 索引的 map。
-- `one()`：从 team list 中选出唯一的 `owners` team。
+## 阶段 1：Membership 对象
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1。
 
-请在 `main.tf` 中完成八个 TODO：
+| 对象 | 职责 |
+|---|---|
+| User account | 代表一个人的身份 |
+| Invitation | 邀请用户加入 organization |
+| Team | 按平台、开发、安全、审计等职责分组用户 |
+| Permission | 定义 Team 在某个范围可以执行的操作 |
 
-1. 用 `jsondecode(file("${path.module}/data/hcp-teams.json"))` 读取并解析 mock 数据。
-2. 从解析结果中读取 `organization`。
-3. 从解析结果中读取 `teams` list。
-4. 从解析结果中读取 `invitations` list。
-5. 用 `for` 表达式输出全部 team 名称。
-6. 用 `for` + `if` 找到默认 team 名称。
-7. 用 `one()` + `for` 找到 `owners` team，并判断它是否具备最高访问级别。
-8. 构造 team member count map、pending invitation emails、invitation targets、invitations by email。
+一个用户可以属于多个 Team。邀请用户加入 organization 并不等于应给他 Owners 权限。
 
-完成后运行 `README.md` 中的命令。
+## 阶段 2：Owners Team
 
-## 4. 验收方式
+完成 TODO 2。
 
-基础检查：
+标准 HCP Terraform organization 都有 Owners Team，其成员拥有：
 
-```sh
-terraform init -input=false
+- 所有 organization-level permissions；
+- 所有 workspaces 和 Stacks 的最高权限；
+- 一些只有 owners 才能执行的成员和安全管理操作。
+
+因此 Owners Team 应保持很小，只包含真正负责 organization 管理和应急恢复的人。最后一名 owner 不能直接离开 organization，以避免组织失去管理者。
+
+## 阶段 3：权限是叠加的
+
+完成 TODO 3。
+
+Team 权限可以授予在 organization、project 和 workspace 范围。用户属于多个 Team 时，有效权限会叠加，最终获得其中能够授予的最高访问能力。
+
+例如：
+
+```text
+Team A：workspace read
+Team B：同一 workspace admin
+最终有效权限：admin
+```
+
+把该用户再加入一个 `read-only` Team 不会撤销 admin。发现权限过大时，必须检查该用户的所有 Team，以及 organization/project/workspace 各范围的授权来源。
+
+## 阶段 4：企业访问场景
+
+完成 TODO 4。
+
+| 人员/身份 | 推荐方式 |
+|---|---|
+| 只负责一个应用 project 的开发者 | Developer Team + project scope |
+| 只查看一个 workspace run 的外包审计员 | Read-only Team + workspace scope |
+| 平台自动化 | 独立、最小权限的 Team token |
+| Organization 管理员 | 小范围 Owners Team |
+
+不要共享 owner 账号，也不要让 CI 使用个人 owner token。Token 拥有对应用户或 Team 的权限，泄露后的影响与该身份权限一致。
+
+## HCP Europe 的区别
+
+HCP Europe organization 使用 HCP Groups 和 roles 管理用户，传统 Team permissions 和 Owners Team 不适用。考试或实际排障时，要先确认使用的是标准 HCP Terraform organization 还是 HCP Europe organization。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output organization_name` 显示 `kp-labs`。
-- `terraform output team_names` 显示 `owners`、`platform-engineering`、`app-developers`。
-- `terraform output default_team_names` 只显示 `owners`。
-- `terraform output owners_has_highest_access` 显示 `true`。
-- `terraform output pending_invitation_emails` 显示两个 pending 邀请邮箱。
-- `terraform output invitations_by_email` 按 email 索引所有邀请记录。
+1. Invitation、Team 和 Permission 分别解决什么问题？
+2. 为什么不能让所有开发者加入 Owners Team？
+3. 给已有 admin 权限的用户增加 read-only Team，会降低权限吗？
+4. 外包人员只看一个 workspace run 时应如何授权？
+5. HCP Europe 为什么不能照搬传统 Owners Team 模型？
 
-## 6. 约束
+## 官方参考
 
-- 不要硬编码输出绕过 `jsondecode()` 和 `for` 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- `owners` team 必须从 `local.teams` 中筛选出来，不要手写一个 owners 对象。
-- pending invitation 必须通过 `invitation.status == "pending"` 筛选。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Create and manage users](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/users)
+- [Teams overview](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/teams)
+- [Permission model](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/permissions)
+- [Organization owners](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/permissions/organization#organization-owners)

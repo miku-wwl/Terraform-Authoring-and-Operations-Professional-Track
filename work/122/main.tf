@@ -30,12 +30,12 @@ locals {
   #   apply_method      = "manual"
   # }
   vcs_workspace_settings = {
-    repository        = ""
-    branch            = ""
-    working_directory = ""
-    trigger_patterns  = []
-    speculative_plans = false
-    apply_method      = "auto"
+    repository        = "acme/infrastructure"
+    branch            = "main"
+    working_directory = "environments/prod/network"
+    trigger_patterns  = ["/environments/prod/network/**/*.tf", "/modules/networking/**/*"]
+    speculative_plans = true
+    apply_method      = "manual"
   }
 
   # TODO 2：判断不同 VCS 事件会产生什么结果。
@@ -47,10 +47,10 @@ locals {
   #   discard_run          = "no_apply_no_infrastructure_change"
   # }
   event_results = {
-    pull_request_opened = "apply_immediately"
-    push_to_main        = "no_run"
-    confirm_apply       = "discard_run"
-    discard_run         = "apply_changes"
+    pull_request_opened = "speculative_plan_no_apply"
+    push_to_main        = "standard_plan_wait_for_confirmation"
+    confirm_apply       = "apply_infrastructure_changes"
+    discard_run         = "no_apply_no_infrastructure_change"
   }
 
   # TODO 3：判断同一 monorepo 中 network/app 两套配置怎样隔离。
@@ -63,11 +63,11 @@ locals {
   #   path_filtered_triggers = true
   # }
   monorepo_design = {
-    workspace_count        = 1
-    network_working_dir    = "/"
-    app_working_dir        = "/"
-    independent_state      = false
-    path_filtered_triggers = false
+    workspace_count        = 2
+    network_working_dir    = "network"
+    app_working_dir        = "app"
+    independent_state      = true
+    path_filtered_triggers = true
   }
 
   # TODO 4：选择 AWS remote run 的安全认证策略。
@@ -80,11 +80,11 @@ locals {
   #   sensitive_flag_is_sufficient = false
   # }
   credential_strategy = {
-    preferred_method             = "static_access_keys"
-    credential_lifetime          = "long_lived"
-    permission_model             = "administrator_access"
-    store_admin_access_keys      = true
-    sensitive_flag_is_sufficient = true
+    preferred_method             = "oidc_dynamic_credentials"
+    credential_lifetime          = "per_run_short_lived"
+    permission_model             = "least_privilege_role"
+    store_admin_access_keys      = false
+    sensitive_flag_is_sufficient = false
   }
 }
 

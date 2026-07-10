@@ -1,111 +1,116 @@
+# Lab 128 知识点总结：
+# - HCP Terraform Team 是 organization 内的用户分组，用来按职责批量授予权限。
+# - 用户属于个人账号；Team 负责授权。不要共享 owners 账号或个人 API token。
+# - 用户需要先被邀请加入 organization，随后通过一个或多个 Team 获得实际访问能力。
+# - 用户可以属于多个 organizations，也可以在同一 organization 中属于多个 Teams。
+# - 权限可以在 organization、project 和 workspace 三个范围授予。
+# - 有效权限是叠加的：来自多个 Team/范围的权限取能够授予的最高访问能力。
+# - 给用户再加一个低权限 Team，不会抵消他从另一个 Team 获得的高权限。
+# - Owners Team 拥有 organization 的最高权限，以及所有 workspace 和 Stack 的最高权限。
+# - 普通开发者、审计员和临时外包人员不应为了方便直接加入 Owners Team。
+# - 最后一名 Owners Team 成员不能直接离开 organization，必须先增加另一名 owner 或删除 organization。
+# - 邀请或管理成员需要 organization owner 或具有 Manage Membership 权限的用户。
+# - 用户可以没有 Team，但在加入 Team 获得权限前无法使用 organization 的 Terraform 功能。
+# - 最小权限通常通过职责化 Team 加 project/workspace 范围权限实现，而不是逐个用户随意授权。
+# - 审计人员只需查看 runs 时，应授予只读能力，而不是 plan/apply 或变量写权限。
+# - Team token 继承 Team 的权限，应当按最小权限、最短有效期保护和轮换。
+# - HCP Europe organization 使用 HCP Groups/roles 管理成员，不存在传统 Owners Team；本 Lab 聚焦标准 HCP Terraform organization。
+#
+# 本 Lab 是概念、选择与判断题，不连接 HCP Terraform，也不模拟 Team/Invitation JSON 数据。
+# 请完成四组判断；每个 TODO 都有可以直接替换的完整答案级 Hint。
+
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1: Read and decode the HCP Terraform teams mock file.
-  # Hint: use jsondecode(file("${path.module}/data/hcp-teams.json")).
-  mock = {}
+  # TODO 1：区分 User、Invitation、Team 和 Permission 的职责。
+  # 答案级 Hint：完整答案如下：
+  # membership_model = {
+  #   user_account       = "individual_identity"
+  #   invitation         = "join_organization"
+  #   team               = "group_users_by_responsibility"
+  #   permission         = "authorize_actions_on_scopes"
+  #   multiple_teams     = true
+  # }
+  membership_model = {
+    user_account   = "shared_department_login"
+    invitation     = "grant_owners_access"
+    team           = "terraform_provider"
+    permission     = "email_delivery_setting"
+    multiple_teams = false
+  }
 
-  # TODO 2: Read the organization object from the decoded JSON object.
-  # Hint: use local.mock.organization.
-  organization = {}
+  # TODO 2：判断 Owners Team 的能力和使用边界。
+  # 答案级 Hint：完整答案如下：
+  # owners_judgements = {
+  #   maximum_organization_access = true
+  #   maximum_workspace_access    = true
+  #   default_for_all_users       = false
+  #   last_owner_can_leave        = false
+  #   membership_should_be_small  = true
+  # }
+  owners_judgements = {
+    maximum_organization_access = false
+    maximum_workspace_access    = false
+    default_for_all_users       = true
+    last_owner_can_leave        = true
+    membership_should_be_small  = false
+  }
 
-  # TODO 3: Read the teams list from the decoded JSON object.
-  # Hint: use local.mock.teams.
-  teams = []
+  # TODO 3：判断权限范围、叠加规则与最小权限。
+  # 答案级 Hint：完整答案如下：
+  # permission_judgements = {
+  #   available_scopes                = "organization_project_workspace"
+  #   multiple_grants_are_additive    = true
+  #   effective_access_uses_highest   = true
+  #   low_role_revokes_high_role      = false
+  #   prefer_role_based_teams         = true
+  #   read_only_auditor_can_apply     = false
+  # }
+  permission_judgements = {
+    available_scopes              = "workspace_only"
+    multiple_grants_are_additive  = false
+    effective_access_uses_highest = false
+    low_role_revokes_high_role    = true
+    prefer_role_based_teams       = false
+    read_only_auditor_can_apply   = true
+  }
 
-  # TODO 4: Read the invitations list from the decoded JSON object.
-  # Hint: use local.mock.invitations.
-  invitations = []
-
-  # TODO 5: Return all team names in their original order.
-  # Hint: use [for team in local.teams : team.name].
-  team_names = []
-
-  # TODO 6: Return only default team names.
-  # Hint: use a for expression with if team.is_default.
-  default_team_names = []
-
-  # TODO 7: Find the owners team object.
-  # Hint: use one([for team in local.teams : team if team.name == "owners"]).
-  owners_team = {}
-
-  # TODO 8: Check whether the owners team has highest access and can manage the organization.
-  # Hint: check access_level == "highest" and contains(permissions, "manage_organization").
-  owners_has_highest_access = false
-
-  # TODO 9: Build a map of team member counts keyed by team name.
-  # Hint: use { for team in local.teams : team.name => team.member_count }.
-  team_member_counts = {}
-
-  # TODO 10: Return only pending invitation emails.
-  # Hint: use a for expression with if invitation.status == "pending".
-  pending_invitation_emails = []
-
-  # TODO 11: Build invitation target labels like "email -> team".
-  # Hint: use [for invitation in local.invitations : "${invitation.email} -> ${invitation.team}"].
-  invitation_targets = []
-
-  # TODO 12: Build a map of invitations keyed by email.
-  # Hint: use { for invitation in local.invitations : invitation.email => invitation }.
-  invitations_by_email = {}
-}
-
-resource "terraform_data" "lesson" {
-  input = {
-    topic        = "hcp terraform teams and invitations"
-    organization = try(local.organization.name, "")
-    teams        = local.team_names
+  # TODO 4：为企业成员管理场景选择正确做法。
+  # 答案级 Hint：完整答案如下：
+  # access_scenarios = {
+  #   app_developer_one_project = "developer_team_with_project_scope"
+  #   contractor_read_one_workspace = "read_only_team_with_workspace_scope"
+  #   suspicious_excess_access  = "review_all_team_and_scope_grants"
+  #   automation_identity       = "least_privilege_team_token"
+  #   hcp_europe_membership     = "hcp_groups_and_roles"
+  # }
+  access_scenarios = {
+    app_developer_one_project     = "owners_team"
+    contractor_read_one_workspace = "shared_owner_account"
+    suspicious_excess_access      = "add_another_read_only_team"
+    automation_identity           = "personal_owner_token"
+    hcp_europe_membership         = "traditional_owners_team_only"
   }
 }
 
-output "organization_name" {
-  description = "HCP Terraform organization name from mock data."
-  value       = try(local.organization.name, "")
+output "membership_model" {
+  description = "Responsibilities of users, invitations, teams, and permissions."
+  value       = local.membership_model
 }
 
-output "organization_plan" {
-  description = "HCP Terraform plan from mock data."
-  value       = try(local.organization.plan, "")
+output "owners_judgements" {
+  description = "Capabilities and safe membership practices for the Owners Team."
+  value       = local.owners_judgements
 }
 
-output "team_names" {
-  description = "All HCP Terraform team names."
-  value       = local.team_names
+output "permission_judgements" {
+  description = "Permission scopes, additive access, and least-privilege judgements."
+  value       = local.permission_judgements
 }
 
-output "default_team_names" {
-  description = "Default team names in the organization."
-  value       = local.default_team_names
-}
-
-output "owners_team" {
-  description = "The owners team object selected from teams."
-  value       = local.owners_team
-}
-
-output "owners_has_highest_access" {
-  description = "Whether owners has highest access and organization management permission."
-  value       = local.owners_has_highest_access
-}
-
-output "team_member_counts" {
-  description = "Team member counts keyed by team name."
-  value       = local.team_member_counts
-}
-
-output "pending_invitation_emails" {
-  description = "Emails with pending HCP Terraform invitations."
-  value       = local.pending_invitation_emails
-}
-
-output "invitation_targets" {
-  description = "Human-readable email to team invitation target labels."
-  value       = local.invitation_targets
-}
-
-output "invitations_by_email" {
-  description = "Invitations keyed by email address."
-  value       = local.invitations_by_email
+output "access_scenarios" {
+  description = "Recommended access design for common enterprise membership scenarios."
+  value       = local.access_scenarios
 }

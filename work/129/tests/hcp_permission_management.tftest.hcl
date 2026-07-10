@@ -1,64 +1,50 @@
-run "hcp_permission_management_is_modeled" {
+run "hcp_workspace_permission_concepts_are_understood" {
   command = plan
 
   assert {
-    condition     = output.organization_name == "example-kplabs-org"
-    error_message = "organization_name must be read from data/permissions.json."
-  }
-
-  assert {
-    condition     = output.team_count == 3
-    error_message = "team_count must count all teams from the decoded JSON data."
-  }
-
-  assert {
-    condition     = output.owner_team_names == ["owners"]
-    error_message = "owner_team_names must include only teams where full_organization_access is true."
-  }
-
-  assert {
-    condition     = output.safe_invite_team_names == ["developers", "security"]
-    error_message = "safe_invite_team_names must exclude owners and preserve JSON order."
-  }
-
-  assert {
-    condition     = output.selected_workspace_name == "dev-web-app"
-    error_message = "selected_workspace_name must come from the dev-web-app workspace."
-  }
-
-  assert {
-    condition     = output.developer_workspace_access_level == "custom"
-    error_message = "developers must use the custom workspace access level on dev-web-app."
-  }
-
-  assert {
-    condition = output.developer_permission_labels == [
-      "run:read",
-      "run:plan",
-      "run:apply",
-      "variables:write",
-      "state:outputs-only",
-      "sentinel_mocks:none",
-      "run_tasks:read"
-    ]
-    error_message = "developer_permission_labels must summarize developers custom workspace permissions."
-  }
-
-  assert {
-    condition     = output.security_workspace_state_access == "read"
-    error_message = "security_workspace_state_access must be read from the security workspace access entry."
-  }
-
-  assert {
-    condition     = output.owner_private_registry_permission == "manage"
-    error_message = "owner_private_registry_permission must come from the owners team entry."
-  }
-
-  assert {
-    condition = output.invite_team_assignments == {
-      "new.dev@example.com" = "developers"
-      "new.sec@example.com" = "security"
+    condition = output.role_choices == {
+      view_workspace_information = "read"
+      propose_without_apply      = "plan"
+      daily_plan_and_apply       = "write"
+      manage_settings_and_access = "admin"
+      task_specific_permissions  = "custom"
     }
-    error_message = "invite_team_assignments must map pending invitation email addresses to team names."
+    error_message = "Review TODO 1: select Read, Plan, Write, Admin, or Custom according to the responsibility."
+  }
+
+  assert {
+    condition = output.role_capabilities == {
+      read_can_plan              = false
+      plan_can_plan              = true
+      plan_can_apply             = false
+      write_can_apply            = true
+      write_can_manage_settings  = false
+      admin_can_delete_workspace = true
+    }
+    error_message = "Review TODO 2: Plan cannot apply, Write cannot manage settings, and Admin includes workspace deletion."
+  }
+
+  assert {
+    condition = output.state_judgements == {
+      outputs_only_reads        = "public_root_outputs"
+      full_state_permission     = "read"
+      create_state_versions     = "read_and_write"
+      state_may_contain_secrets = true
+      plan_preset_reads_state   = true
+      state_cli_maintenance     = "read_and_write"
+    }
+    error_message = "Review TODO 3: distinguish public outputs, full state read, and state version write access."
+  }
+
+  assert {
+    condition = output.security_scenarios == {
+      auditor_runs_no_full_state  = "custom_role"
+      sensitive_variable_read     = "value_remains_write_only"
+      download_sentinel_mocks     = "treat_as_sensitive_access"
+      attach_workspace_run_task   = "manage_workspace_run_tasks"
+      custom_can_delete_workspace = false
+      reduce_excess_access        = "review_all_additive_grants"
+    }
+    error_message = "Review TODO 4: use Custom for task-focused access and protect state, mocks, variables, and Run Task management."
   }
 }

@@ -1,68 +1,48 @@
-run "hcp_terraform_teams_are_modeled_correctly" {
+run "hcp_terraform_team_concepts_are_understood" {
   command = plan
 
   assert {
-    condition     = output.organization_name == "kp-labs"
-    error_message = "organization_name must come from data/hcp-teams.json."
-  }
-
-  assert {
-    condition     = output.organization_plan == "free"
-    error_message = "organization_plan must read the free plan from the organization object."
-  }
-
-  assert {
-    condition = output.team_names == [
-      "owners",
-      "platform-engineering",
-      "app-developers"
-    ]
-    error_message = "team_names must return all team names in order."
-  }
-
-  assert {
-    condition     = output.default_team_names == ["owners"]
-    error_message = "default_team_names must return only the default owners team."
-  }
-
-  assert {
-    condition     = output.owners_team.name == "owners" && output.owners_team.is_default == true
-    error_message = "owners_team must select the owners team object from local.teams."
-  }
-
-  assert {
-    condition     = output.owners_has_highest_access == true
-    error_message = "owners_has_highest_access must confirm highest access plus manage_organization permission."
-  }
-
-  assert {
-    condition = output.team_member_counts == {
-      owners               = 32
-      platform-engineering = 5
-      app-developers       = 8
+    condition = output.membership_model == {
+      user_account   = "individual_identity"
+      invitation     = "join_organization"
+      team           = "group_users_by_responsibility"
+      permission     = "authorize_actions_on_scopes"
+      multiple_teams = true
     }
-    error_message = "team_member_counts must map each team name to its member_count."
+    error_message = "Review TODO 1: users are identities, invitations join organizations, teams group users, and permissions authorize actions."
   }
 
   assert {
-    condition = output.pending_invitation_emails == [
-      "bob@example.com",
-      "carol@example.com"
-    ]
-    error_message = "pending_invitation_emails must select invitations where status is pending."
+    condition = output.owners_judgements == {
+      maximum_organization_access = true
+      maximum_workspace_access    = true
+      default_for_all_users       = false
+      last_owner_can_leave        = false
+      membership_should_be_small  = true
+    }
+    error_message = "Review TODO 2: Owners have maximum access, so membership must remain limited and the last owner cannot leave."
   }
 
   assert {
-    condition = output.invitation_targets == [
-      "alice@example.com -> owners",
-      "bob@example.com -> platform-engineering",
-      "carol@example.com -> app-developers"
-    ]
-    error_message = "invitation_targets must build email -> team labels for every invitation."
+    condition = output.permission_judgements == {
+      available_scopes              = "organization_project_workspace"
+      multiple_grants_are_additive  = true
+      effective_access_uses_highest = true
+      low_role_revokes_high_role    = false
+      prefer_role_based_teams       = true
+      read_only_auditor_can_apply   = false
+    }
+    error_message = "Review TODO 3: permissions are scoped and additive; a lower grant does not cancel a higher grant."
   }
 
   assert {
-    condition = output.invitations_by_email["bob@example.com"].team == "platform-engineering" && output.invitations_by_email["carol@example.com"].status == "pending"
-    error_message = "invitations_by_email must be keyed by invitation email."
+    condition = output.access_scenarios == {
+      app_developer_one_project       = "developer_team_with_project_scope"
+      contractor_read_one_workspace   = "read_only_team_with_workspace_scope"
+      suspicious_excess_access        = "review_all_team_and_scope_grants"
+      automation_identity             = "least_privilege_team_token"
+      hcp_europe_membership           = "hcp_groups_and_roles"
+    }
+    error_message = "Review TODO 4: choose role-based least privilege and account for the HCP Europe group model."
   }
 }
