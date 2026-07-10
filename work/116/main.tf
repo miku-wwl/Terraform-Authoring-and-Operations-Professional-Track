@@ -8,9 +8,9 @@
 # - 关闭终端也会丢失这种临时设置；不建议把 TRACE 永久配置为系统环境变量。
 # - 日志文件存在时 Terraform 会继续追加，所以实验前应删除旧日志。
 #
-# 本 Lab 不需要修改下面的 Terraform 配置。请在 PowerShell 中按 TODO 1～4 操作。
+# 实践状态：已完成。下面保留完整操作记录，供后续复习。
 #
-# TODO 1：观察没有 TF_LOG_PATH 时，INFO 日志直接出现在终端。
+# 已完成 1：观察没有 TF_LOG_PATH 时，INFO 日志直接出现在终端。
 # 答案级 Hint：整段复制到 PowerShell 执行即可。
 #
 #   terraform init -input=false
@@ -20,7 +20,7 @@
 #
 # 观察：终端除了正常 plan，还出现带 [INFO] 的日志。这些详细日志来自 stderr。
 #
-# TODO 2：把 TRACE 日志改写到文件。
+# 已完成 2：把 TRACE 日志改写到文件。
 # 答案级 Hint：整段复制到 PowerShell 执行即可。
 #
 #   Remove-Item terraform-debug.log -ErrorAction SilentlyContinue
@@ -33,7 +33,7 @@
 #
 #   $beforeCleanup = (Get-Item terraform-debug.log).Length
 #
-# TODO 3：清除当前会话的日志设置，证明后续 plan 不再追加日志。
+# 已完成 3：清除当前会话的日志设置，证明后续 plan 不再追加日志。
 #
 #   Remove-Item Env:TF_LOG
 #   Remove-Item Env:TF_LOG_PATH
@@ -51,7 +51,7 @@
 #
 # 两条都应该返回 False。
 #
-# TODO 4：最终验收。
+# 已完成 4：最终验收。
 #
 #   terraform fmt
 #   terraform validate
