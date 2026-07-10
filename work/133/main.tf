@@ -23,66 +23,66 @@ resource "aws_vpc" "lab" {
 # TODO 1：在同一个 VPC 中创建两个不同 AZ、不同 CIDR 的 subnet。
 # 答案级 Hint：完整答案如下，取消注释即可：
 #
-# resource "aws_subnet" "a" {
-#   vpc_id            = aws_vpc.lab.id
-#   cidr_block        = "10.132.1.0/24"
-#   availability_zone = "us-east-1a"
+resource "aws_subnet" "a" {
+  vpc_id            = aws_vpc.lab.id
+  cidr_block        = "10.132.1.0/24"
+  availability_zone = "us-east-1a"
+
+  tags = {
+    Name = "tf-pro-133-a"
+  }
+}
 #
-#   tags = {
-#     Name = "tf-pro-133-a"
-#   }
-# }
-#
-# resource "aws_subnet" "b" {
-#   vpc_id            = aws_vpc.lab.id
-#   cidr_block        = "10.132.2.0/24"
-#   availability_zone = "us-east-1b"
-#
-#   tags = {
-#     Name = "tf-pro-133-b"
-#   }
-# }
+resource "aws_subnet" "b" {
+  vpc_id            = aws_vpc.lab.id
+  cidr_block        = "10.132.2.0/24"
+  availability_zone = "us-east-1b"
+
+  tags = {
+    Name = "tf-pro-133-b"
+  }
+}
 
 # TODO 2：使用复数 aws_subnets，按 vpc-id 查询刚创建的两个 subnet。
 # 为什么需要 depends_on：filter 只引用 VPC ID，没有直接引用 subnet resource；显式依赖确保查询发生在二者创建之后。
 # 答案级 Hint：完整答案如下，取消注释即可：
 #
-# data "aws_subnets" "lab" {
-#   filter {
-#     name   = "vpc-id"
-#     values = [aws_vpc.lab.id]
-#   }
-#
-#   depends_on = [aws_subnet.a, aws_subnet.b]
-# }
+data "aws_subnets" "lab" {
+  filter {
+    name   = "vpc-id"
+    values = [aws_vpc.lab.id]
+  }
+
+  depends_on = [aws_subnet.a, aws_subnet.b]
+}
 
 # TODO 3：使用单数 aws_subnet，按 aws_subnet.a.id 精确读取第一个 subnet 的详情。
 # 这里不需要 depends_on，因为 id 引用已经建立隐式依赖。
 # 答案级 Hint：完整答案如下，取消注释即可：
 #
-# data "aws_subnet" "first" {
-#   id = aws_subnet.a.id
-# }
+data "aws_subnet" "first" {
+  id = aws_subnet.a.id
+}
 
 # TODO 4：输出排序后的集合查询结果，以及单对象查询返回的详细属性。
 # 答案级 Hint：完整答案如下，取消注释即可：
 #
-# output "subnet_ids" {
-#   description = "Subnet IDs returned by aws_subnets, sorted only for stable display and testing."
-#   value       = sort(data.aws_subnets.lab.ids)
-# }
-#
-# output "subnet_count" {
-#   description = "Number of subnets returned by the plural data source."
-#   value       = length(data.aws_subnets.lab.ids)
-# }
-#
-# output "first_subnet" {
-#   description = "Detailed attributes returned by the singular aws_subnet data source."
-#   value = {
-#     id                = data.aws_subnet.first.id
-#     cidr_block        = data.aws_subnet.first.cidr_block
-#     availability_zone = data.aws_subnet.first.availability_zone
-#     vpc_id            = data.aws_subnet.first.vpc_id
-#   }
-# }
+output "subnet_ids" {
+  description = "Subnet IDs returned by aws_subnets, sorted only for stable display and testing."
+  value       = sort(data.aws_subnets.lab.ids)
+}
+
+output "subnet_count" {
+  description = "Number of subnets returned by the plural data source."
+  value       = length(data.aws_subnets.lab.ids)
+}
+
+output "first_subnet" {
+  description = "Detailed attributes returned by the singular aws_subnet data source."
+  value = {
+    id                = data.aws_subnet.first.id
+    cidr_block        = data.aws_subnet.first.cidr_block
+    availability_zone = data.aws_subnet.first.availability_zone
+    vpc_id            = data.aws_subnet.first.vpc_id
+  }
+}
