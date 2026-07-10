@@ -1,0 +1,75 @@
+{
+  "organization": "platform-engineering",
+  "project": "networking",
+  "workspace": {
+    "name": "network-prod",
+    "terraform_version": "1.9.8",
+    "execution_mode": "remote",
+    "auto_apply": false,
+    "vcs": {
+      "provider": "github",
+      "repository": "acme/network-infrastructure",
+      "branch": "main",
+      "trigger": "branch"
+    },
+    "variables": [
+      {
+        "key": "environment",
+        "category": "terraform",
+        "sensitive": false,
+        "value": "prod"
+      },
+      {
+        "key": "AWS_REGION",
+        "category": "env",
+        "sensitive": false,
+        "value": "ap-southeast-2"
+      },
+      {
+        "key": "AWS_ACCESS_KEY_ID",
+        "category": "env",
+        "sensitive": true,
+        "value": "redacted"
+      },
+      {
+        "key": "AWS_SECRET_ACCESS_KEY",
+        "category": "env",
+        "sensitive": true,
+        "value": "redacted"
+      }
+    ]
+  },
+  "run": {
+    "source": "vcs",
+    "phases": [
+      {
+        "name": "plan",
+        "status": "passed"
+      },
+      {
+        "name": "cost_estimation",
+        "status": "passed"
+      },
+      {
+        "name": "policy_check",
+        "status": "failed"
+      },
+      {
+        "name": "apply",
+        "status": "pending"
+      }
+    ],
+    "policies": [
+      {
+        "name": "require-owner-tag",
+        "status": "passed"
+      },
+      {
+        "name": "restrict-instance-types",
+        "status": "failed"
+      }
+    ],
+    "monthly_cost_estimate": 17,
+    "approved_by": null
+  }
+}
