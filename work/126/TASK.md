@@ -1,87 +1,97 @@
-# Terraform 实操训练 126：Sentinel Policy as Code 与策略集建模
+# Terraform 实操训练 126：Sentinel Policy as Code 概念
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/126` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Sentinel 策略、策略集、工作区关联和 enforcement mode 的建模练习。
+Sentinel 把组织治理规则放在成功的 Terraform plan 与 apply 之间：
 
-本节视频的重点是：Sentinel 是 HashiCorp enterprise 产品体系中的 policy as code 框架。在 HCP Terraform / Terraform Cloud 中，策略会被放入 policy set，再把 policy set 关联到 workspace。运行 Terraform plan 之后，平台可以执行 cost estimation 和 policy check。如果 hard mandatory 策略失败，apply 会被阻断，不能被普通用户覆盖。
+```text
+Terraform run
+  └─ Successful plan
+       └─ Post-plan run tasks / Cost estimation
+            └─ Sentinel policy check
+                 ├─ Pass：允许进入后续流程
+                 ├─ Advisory fail：警告后继续
+                 ├─ Soft-mandatory fail：等待授权覆盖或终止
+                 └─ Hard-mandatory fail：不能进入 apply
+```
 
-真实 Sentinel 配置通常需要 HCP Terraform 付费能力或 trial 环境。本 lab 不要求你连接真实 Terraform Cloud，也不要求写真实 AWS 凭证。你只需要基于本地 mock JSON，把 Sentinel 的核心对象关系建模成 Terraform 输出，并通过 `terraform test` 验证理解是否正确。
+本 Lab 只考平台概念。你不需要连接 HCP Terraform、编写 Sentinel 语言，或用 JSON 模拟 Policy Set。
 
-## 2. 核心主题
+## 阶段 1：三个核心对象
 
-- Sentinel：policy as code 框架，用逻辑策略判断 Terraform run 是否允许继续。
-- Policy：单条策略，例如 `block EC2 without tags`。
-- Policy set：策略集合，用来绑定多个 policy。
-- Workspace scope：policy set 可以绑定全部 workspace，也可以绑定指定 workspace。
-- Enforcement mode：
-  - `hard-mandatory`：失败后不能覆盖，apply 被阻断。
-  - `soft-mandatory`：失败后可以由有权限的人覆盖。
-  - `advisory`：只记录结果，不阻断。
-- HCP Terraform plan：Sentinel 通常属于付费/治理能力；免费计划中可能不可用。
-- 防线边界：Sentinel 只检查 Terraform run，无法阻止别人绕过 IaC 在 AWS 控制台手动创建资源；生产环境还需要 AWS Config 等云侧控制。
+完成 `main.tf` 的 TODO 1。
 
-## 3. 任务目标
+| 对象 | 职责 |
+|---|---|
+| Sentinel | HashiCorp policy as code framework |
+| Policy | 一条治理规则 |
+| Policy Set | 组织多条 policy 并分配作用范围 |
 
-请在 `main.tf` 中完成八个 TODO：
+Policy 可以检查 Terraform plan、配置、state 和 run 数据。例如：限制生产区域、禁止过大实例、要求资源标签。
 
-1. 用 `jsondecode(file("${path.module}/data/sentinel_policy.json"))` 读取并解析 mock 数据。
-2. 从 mock 数据中读取 Sentinel feature 名称。
-3. 从 mock 数据中读取是否需要 paid governance plan。
-4. 读取 workspace name，并要求值为 `sentinel`。
-5. 组装 policy set 对象：
-   - name：来自 JSON 的 `policy_set.name`
-   - scope：来自 JSON 的 `policy_set.scope`
-   - workspaces：来自 JSON 的 `policy_set.workspaces`
-6. 组装 policy 对象：
-   - name：来自 JSON 的 `policy.name`
-   - rule：来自 JSON 的 `policy.rule`
-   - enforcement_mode：来自 JSON 的 `policy.enforcement_mode`
-   - required_tag_key：来自 JSON 的 `policy.required_tag_key`
-7. 从 JSON 读取所有 enforcement modes，并生成 run checks 顺序。
-8. 生成 production guardrail layers，顺序必须是：
-   - `Terraform run policy check with Sentinel`
-   - `Cloud-side drift/resource compliance with AWS Config`
+## 阶段 2：Enforcement Level
 
-完成后运行 `README.md` 中的命令。
+完成 TODO 2。
 
-## 4. 验收方式
+- `advisory`：失败只告警，run 继续。
+- `soft-mandatory`：失败后暂停，只有具备 policy override 权限的人员才能覆盖。
+- `hard-mandatory`：必须通过，当前 run 中不能覆盖。
 
-基础检查：
+Enforcement level 不写在 policy 判断逻辑里，而是在部署 policy 时配置。因此同一规则可以在测试环境先 advisory，在生产环境设为 hard-mandatory。
 
-```sh
-terraform init -input=false
+## 阶段 3：Policy Set 的分发
+
+完成 TODO 3。
+
+Policy Set 可以：
+
+- 全局应用到 organization；
+- 应用到指定 projects 或 workspaces；
+- 按 workspace tags 匹配范围（该连接方式目前为 Beta）；
+- 从 VCS 管理和更新，以保留 review、版本与审计记录。
+
+一个 Policy Set 只能包含同一种 framework 的 policies，但同一 workspace 可以同时关联 Sentinel 和 OPA Policy Sets。
+
+不要继续记忆旧结论“Sentinel 一定要求付费”：HashiCorp 当前文档说明 HCP Terraform Free 包含一个最多五条 policies 的 Policy Set；套餐限制以后仍应查阅最新官方文档。
+
+## 阶段 4：运行阶段与治理边界
+
+完成 TODO 4。
+
+Sentinel 只评估成功的 Terraform plan。如果 plan 本身失败，不会进入 policy check。
+
+要求 Terraform 部署的资源必须有标签，适合使用 Sentinel 在 apply 前检查；但有人绕过 Terraform、直接从云控制台创建资源时，Sentinel 不会自动看到或阻止它。此时需要云侧权限、审计、AWS Config/Azure Policy 等持续合规控制。
+
+因此成熟治理通常包含两层：
+
+1. IaC pipeline/run 的部署前政策检查。
+2. 云平台侧的权限限制、审计、漂移和持续合规检测。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output feature_name` 显示 `Sentinel`。
-- `terraform output requires_paid_plan` 显示 `true`。
-- `terraform output workspace_name` 显示 `sentinel`。
-- `terraform output policy_set` 显示名为 `sentinel-policy-set` 的策略集，并绑定到 `sentinel` workspace。
-- `terraform output policy` 显示 `check-ec2-tags`，规则为 `block_ec2_without_tags`，enforcement mode 为 `hard-mandatory`。
-- `terraform output enforcement_modes` 显示 `hard-mandatory`、`soft-mandatory`、`advisory`。
-- `terraform output run_checks` 显示 `cost_estimation`、`policy_check`。
-- `terraform output production_guardrail_layers` 显示 IaC 侧 Sentinel 和云侧 AWS Config 两层防线。
+1. Sentinel Policy Check 在 plan 之前还是之后？
+2. Policy 与 Policy Set 有什么区别？
+3. 哪种 enforcement level 可以由授权人员覆盖？
+4. Hard-mandatory 失败后 workspace admin 是否一定能强行 apply？
+5. 为什么 Sentinel 不能替代云侧持续合规控制？
 
-## 6. 约束
+## 官方参考
 
-- 不要连接真实 HCP Terraform / Terraform Cloud。
-- 不要写真实 AWS access key、secret key 或 HCP Terraform token。
-- 不要把 Sentinel 建模成可以检查手动创建资源的万能工具。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 不要硬编码所有输出绕过 `jsondecode()` 练习。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [HCP Terraform policy enforcement overview](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/policy-enforcement)
+- [Policy enforcement results and overrides](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/policy-enforcement/view-results)
+- [Sentinel enforcement levels](https://developer.hashicorp.com/sentinel/docs/concepts/enforcement-levels)
+- [Configure Policy Set connections](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/policy-enforcement/manage-policy-sets/configure)

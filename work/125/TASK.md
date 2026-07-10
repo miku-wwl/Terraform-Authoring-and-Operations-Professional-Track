@@ -1,77 +1,94 @@
-# Terraform 实操训练 125：模拟 HCP Terraform Variable Sets
+# Terraform 实操训练 125：HCP Terraform Variable Sets 概念
 
-## 1. 背景
+## 本节主旨
 
-HCP Terraform 的 Variable Set 用于集中维护可复用变量，并将它们应用到所有 workspace、指定 project，或单个 workspace。
+Variable Set 把需要重复配置的变量集中维护，再按组织、项目或 workspace 范围复用：
 
-本 lab 不连接真实 HCP Terraform。你需要读取 `data/mock.json`，使用 Terraform 表达式模拟 Variable Set 的 scope、变量分类以及 workspace override 优先级。
+```text
+Organization
+  ├─ Organization-owned Variable Set
+  │    ├─ Global：所有当前及未来 workspace
+  │    └─ 指定 project / workspace / Stack
+  └─ Project
+       └─ Project-owned Variable Set
+            ├─ 整个 project
+            └─ 指定 workspace / Stack
+```
 
-## 2. 核心主题
+本 Lab 只考 HCP Terraform 平台概念。你不需要连接 HCP、创建 Variable Set，或用 Terraform 表达式模拟平台行为。
 
-- Global scope：适用于当前及未来的所有 workspace。
-- Project scope：只适用于属于指定 project 的 workspace。
-- Workspace scope：只适用于指定 workspace。
-- Variable category：区分 `terraform` 变量和 `env` 环境变量。
-- Override precedence：workspace 中的同名变量覆盖 Variable Set 提供的值。
-- Sensitive metadata：识别被标记为 sensitive 的变量。
+## 阶段 1：Ownership 与 Scope
 
-## 3. 数据模型
+完成 `main.tf` 的 TODO 1。
 
-`data/mock.json` 包含：
+| 需求 | 合适选择 |
+|---|---|
+| 跨多个 project 共享 | Organization-owned Variable Set |
+| 只在一个 project 内共享 | Project-owned Variable Set |
+| 自动应用整个 organization | Global scope |
+| 只应用到指定 workspace | Workspace-scoped |
 
-- 三个 workspace：`checkout-api`、`catalog-api`、`analytics`。
-- 一个 global Variable Set。
-- 一个只应用于 `commerce` project 的 Variable Set。
-- 一个只应用于 `checkout-api` 的 Variable Set。
-- 每个 workspace 自己的 workspace variables。
+作用域越宽，维护越集中，但获得变量或凭据的 workspace 也越多。凭据应使用满足需求的最小作用域。
 
-默认处理 `checkout-api`。测试还会把 `workspace_name` 改成 `analytics`，检查 scope 是否正确。
+## 阶段 2：两种变量类型
 
-## 4. 任务目标
+完成 TODO 2。
 
-请在 `main.tf` 中完成十个 TODO：
+- Terraform variable：为配置中的 `variable` block / `var.<name>` 提供输入值。
+- Environment variable：注入运行进程环境，常用于 provider 设置、Terraform 行为或认证配置。
+- HCL checkbox：只适用于 Terraform variable，用来输入 list、map 等 HCL 值。
+- Sensitive：两种类型都可以标记。
 
-1. 使用 `jsondecode(file(...))` 读取 mock 数据。
-2. 根据 `var.workspace_name` 找到当前 workspace。
-3. 筛选适用于当前 workspace 的 Variable Sets。
-4. 展开所有适用 Variable Set 中的变量，并保留来源名称。
-5. 将 Variable Set 变量转换成按 key 索引的 object。
-6. 读取当前 workspace 自己定义的变量。
-7. 将 workspace variables 转换成按 key 索引的 object。
-8. 使用 `merge()` 生成最终有效变量，确保 workspace variable 优先。
-9. 找出被 workspace 覆盖的同名 key。
-10. 按 `terraform`、`env` 和 `sensitive` 分类输出最终变量。
+不要因为二者都出现在 HCP Variables 页面，就把它们当成相同的传值通道。
 
-## 5. 验收方式
+## 阶段 3：优先级与执行模式
 
-```sh
-terraform init -input=false
+完成 TODO 3。
+
+普通情况下，同类型、同 key 的 workspace-specific variable 会覆盖 Variable Set 中的值，UI 会标记被覆盖项。
+
+同 scope、同 ownership 的 Variable Set 出现同名变量时，HCP Terraform 按 Variable Set 名称的 Unicode 词法顺序判断，而不是“最后编辑的值获胜”。
+
+Priority Variable Set 是管理者显式启用的例外：它可以覆盖更具体作用域中的同名值，包括 CLI run-specific 值。因此 priority 应谨慎使用。
+
+HCP Terraform 不会在 `Local` execution mode 的运行中计算 workspace variables 或 Variable Sets。
+
+## 阶段 4：Sensitive 的真实边界
+
+完成 TODO 4。
+
+- Sensitive 值保存后，在 HCP Terraform UI 和 API 中不可再次读取。
+- Sensitive 不等于数据永远不会出现在 Terraform state 或日志中。
+- Variable description 不加密，不能写秘密。
+- `TF_LOG=TRACE` 可能让环境变量进入日志，调试产物应按敏感数据保护。
+- 云 provider 认证优先使用每次 run 的 dynamic credentials，减少长期静态密钥。
+
+因此，Sensitive 是显示与读取保护，不是完整的数据泄露防护边界。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-测试包含两个 run：
+预期：
 
-- 默认 `checkout-api`：应继承 global、project 和 workspace 三层 Variable Set，并覆盖两个同名变量。
-- `analytics`：应只继承 global Variable Set，并用 workspace 变量覆盖 `AWS_REGION`。
+```text
+Success! 1 passed, 0 failed.
+```
 
-## 6. 预期结果
+## 你现在应该能回答
 
-完成后：
+1. Variable Set 与 workspace-specific variable 的核心区别是什么？
+2. 跨 project 共享变量时应该选择哪种 ownership？
+3. Terraform variable 与 environment variable 分别进入哪里？
+4. 普通 Variable Set 和 Priority Variable Set 的覆盖行为有何不同？
+5. 为什么标记 Sensitive 后仍要保护 state 和 TRACE 日志？
 
-- `terraform test` 返回 `2 passed, 0 failed`。
-- `checkout-api` 的适用 Variable Set 为 `global-aws`、`commerce-database`、`checkout-features`。
-- `checkout-api` 的 `db_write_capacity` 最终值为 `15`。
-- `checkout-api` 的 `APP_LOG_LEVEL` 最终值为 `debug`。
-- `analytics` 不应继承 `commerce-database` 或 `checkout-features`。
-- sensitive key 应为 `AWS_ACCESS_KEY_ID`。
+## 官方参考
 
-## 7. 约束
-
-- 不要修改 `tests/` 来绕过测试。
-- 不要硬编码最终输出。
-- JSON 路径必须基于 `path.module`。
-- Variable Set applicability 必须根据 scope 动态计算。
-- workspace override 必须通过 `merge(variable_set_map, workspace_variable_map)` 或等价逻辑实现。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Variables overview and precedence](https://developer.hashicorp.com/terraform/cloud-docs/variables)
+- [Manage variables and variable sets](https://developer.hashicorp.com/terraform/cloud-docs/variables/managing-variables)
+- [Dynamic provider credentials](https://developer.hashicorp.com/terraform/cloud-docs/dynamic-provider-credentials)

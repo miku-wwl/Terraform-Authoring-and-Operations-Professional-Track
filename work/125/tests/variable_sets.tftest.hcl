@@ -1,125 +1,48 @@
-run "checkout_workspace_inherits_and_overrides_variables" {
+run "hcp_variable_set_concepts_are_understood" {
   command = plan
 
   assert {
-    condition = output.selected_workspace == {
-      name    = "checkout-api"
-      project = "commerce"
+    condition = output.scope_choices == {
+      share_across_projects      = "organization_owned"
+      share_within_one_project   = "project_owned"
+      all_org_current_and_future = "global"
+      selected_workspaces_only   = "workspace_scoped"
+      reusable_across_workspaces = true
     }
-    error_message = "The default selected workspace must be checkout-api in the commerce project."
+    error_message = "Review TODO 1: choose Variable Set ownership and scope according to the required reuse boundary."
   }
 
   assert {
-    condition = output.applicable_variable_set_names == [
-      "global-aws",
-      "commerce-database",
-      "checkout-features"
-    ]
-    error_message = "checkout-api must inherit global, commerce project, and checkout workspace Variable Sets."
-  }
-
-  assert {
-    condition = output.effective_variable_values == {
-      AWS_ACCESS_KEY_ID = "shared-access-key"
-      AWS_REGION        = "ap-southeast-2"
-      APP_LOG_LEVEL     = "debug"
-      db_server         = "10.20.0.15"
-      db_write_capacity = 15
-      feature_mode      = "canary"
-      service_owner     = "payments"
+    condition = output.variable_categories == {
+      module_input_value       = "terraform"
+      provider_process_setting = "environment"
+      hcl_option_supported_by  = "terraform_only"
+      sensitive_supported_by   = "both_categories"
+      env_values_are_strings   = true
     }
-    error_message = "Effective values must combine applicable Variable Sets and workspace overrides."
+    error_message = "Review TODO 2: Terraform and environment variables use different input channels and HCL behavior."
   }
 
   assert {
-    condition = output.effective_variable_sources == {
-      AWS_ACCESS_KEY_ID = "global-aws"
-      AWS_REGION        = "global-aws"
-      APP_LOG_LEVEL     = "workspace"
-      db_server         = "commerce-database"
-      db_write_capacity = "workspace"
-      feature_mode      = "checkout-features"
-      service_owner     = "workspace"
+    condition = output.precedence_and_execution == {
+      normal_same_key_winner       = "workspace_specific_variable"
+      priority_set_can_override    = "more_specific_scopes_and_cli_values"
+      overwritten_marker_location  = "workspace_variables_ui"
+      local_execution_uses_varsets = false
+      newest_edit_always_wins      = false
     }
-    error_message = "Effective variable sources must identify inherited and workspace-supplied values."
+    error_message = "Review TODO 3: distinguish normal precedence, priority sets, and Local execution mode."
   }
 
   assert {
-    condition     = output.overridden_keys == ["APP_LOG_LEVEL", "db_write_capacity"]
-    error_message = "Workspace variables must override APP_LOG_LEVEL and db_write_capacity."
-  }
-
-  assert {
-    condition = output.terraform_variable_values == {
-      db_server         = "10.20.0.15"
-      db_write_capacity = 15
-      feature_mode      = "canary"
-      service_owner     = "payments"
+    condition = output.security_judgements == {
+      sensitive_is_write_only_in_ui_api  = true
+      sensitive_guarantees_no_state_leak = false
+      descriptions_are_encrypted         = false
+      prefer_dynamic_credentials          = true
+      credentials_should_be_global        = false
+      trace_logs_need_protection           = true
     }
-    error_message = "Terraform-category variables must be separated from environment variables."
-  }
-
-  assert {
-    condition = output.environment_variable_values == {
-      AWS_ACCESS_KEY_ID = "shared-access-key"
-      AWS_REGION        = "ap-southeast-2"
-      APP_LOG_LEVEL     = "debug"
-    }
-    error_message = "Environment-category variables must include the effective overridden values."
-  }
-
-  assert {
-    condition     = output.sensitive_keys == ["AWS_ACCESS_KEY_ID"]
-    error_message = "AWS_ACCESS_KEY_ID must be recognized as the sensitive effective variable."
-  }
-}
-
-run "analytics_only_inherits_global_scope" {
-  command = plan
-
-  variables {
-    workspace_name = "analytics"
-  }
-
-  assert {
-    condition = output.selected_workspace == {
-      name    = "analytics"
-      project = "data"
-    }
-    error_message = "The second run must select the analytics workspace."
-  }
-
-  assert {
-    condition     = output.applicable_variable_set_names == ["global-aws"]
-    error_message = "analytics must inherit only the global Variable Set."
-  }
-
-  assert {
-    condition = output.effective_variable_values == {
-      AWS_ACCESS_KEY_ID   = "shared-access-key"
-      AWS_REGION          = "us-west-2"
-      DATA_RETENTION_DAYS = 30
-    }
-    error_message = "analytics must combine global variables with its own workspace variables."
-  }
-
-  assert {
-    condition     = output.overridden_keys == ["AWS_REGION"]
-    error_message = "The analytics workspace must override only AWS_REGION."
-  }
-
-  assert {
-    condition = output.environment_variable_values == {
-      AWS_ACCESS_KEY_ID = "shared-access-key"
-      AWS_REGION        = "us-west-2"
-    }
-    error_message = "analytics environment variables must contain the workspace AWS_REGION override."
-  }
-
-  assert {
-    condition = output.terraform_variable_values == {
-      DATA_RETENTION_DAYS = 30
-    }
-    error_message = "analytics must expose DATA_RETENTION_DAYS as a Terraform variable."
+    error_message = "Review TODO 4: Sensitive protects UI/API visibility but does not replace least privilege or log/state protection."
   }
 }

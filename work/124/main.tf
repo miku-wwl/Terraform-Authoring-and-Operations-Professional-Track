@@ -1,83 +1,106 @@
+# Lab 124 知识点总结：
+# - Lab 123 学 CLI-driven workflow 的定位；Lab 124 学步骤顺序、各步骤职责和故障定位。
+# - 典型顺序是：准备 workspace/cloud target → terraform login → terraform init → plan/apply。
+# - cloud block 指定 organization 和 workspace，解决“连接到哪里”。
+# - terraform login 获取并保存 HCP Terraform CLI 凭据，解决“本地 CLI 是谁”。
+# - terraform init 初始化 cloud integration；修改 cloud block 后应重新运行 init。
+# - terraform plan 从本地发起远端 speculative plan，不会直接 apply。
+# - terraform apply 对未连接 VCS 的 workspace 发起远端 standard plan/apply。
+# - 登录 token 与云 provider credentials 是两种不同凭据，不能互相替代。
+# - 凭据文件和 token 不应进入 Git；token 应使用短有效期并按需撤销。
+# - 判断远端执行应优先看 HCP run URL、workspace run history 和 remote execution 设置。
+# - 本地/远端 Terraform 版本不同可以作为辅助证据，但版本相同不代表 run 在本地执行。
+# - 创建或初始化成功不等于 workspace 已有变量、provider 认证、权限和生产安全设置。
+#
+# 本 Lab 是概念与故障判断题，不执行 terraform login，也不连接真实 HCP Terraform。
+# 请完成四组判断；每个 TODO 都有完整答案级 Hint。
+
 terraform {
   required_version = ">= 1.5.0"
 }
 
 locals {
-  # TODO 1: Read and decode data/cli_workflow.json.
-  # Hint: use jsondecode(file("${path.module}/data/cli_workflow.json")).
-  workflow = {}
+  # TODO 1：排列 CLI-driven workflow 的概念步骤。
+  # 答案级 Hint：直接使用下面的完整列表：
+  # workflow_sequence = [
+  #   "configure_cloud_target",
+  #   "terraform_login",
+  #   "terraform_init",
+  #   "terraform_plan",
+  #   "terraform_apply_if_approved",
+  # ]
+  workflow_sequence = []
 
-  # TODO 2: Build the HCP Terraform cloud target object.
-  # Expected shape:
-  # {
-  #   hostname     = local.workflow.hostname
-  #   organization = local.workflow.organization
-  #   workspaces = {
-  #     name = local.workflow.workspace.name
-  #   }
+  # TODO 2：为 cloud/login/init/plan 匹配职责。
+  # 答案级 Hint：完整答案如下：
+  # step_responsibilities = {
+  #   cloud_block     = "select_organization_and_workspace"
+  #   terraform_login = "authenticate_local_cli_to_hcp"
+  #   terraform_init  = "initialize_or_reconfigure_cloud_integration"
+  #   terraform_plan  = "start_remote_speculative_plan"
+  #   terraform_apply = "start_remote_standard_run_for_non_vcs_workspace"
   # }
-  cloud_target = {}
-
-  # TODO 3: Generate the ordered CLI command sequence from workflow.steps.
-  # Hint: the JSON steps are already ordered; use a for expression.
-  command_sequence = []
-
-  # TODO 4: Build the browser URL for the linked workspace.
-  # Expected format:
-  # https://app.terraform.io/app/<organization>/workspaces/<workspace>
-  workspace_url = ""
-
-  # TODO 5: Detect evidence that the CLI-triggered run executes remotely.
-  # It is remote only when execution_mode is "remote" AND the local and remote
-  # Terraform versions are different.
-  remote_execution_detected = false
-
-  # TODO 6: Build authentication safety checks.
-  # token_absent_from_mock should verify that authentication has no "token" key.
-  # credentials_file_committed must reflect commit_credentials_file from JSON.
-  authentication_safety = {
-    token_absent_from_mock      = false
-    credentials_file_committed = true
-    credentials_file           = ""
+  step_responsibilities = {
+    cloud_block     = "authenticate_to_aws"
+    terraform_login = "select_workspace"
+    terraform_init  = "apply_infrastructure"
+    terraform_plan  = "create_local_state_only"
+    terraform_apply = "trigger_git_pull_request"
   }
 
-  # TODO 7: Build a final summary object from the completed locals.
-  run_summary = {}
-}
+  # TODO 3：根据报错或变化选择优先检查项。
+  # 答案级 Hint：完整答案如下：
+  # troubleshooting_choices = {
+  #   missing_hcp_credentials      = "terraform_login_or_cli_credentials"
+  #   wrong_remote_workspace       = "cloud_block_organization_and_workspace"
+  #   cloud_block_recently_changed = "rerun_terraform_init"
+  #   remote_provider_auth_failed  = "workspace_dynamic_provider_credentials"
+  #   no_remote_run_visible        = "execution_mode_and_workspace_run_history"
+  # }
+  troubleshooting_choices = {
+    missing_hcp_credentials      = "aws_provider_block"
+    wrong_remote_workspace       = "terraform_fmt"
+    cloud_block_recently_changed = "terraform_destroy"
+    remote_provider_auth_failed  = "local_laptop_aws_profile_only"
+    no_remote_run_visible        = "local_tfstate_file"
+  }
 
-resource "terraform_data" "cli_driven_workflow" {
-  input = {
-    topic   = "HCP Terraform CLI-driven run workflow"
-    summary = local.run_summary
+  # TODO 4：判断凭据和远端执行证据的安全做法。
+  # 答案级 Hint：完整答案如下：
+  # safety_and_evidence = {
+  #   commit_cli_credentials_file = false
+  #   put_token_in_tf_code        = false
+  #   prefer_short_token_expiry   = true
+  #   run_url_is_remote_evidence  = true
+  #   version_difference_required = false
+  #   local_aws_creds_auto_upload = false
+  # }
+  safety_and_evidence = {
+    commit_cli_credentials_file = true
+    put_token_in_tf_code        = true
+    prefer_short_token_expiry   = false
+    run_url_is_remote_evidence  = false
+    version_difference_required = true
+    local_aws_creds_auto_upload = true
   }
 }
 
-output "cloud_target" {
-  description = "HCP Terraform hostname, organization, and workspace target."
-  value       = local.cloud_target
+output "workflow_sequence" {
+  description = "Ordered conceptual steps for CLI-driven workflow."
+  value       = local.workflow_sequence
 }
 
-output "command_sequence" {
-  description = "CLI-driven workflow commands in execution order."
-  value       = local.command_sequence
+output "step_responsibilities" {
+  description = "Responsibility of cloud block, login, init, plan, and apply."
+  value       = local.step_responsibilities
 }
 
-output "workspace_url" {
-  description = "Browser URL for the linked HCP Terraform workspace."
-  value       = local.workspace_url
+output "troubleshooting_choices" {
+  description = "First checks for common CLI-driven workflow failures."
+  value       = local.troubleshooting_choices
 }
 
-output "remote_execution_detected" {
-  description = "Whether the mock evidence indicates remote execution."
-  value       = local.remote_execution_detected
-}
-
-output "authentication_safety" {
-  description = "Checks related to token and credentials file handling."
-  value       = local.authentication_safety
-}
-
-output "run_summary" {
-  description = "Combined CLI-driven workflow summary."
-  value       = local.run_summary
+output "safety_and_evidence" {
+  description = "Credential safety and reliable remote-execution evidence."
+  value       = local.safety_and_evidence
 }

@@ -27,7 +27,13 @@ locals {
   #   "select_workspace_workflow",
   #   "configure_workspace_before_first_run",
   # ]
-  creation_sequence = []
+  creation_sequence = [
+    "create_organization",
+    "use_default_or_create_project",
+    "create_workspace_in_project",
+    "select_workspace_workflow",
+    "configure_workspace_before_first_run",
+  ]
 
   # TODO 2：根据团队场景选择 workspace workflow。
   # 答案级 Hint：完整答案如下：
@@ -37,9 +43,9 @@ locals {
   #   internal_platform_uploads_code  = "api_driven"
   # }
   workflow_selection = {
-    git_pr_is_source_of_truth      = "api_driven"
-    engineer_uses_local_cli        = "vcs_driven"
-    internal_platform_uploads_code = "manual_only"
+    git_pr_is_source_of_truth      = "vcs_driven"
+    engineer_uses_local_cli        = "cli_driven"
+    internal_platform_uploads_code = "api_driven"
   }
 
   # TODO 3：列出 workspace 第一次正式 run 前的检查项。
@@ -52,7 +58,14 @@ locals {
   #   "team_permissions",
   #   "auto_apply_and_policy_settings",
   # ]
-  workspace_readiness = []
+  workspace_readiness = [
+    "project_and_name",
+    "workflow_and_configuration_source",
+    "terraform_version_and_execution_mode",
+    "variables_and_credentials",
+    "team_permissions",
+    "auto_apply_and_policy_settings",
+  ]
 
   # TODO 4：判断 registry、settings 和 workspace 的职责。
   # 答案级 Hint：完整答案如下：
@@ -63,10 +76,10 @@ locals {
   #   empty_workspace_ready_for_apply = false
   # }
   platform_capabilities = {
-    private_registry                = "store_workspace_state"
-    organization_settings           = "provider_resource_configuration"
-    workspace                       = "billing_only"
-    empty_workspace_ready_for_apply = true
+    private_registry                = "share_private_modules_and_providers"
+    organization_settings           = "users_teams_plan_and_billing"
+    workspace                       = "configuration_state_variables_and_runs"
+    empty_workspace_ready_for_apply = false
   }
 }
 

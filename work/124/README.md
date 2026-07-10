@@ -1,34 +1,30 @@
-# 第 124 节做题环境
+# Lab 124：CLI-driven Workflow 步骤与排障
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要直接连接真实 HCP Terraform workspace 完成基础验收。
+本节只学习 CLI-driven workflow 的步骤、职责和常见故障，不执行真实登录或远端操作。
 
-本 lab 使用本地 mock 数据模拟 HCP Terraform 的 CLI-driven run workflow，因此不需要 HCP Terraform 账号、登录 token 或云厂商凭据。
+请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成。每个 TODO 都提供完整答案级 Hint。
 
-## 本地执行
+学习路径：
+
+1. 排列 cloud、login、init、plan/apply 的顺序。
+2. 匹配每个步骤的职责。
+3. 根据报错选择正确的排查入口。
+4. 判断 token 安全和远端执行证据。
+
+每完成一段，可以运行：
 
 ```powershell
 cd work/124
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+全部完成后验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
-
-## 可选：连接真实 HCP Terraform
-
-完成本地练习后，可以复制 `cloud-config.tf.example` 为单独实验目录中的 `.tf` 文件，替换 organization 和 workspace，再执行：
-
-```powershell
-terraform login app.terraform.io
-terraform init
-terraform plan
-terraform apply
-```
-
-不要把 `~/.terraform.d/credentials.tfrc.json`、登录 token、AWS access key 或其他凭据提交到 Git。
+本 Lab 没有资源，不需要执行 `apply` 或 `destroy`。

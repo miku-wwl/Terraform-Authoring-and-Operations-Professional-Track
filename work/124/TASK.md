@@ -1,71 +1,97 @@
-# Terraform 实操训练 124：HCP Terraform CLI-driven Run Workflow
+# Terraform 实操训练 124：CLI-driven 步骤与故障定位
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/124` 上机做题环境。
+CLI-driven workflow 的关键不是背命令，而是理解每一步解决哪个问题：
 
-CLI-driven workflow 允许工程师继续在本地目录运行 Terraform CLI，但 `plan` 和 `apply` 可以由 HCP Terraform workspace 在远端执行。完整流程通常包括：
+```text
+cloud block
+→ 去哪个 organization/workspace
 
-1. 在配置中指定 HCP Terraform hostname、organization 和 workspace。
-2. 执行 `terraform login` 获取并保存登录凭据。
-3. 执行 `terraform init` 初始化 HCP Terraform 集成。
-4. 从本地 CLI 发起 `terraform plan` 和 `terraform apply`。
+terraform login
+→ 本地 CLI 以谁的身份访问 HCP Terraform
 
-本 lab 不会真的连接 HCP Terraform，而是使用 `data/cli_workflow.json` 模拟上述配置和运行证据。
+terraform init
+→ 初始化或重新配置 cloud integration
 
-## 2. 核心主题
+terraform plan/apply
+→ 上传本地配置并发起远端 run
+```
 
-- HCP Terraform CLI-driven workflow 的四步执行顺序。
-- organization 与 workspace 如何形成远端执行目标。
-- `terraform login app.terraform.io` 的用途。
-- `terraform init` 后从本地 CLI 触发远端 run。
-- 通过执行模式和 Terraform 版本差异识别远端执行。
-- 登录 token 的本地存储与 Git 安全边界。
+## 阶段 1：步骤顺序
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1：
 
-请在 `main.tf` 中完成七个 TODO：
+```text
+配置 cloud target
+→ terraform login
+→ terraform init
+→ terraform plan
+→ 审阅后 terraform apply
+```
 
-1. 使用 `jsondecode(file(...))` 读取 `data/cli_workflow.json`。
-2. 构造包含 hostname、organization 和 workspace name 的 `cloud_target` object。
-3. 使用 `for` 表达式生成按顺序排列的 CLI command list。
-4. 生成 HCP Terraform workspace 的浏览器 URL。
-5. 根据 execution mode 与本地/远端 Terraform 版本判断 run 是否在远端执行。
-6. 构造 authentication safety object，确认 mock 数据没有 token 且 credentials 文件不应提交。
-7. 构造最终 `run_summary`，汇总 workspace、命令和远端执行证据。
+真实环境中，账号/workspace 可能已经存在，登录凭据也可能由自动化注入；但概念依赖仍然是“先有目标和身份，再初始化，最后运行”。
 
-## 4. 验收方式
+## 阶段 2：职责边界
 
-```sh
-terraform init -input=false
+完成 TODO 2。
+
+- `cloud` block：选择 organization 和 workspace。
+- `terraform login`：本地 CLI 获取 HCP Terraform 凭据。
+- `terraform init`：初始化或更新 cloud integration。
+- `terraform plan`：发起远端 speculative plan。
+- `terraform apply`：对非 VCS workspace 发起远端标准 run。
+
+写了 `cloud` block 后仍要执行 `terraform init`。修改 cloud 配置后也应重新 init。
+
+## 阶段 3：常见故障
+
+完成 TODO 3：
+
+| 现象 | 优先检查 |
+|---|---|
+| 缺少 HCP 凭据 | `terraform login` 或 CLI credentials |
+| 连接到错误 workspace | `cloud` block 的 organization/workspace |
+| 刚修改 cloud block | 重新运行 `terraform init` |
+| 远端 provider 认证失败 | Workspace dynamic provider credentials |
+| HCP 中看不到 run | execution mode、目标 workspace 和 run history |
+
+本地电脑能访问 AWS，不代表远端 run 能访问 AWS。
+
+## 阶段 4：Token 安全与远端证据
+
+完成 TODO 4。
+
+- 不提交 `credentials.tfrc.json`。
+- 不把 token 写进 `.tf`、变量默认值或测试数据。
+- Token 使用短有效期并在不需要时撤销。
+- HCP run URL、workspace run history 和 remote execution 设置是直接证据。
+- 本地/远端版本不同只是辅助观察；版本相同也可能是远端执行。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `cloud_target` 指向 `app.terraform.io`、指定 organization 和 `cli-driven-workflow` workspace。
-- `command_sequence` 按 login、init、plan、apply 的顺序排列。
-- `workspace_url` 能定位对应 HCP Terraform workspace。
-- `remote_execution_detected` 为 `true`。
-- `authentication_safety` 显示 mock 数据未包含 token，且 credentials 文件不得提交。
+1. `cloud` block 与 `terraform login` 分别解决什么问题？
+2. 修改 `cloud` block 后为什么要重新 init？
+3. 本地 AWS 凭据为什么不能解决远端 provider 认证失败？
+4. Terraform 版本差异是不是判断远端执行的必要条件？
+5. 哪些文件或值绝不能提交 Git？
 
-## 6. 约束
+## 官方参考
 
-- 不要在代码或 JSON 中写入真实 HCP Terraform token。
-- 不要把本地 credentials 文件加入仓库。
-- JSON 路径必须基于 `path.module` 构造。
-- 命令列表必须使用 `for` 表达式从 mock 数据生成，不要直接硬编码最终 list。
-- 远端执行判断必须同时检查 `execution_mode == "remote"` 和本地/远端版本不同。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [CLI-driven remote run workflow](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/run/cli)
+- [Connect to HCP Terraform](https://developer.hashicorp.com/terraform/cli/cloud/settings)
+- [Terraform login](https://developer.hashicorp.com/terraform/cli/commands/login)
