@@ -13,7 +13,7 @@
 # TODO 1：声明 aws_caller_identity data source，读取当前 AWS Provider 身份。
 # 答案级 Hint：完整答案如下，取消注释即可：
 #
-# data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {}
 
 locals {
   # TODO 2：把 data source 返回的三个关键属性放入 caller_identity。
@@ -24,17 +24,19 @@ locals {
   #   arn        = data.aws_caller_identity.current.arn
   # }
   caller_identity = {
-    account_id = ""
-    user_id    = ""
-    arn        = ""
+    account_id = data.aws_caller_identity.current.account_id
+    user_id    = data.aws_caller_identity.current.user_id
+    arn        = data.aws_caller_identity.current.arn
   }
 
-  # TODO 3：使用动态 account_id 拼接 Role ARN，并判断当前身份是否来自本实验 LocalStack。
+  # TODO 3：使用动态 account_id 拼接“希望 Assume 的目标 Role ARN”，并判断当前身份是否来自本实验 LocalStack。
+  # 本例假设：当前 credentials 对应的 IAM User，以及目标 platform-deployer Role，属于同一个 AWS Account。
+  # account_id 只负责动态确定账号；platform-deployer 是预先约定的目标 Role 名称，不是从当前 User ARN 推导出来的。
   # 答案级 Hint：完整答案如下：
   # example_role_arn = "arn:aws:iam::${local.caller_identity.account_id}:role/platform-deployer"
   # is_localstack    = local.caller_identity.account_id == "000000000000"
-  example_role_arn = ""
-  is_localstack    = false
+  example_role_arn = "arn:aws:iam::${local.caller_identity.account_id}:role/platform-deployer"
+  is_localstack    = local.caller_identity.account_id == "000000000000"
 }
 
 output "account_id" {
