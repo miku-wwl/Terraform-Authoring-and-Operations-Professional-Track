@@ -28,10 +28,10 @@ locals {
   #   cli_driven_requires_git      = false
   # }
   workflow_choices = {
-    local_cli_starts_remote_runs = "vcs_driven"
-    git_pr_is_source_of_truth    = "cli_driven"
-    custom_platform_calls_api    = "manual_only"
-    cli_driven_requires_git      = true
+    local_cli_starts_remote_runs = "cli_driven"
+    git_pr_is_source_of_truth    = "vcs_driven"
+    custom_platform_calls_api    = "api_driven"
+    cli_driven_requires_git      = false
   }
 
   # TODO 2：区分 cloud block、terraform login 和 provider 认证。
@@ -43,10 +43,10 @@ locals {
   #   preferred_provider_auth = "oidc_dynamic_credentials"
   # }
   authentication_boundaries = {
-    cloud_block             = "configure_aws_credentials"
-    terraform_login         = "authenticate_remote_run_to_aws"
-    provider_auth           = "authenticate_git_commit"
-    preferred_provider_auth = "long_lived_admin_access_keys"
+    cloud_block             = "link_directory_to_organization_and_workspace"
+    terraform_login         = "authenticate_local_cli_to_hcp_terraform"
+    provider_auth           = "authenticate_remote_run_to_cloud_provider"
+    preferred_provider_auth = "oidc_dynamic_credentials"
   }
 
   # TODO 3：判断 CLI-driven 命令的本地/远端行为。
@@ -59,11 +59,11 @@ locals {
   #   state_location    = "hcp_terraform_workspace"
   # }
   command_behaviors = {
-    terraform_plan    = "execute_only_on_local_laptop"
-    terraform_apply   = "always_triggered_by_git"
-    terraform_destroy = "delete_hcp_organization"
-    output_location   = "local_log_file_only"
-    state_location    = "local_terraform_tfstate"
+    terraform_plan    = "upload_local_config_and_start_remote_speculative_plan"
+    terraform_apply   = "start_remote_standard_run_for_non_vcs_workspace"
+    terraform_destroy = "start_remote_destroy_run"
+    output_location   = "remote_logs_streamed_to_local_terminal"
+    state_location    = "hcp_terraform_workspace"
   }
 
   # TODO 4：判断新建 CLI-driven workspace 是否已经准备就绪。
@@ -77,12 +77,12 @@ locals {
   #   ready_for_production_apply    = false
   # }
   workspace_readiness = {
-    workspace_object_exists       = false
-    variables_auto_configured     = true
-    provider_auth_auto_configured = true
-    permissions_need_review       = false
-    terraform_version_need_review = false
-    ready_for_production_apply    = true
+    workspace_object_exists       = true
+    variables_auto_configured     = false
+    provider_auth_auto_configured = false
+    permissions_need_review       = true
+    terraform_version_need_review = true
+    ready_for_production_apply    = false
   }
 }
 
