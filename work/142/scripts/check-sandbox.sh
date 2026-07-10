@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 set -eu
-if [ "${LOCALSTACK_ENDPOINT:-http://localhost:4566}" != "http://localhost:4566" ]; then
-  echo '警告：当前 endpoint 不是默认 LocalStack 地址，请确认没有连接真实 AWS。'
-fi
+lab_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+[ "${AWS_CONFIG_FILE:-}" = "$lab_root/aws-config/config" ]
+[ "${AWS_SHARED_CREDENTIALS_FILE:-}" = "$lab_root/aws-config/credentials" ]
+[ "${AWS_EC2_METADATA_DISABLED:-}" = true ]
+command -v aws >/dev/null 2>&1
+echo 'PASS: AWS CLI paths are isolated and metadata lookup is disabled.'

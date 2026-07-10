@@ -1,0 +1,19 @@
+# Lab 142 starter. Edit only this isolated training file.
+
+[profile base]
+# TODO 1: Configure the base profile region and output format.
+# Answer-level Hint:
+# region = us-east-1
+# output = json
+region = REPLACE_ME
+output = REPLACE_ME
+
+[profile lab-142]
+# TODO 2: Use base credentials as the source for the demo role.
+# Answer-level Hint:
+# region = us-east-1
+# source_profile = base
+# role_arn = arn:aws:iam::000000000000:role/tf-pro-lab-142-demo
+region = REPLACE_ME
+source_profile = REPLACE_ME
+role_arn = REPLACE_ME

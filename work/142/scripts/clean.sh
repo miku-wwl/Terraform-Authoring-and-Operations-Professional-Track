@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-set -eu
-rm -rf aws-config
-echo '已清理 lab 142 生成的 AWS CLI 配置。'
+# Source this file: `. ./scripts/clean.sh`
+unset AWS_CONFIG_FILE AWS_SHARED_CREDENTIALS_FILE AWS_EC2_METADATA_DISABLED
+echo 'Cleared Lab 142 AWS CLI isolation variables; starter files were preserved.'

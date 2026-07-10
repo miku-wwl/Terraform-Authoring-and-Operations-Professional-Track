@@ -1,59 +1,82 @@
-# 第 142 节做题环境：AWS CLI source_profile 配置
+# Lab 142：AWS CLI source_profile
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/142/` 中的参考实现。
+本实验只练 AWS CLI 的本地 profile 解析，不运行 Terraform、不启动 LocalStack、不访问 AWS API，也不会真正 AssumeRole。
 
-本实验只练 AWS CLI 本地配置文件，不需要启动真实 AWS 资源。不要使用真实 AWS 账号。
+你会直接编辑：
 
-## 知识点总结
+- `aws-config/config`：region、output、role_arn、source_profile；
+- `aws-config/credentials`：base profile 的 LocalStack 测试凭据。
 
-- `credentials` 文件保存基础访问密钥。
-- `config` 文件保存 profile 的 region、output、role_arn、source_profile 等配置。
-- `source_profile = base` 表示当前 profile 先使用 base profile 的凭证作为来源。
-- `role_arn` 表示当前 profile 准备基于来源凭证去 assume 哪个 role。
-
-## 1. 进入实验目录
+## 1. 进入目录并隔离 AWS CLI
 
 ```powershell
-cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\142
+cd D:\workshop\Codex\Terraform-Authoring-and-Operations-Professional-Track\work\142
+Set-ExecutionPolicy -Scope Process Bypass -Force
+& .\scripts\bootstrap.ps1
+& .\scripts\check-sandbox.ps1
 ```
 
-## 2. 开始做题
+bootstrap 只把 AWS CLI 指向当前 Lab 文件，不写答案：
+
+```text
+AWS_CONFIG_FILE=work/142/aws-config/config
+AWS_SHARED_CREDENTIALS_FILE=work/142/aws-config/credentials
+AWS_EC2_METADATA_DISABLED=true
+```
+
+因此不会读取你真实的 `~/.aws/config` 或 `~/.aws/credentials`。
+
+## 2. 边学边练
+
+打开 `aws-config/config` 和 `aws-config/credentials`。每个 TODO 上方都有完整答案级 Hint。
+
+先完成 base profile：
+
+```ini
+[profile base]     # config 文件的命名方式
+[base]             # credentials 文件的命名方式
+```
+
+注意：credentials 文件不能写成 `[profile base]`。
+
+再完成 `lab-142`：
+
+```text
+lab-142 ── source_profile=base ──► base 的 test/test 凭据
+       └─ role_arn ──────────────► 准备调用 STS AssumeRole
+```
+
+本实验只解析这条链，不执行 STS。
+
+## 3. 用 AWS CLI 本地解析验收
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-Get-Content aws-config\config
-Get-Content aws-config\credentials
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+aws configure get region --profile base
+aws configure get source_profile --profile lab-142
+aws configure get role_arn --profile lab-142
+& .\scripts\verify.ps1
 ```
 
-## 3. 关键配置
+验证脚本还会确认 credentials 中只有 `base`，没有给 `lab-142` 重复存长期密钥。
 
-`aws-config/config` 里重点看：
+## 4. 清理当前进程隔离变量
 
-```ini
-[profile lab-142]
-region = us-east-1
-source_profile = base
-role_arn = arn:aws:iam::000000000000:role/tf-pro-lab-142-demo
+```powershell
+& .\scripts\clean.ps1
 ```
 
-`aws-config/credentials` 里重点看：
+清理脚本不会删除 starter 文件，只移除当前 PowerShell 进程中的 AWS 路径变量。
 
-```ini
-[base]
-aws_access_key_id = test
-aws_secret_access_key = test
-```
-
-## 4. Linux 方式
+## Linux
 
 ```sh
-bash scripts/check-sandbox.sh
-bash scripts/bootstrap.sh
-cat aws-config/config
-cat aws-config/credentials
-bash scripts/verify.sh
-bash scripts/clean.sh
+cd work/142
+. ./scripts/bootstrap.sh
+sh scripts/check-sandbox.sh
+sh scripts/verify.sh
+. ./scripts/clean.sh
 ```
+
+## 实验边界
+
+`source_profile` 只选择“拿哪组来源凭据去尝试 AssumeRole”。真正成功还要求来源身份允许 `sts:AssumeRole`，目标 Role trust policy 信任来源主体，并且 STS endpoint 可达。本实验不验证这些远端条件。

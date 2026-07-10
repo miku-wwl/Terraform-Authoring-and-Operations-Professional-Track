@@ -1,29 +1,21 @@
 variable "aws_region" {
-  type        = string
-  description = "LocalStack 使用的 AWS 区域"
-  default     = "us-east-1"
+  type    = string
+  default = "us-east-1"
 }
-
 variable "localstack_endpoint" {
-  type        = string
-  description = "LocalStack edge endpoint"
-  default     = "http://localhost:4566"
+  type    = string
+  default = "http://localhost:4566"
+  validation {
+    condition     = var.localstack_endpoint == "http://localhost:4566"
+    error_message = "Lab 141 only permits LocalStack localhost:4566."
+  }
 }
 
 provider "aws" {
   region                      = var.aws_region
-  access_key                  = "test"
-  secret_key                  = "test"
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
   s3_use_path_style           = true
-
-  endpoints {
-    autoscaling = var.localstack_endpoint
-    ec2         = var.localstack_endpoint
-    iam         = var.localstack_endpoint
-    s3          = var.localstack_endpoint
-    sts         = var.localstack_endpoint
-  }
+  endpoints { s3 = var.localstack_endpoint }
 }
