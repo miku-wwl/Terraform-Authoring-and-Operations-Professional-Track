@@ -1,38 +1,38 @@
-run "terraform_debug_logging_config_is_correct" {
+run "real_debug_logs_were_generated" {
   command = plan
 
   assert {
-    condition = output.supported_log_levels == [
-      "TRACE",
-      "DEBUG",
-      "INFO",
-      "WARN",
-      "ERROR"
-    ]
-    error_message = "supported_log_levels must contain all TF_LOG levels from data/debugging.json in decreasing verbosity order."
-  }
-
-  assert {
-    condition     = output.most_verbose_log_level == "TRACE"
-    error_message = "most_verbose_log_level must be calculated from the smallest verbosity_rank and should be TRACE."
-  }
-
-  assert {
-    condition     = output.debug_command_bash == "TF_LOG=TRACE TF_LOG_PATH=terraform-debug.log terraform plan -input=false -no-color"
-    error_message = "debug_command_bash must enable TF_LOG=TRACE, set TF_LOG_PATH, and run terraform plan."
-  }
-
-  assert {
-    condition     = output.debug_command_powershell == "$env:TF_LOG=\"TRACE\"; $env:TF_LOG_PATH=\"terraform-debug.log\"; terraform plan -input=false -no-color"
-    error_message = "debug_command_powershell must enable TF_LOG=TRACE, set TF_LOG_PATH, and run terraform plan."
-  }
-
-  assert {
-    condition = output.debugging_checklist == {
-      "root-cause" = "What is the root cause instead of only the surface error?"
-      verbosity  = "Is TF_LOG set to a suitable level for the issue?"
-      "log-file"   = "Is TF_LOG_PATH set so detailed logs are saved to a file?"
+    condition = output.debug_target == {
+      lesson = "TF_LOG and TF_LOG_PATH"
+      goal   = "compare INFO and TRACE logs"
     }
-    error_message = "debugging_checklist must be keyed by checklist id from data/debugging.json."
+    error_message = "The debug target must remain available for repeatable plan logging."
+  }
+
+  assert {
+    condition     = fileexists("${path.module}/terraform-info.log")
+    error_message = "terraform-info.log is missing. Follow TODO 2 in main.tf with TF_LOG=INFO and TF_LOG_PATH set."
+  }
+
+  assert {
+    condition     = fileexists("${path.module}/terraform-trace.log")
+    error_message = "terraform-trace.log is missing. Follow TODO 3 in main.tf with TF_LOG=TRACE and TF_LOG_PATH set."
+  }
+
+  assert {
+    condition     = strcontains(try(file("${path.module}/terraform-info.log"), ""), "[INFO]")
+    error_message = "terraform-info.log must contain real INFO log entries."
+  }
+
+  assert {
+    condition     = strcontains(try(file("${path.module}/terraform-trace.log"), ""), "[TRACE]")
+    error_message = "terraform-trace.log must contain real TRACE log entries."
+  }
+
+  assert {
+    condition = length(try(file("${path.module}/terraform-trace.log"), "")) > length(
+      try(file("${path.module}/terraform-info.log"), "")
+    )
+    error_message = "TRACE output should be more detailed than INFO output. Delete old logs and repeat TODO 2 and TODO 3."
   }
 }

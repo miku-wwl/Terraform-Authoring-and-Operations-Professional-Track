@@ -10,6 +10,10 @@
 .terraform.lock.hcl
 !work/114/.terraform.lock.hcl
 
+# Lab 115 generates temporary debug logs that may contain sensitive details.
+work/115/terraform-info.log
+work/115/terraform-trace.log
+
 # .tfstate files
 *.tfstate
 *.tfstate.*

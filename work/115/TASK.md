@@ -1,72 +1,106 @@
-# Terraform 实操训练 115：Terraform Debugging、TF_LOG 与 TF_LOG_PATH
+# Terraform 实操训练 115：TF_LOG 与 TF_LOG_PATH
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/115` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform debugging 配置练习。
+Terraform 默认只显示正常的命令结果。遇到异常行为时，可以临时启用详细日志，观察 Terraform core、provider 和执行图背后的信息，从而定位 root cause。
 
-这个 lab 不会创建真实云资源，而是用 `terraform_data` 和 mock 数据模拟 Terraform debugging 的知识点：
+两个核心环境变量：
 
-- debugging 的目标是定位 root cause。
-- 详细日志可以帮助你理解 Terraform core、provider plugin、plan/apply 流程背后发生了什么。
-- `TF_LOG` 控制 Terraform 日志级别。
-- `TF_LOG_PATH` 控制详细日志写入文件，避免大量 trace/debug 内容直接输出到终端。
+```text
+TF_LOG      = 是否启用日志，以及使用哪个详细级别
+TF_LOG_PATH = 把已经启用的日志保存到哪个文件
+```
 
-## 2. 核心主题
+只设置 `TF_LOG_PATH` 不会启用日志。Terraform 日志默认写到 stderr；同时设置 `TF_LOG_PATH` 后，日志会保存到指定文件。已有日志文件会被追加，因此每轮练习前先删除旧文件。
 
-- `TF_LOG`：启用 Terraform 详细日志。
-- `TRACE`、`DEBUG`、`INFO`、`WARN`、`ERROR`：不同 verbosity 的日志级别。
-- `TRACE`：最详细，适合深度排查 Terraform core/provider 问题。
-- `TF_LOG_PATH`：把日志保存到文件。
-- `jsondecode(file(...))`：读取 mock debugging 配置。
-- `for` 表达式：从配置中派生命令和检查项。
+## 阶段 1：建立正常输出基线
 
-## 3. 任务目标
-
-请在 `main.tf` 中完成七个 TODO：
-
-1. 用 `jsondecode(file("${path.module}/data/debugging.json"))` 读取并解析 mock 配置。
-2. 从解析后的对象中读取 `log_levels` list。
-3. 生成 `supported_log_levels`，只保留每个日志级别的 `name`。
-4. 找出最详细的日志级别，也就是 verbosity_rank 最小的 level。
-5. 构造 `debug_command_bash`，格式为 `TF_LOG=TRACE TF_LOG_PATH=terraform-debug.log terraform plan -input=false -no-color`。
-6. 构造 `debug_command_powershell`，格式为 `$env:TF_LOG="TRACE"; $env:TF_LOG_PATH="terraform-debug.log"; terraform plan -input=false -no-color`。
-7. 生成 `debugging_checklist`，输出 root cause、verbosity、log file 三个检查项。
-
-完成后运行 `README.md` 中的命令。
-
-## 4. 验收方式
-
-基础检查：
-
-```sh
+```powershell
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+先观察正常 plan 输出。调试的第一步不是立刻开启最大日志，而是知道正常行为是什么，并能稳定复现问题。
+
+## 阶段 2：生成 INFO 日志
+
+```powershell
+Remove-Item terraform-info.log -ErrorAction SilentlyContinue
+$env:TF_LOG="INFO"
+$env:TF_LOG_PATH="terraform-info.log"
+terraform plan -input=false -no-color
+Remove-Item Env:TF_LOG
+Remove-Item Env:TF_LOG_PATH
+```
+
+打开 `terraform-info.log`，搜索 `[INFO]`。INFO 适合先了解 Terraform 版本、backend 和主要执行阶段。
+
+## 阶段 3：生成 TRACE 日志并比较
+
+```powershell
+Remove-Item terraform-trace.log -ErrorAction SilentlyContinue
+$env:TF_LOG="TRACE"
+$env:TF_LOG_PATH="terraform-trace.log"
+terraform plan -input=false -no-color
+Remove-Item Env:TF_LOG
+Remove-Item Env:TF_LOG_PATH
+```
+
+打开 `terraform-trace.log`，搜索 `[TRACE]`，然后比较：
+
+```powershell
+(Get-Content terraform-info.log).Count
+(Get-Content terraform-trace.log).Count
+```
+
+日志级别按详细程度从高到低为：
+
+```text
+TRACE > DEBUG > INFO > WARN > ERROR
+```
+
+具体行数不是验收目标。TRACE 通常会包含更多 graph、state、provider protocol 和内部执行细节。
+
+## 阶段 4：清理与验收
+
+先确认环境变量没有遗留：
+
+```powershell
+Test-Path Env:TF_LOG
+Test-Path Env:TF_LOG_PATH
+```
+
+预期都是 `False`。如果不是，运行：
+
+```powershell
+Remove-Item Env:TF_LOG -ErrorAction SilentlyContinue
+Remove-Item Env:TF_LOG_PATH -ErrorAction SilentlyContinue
+```
+
+最后验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+测试会读取你真实生成的两份日志，确认 INFO/TRACE 内容存在，并确认 TRACE 比 INFO 更详细。
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output supported_log_levels` 显示 `TRACE`、`DEBUG`、`INFO`、`WARN`、`ERROR`。
-- `terraform output most_verbose_log_level` 显示 `TRACE`。
-- `terraform output debug_command_bash` 显示一条 Linux/macOS shell 命令。
-- `terraform output debug_command_powershell` 显示一条 PowerShell 命令。
-- `terraform output debugging_checklist` 显示三个调试检查项。
+## 安全提醒
 
-## 6. 约束
+Debug log 可能包含本地路径、provider 配置、HTTP 请求信息，甚至敏感值。提交工单或公开分享前必须检查并脱敏。日志只应在排障期间临时启用。
 
-- 不要硬编码所有输出绕过 `data/debugging.json`。
-- JSON 文件路径必须基于 `path.module` 构造。
-- `TF_LOG_PATH` 必须出现在 Bash 和 PowerShell 两条命令里。
-- 最详细日志级别必须通过 `verbosity_rank` 计算出来，不要直接写死 `TRACE`。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+## 你现在应该能回答
+
+1. `TF_LOG` 和 `TF_LOG_PATH` 各自负责什么？
+2. 为什么只设置 `TF_LOG_PATH` 不会生成日志？
+3. 哪个日志级别最详细？
+4. 为什么生成新日志前要删除旧文件？
+5. 为什么排障结束后要清除日志环境变量？
