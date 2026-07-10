@@ -34,11 +34,11 @@ locals {
   #   reading_auto_queues = false
   # }
   dependency_model = {
-    data_channel        = "run_trigger"
-    timing_channel      = "terraform_output_command"
-    source_workspace    = "downstream_consumer"
-    target_workspace    = "upstream_producer"
-    reading_auto_queues = true
+    data_channel        = "workspace_outputs"
+    timing_channel      = "run_trigger"
+    source_workspace    = "upstream_producer"
+    target_workspace    = "downstream_consumer"
+    reading_auto_queues = false
   }
 
   # TODO 2：判断哪些 source run 会触发下游，以及是否自动 apply。
@@ -51,11 +51,11 @@ locals {
   #   dedicated_auto_apply_setting      = true
   # }
   trigger_behaviors = {
-    successful_apply_queues_run        = false
-    speculative_plan_queues_run        = true
-    failed_apply_queues_run            = true
-    triggered_run_auto_applies_default = true
-    dedicated_auto_apply_setting       = false
+    successful_apply_queues_run        = true
+    speculative_plan_queues_run        = false
+    failed_apply_queues_run            = false
+    triggered_run_auto_applies_default = false
+    dedicated_auto_apply_setting       = true
   }
 
   # TODO 3：判断 state sharing、Run Trigger 和权限边界。
@@ -69,12 +69,12 @@ locals {
   #   create_trigger_needs_source_run_read = true
   # }
   access_judgements = {
-    new_workspace_shares_state_default   = true
-    prefer_specific_consumers            = false
-    trigger_grants_state_access          = true
-    state_access_creates_trigger         = true
-    create_trigger_needs_target_admin    = false
-    create_trigger_needs_source_run_read = false
+    new_workspace_shares_state_default   = false
+    prefer_specific_consumers            = true
+    trigger_grants_state_access          = false
+    state_access_creates_trigger         = false
+    create_trigger_needs_target_admin    = true
+    create_trigger_needs_source_run_read = true
   }
 
   # TODO 4：为常见 workspace 依赖场景选择正确做法。
@@ -87,11 +87,11 @@ locals {
   #   evidence_of_trigger_direction    = "inbound_on_target_outbound_on_source"
   # }
   dependency_scenarios = {
-    downstream_reads_upstream_output = "run_trigger_only"
-    upstream_apply_failed            = "queue_downstream_anyway"
-    manual_cloud_console_change      = "always_queues_triggered_run"
-    all_configs_in_one_workspace     = "required_for_any_dependency"
-    evidence_of_trigger_direction    = "inbound_on_source_outbound_on_target"
+    downstream_reads_upstream_output = "outputs_access_plus_run_trigger"
+    upstream_apply_failed            = "do_not_queue_downstream"
+    manual_cloud_console_change      = "run_trigger_does_not_detect_it"
+    all_configs_in_one_workspace     = "not_required_for_dependency"
+    evidence_of_trigger_direction    = "inbound_on_target_outbound_on_source"
   }
 }
 
