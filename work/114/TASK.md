@@ -1,77 +1,125 @@
-# Terraform 实操训练 114：Dependency Lock File 与 provider 版本锁定
+# Terraform 实操训练 114：Dependency Lock File
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/114` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform dependency lock file 的数据建模练习。
+你要通过真实操作理解下面这句话：
 
-Terraform provider plugin 和 Terraform CLI 本身有独立的发布周期。第一次 `terraform init` 选择到某个 provider 版本后，Terraform 会把选中的 provider 版本和 checksum 写入 dependency lock file，也就是 `.terraform.lock.hcl`。
+```text
+required_providers.version = 允许 Terraform 选择什么版本
+.terraform.lock.hcl       = Terraform 上一次实际选择了什么版本
+```
 
-这个 lab 不会真的下载 AWS provider，而是用 `data/dependency-lock.json` 模拟一次 provider 版本锁定场景，帮助你理解：
+第一次 `terraform init` 会选择 provider，并把实际版本和 checksum 写入 `.terraform.lock.hcl`。以后普通 `terraform init` 会优先复用锁文件中的选择；`terraform init -upgrade` 才会重新选择满足当前约束的版本。
 
-- `.terraform.lock.hcl` 记录 provider dependency 的最终选择版本。
-- 版本约束可以允许一个范围，但 lock file 会固定一次实际选中的版本。
-- 当想重新选择、升级或降级 provider 版本时，应使用 `terraform init -upgrade`。
-- lock file 当前跟踪 provider dependency，不负责记住 remote module 的版本选择。
-- lock file 里还会保存 checksum/hash，用于校验下载到的 provider package。
+本节只使用体积较小的 `hashicorp/local` provider，不访问 AWS，也不创建任何资源。
 
-## 2. 核心主题
+## 阶段 1：观察已经锁定的版本
 
-- `file()`：读取当前 module 下的 JSON 文件内容。
-- `jsondecode()`：把 JSON 字符串转换成 Terraform object/list/map。
-- map 构造：把 provider list 转成按 source 或 local name 索引的 map。
-- `for` 过滤：筛选需要 `terraform init -upgrade` 才能重新选择版本的 provider。
-- 嵌套 `for` + `flatten()`：展开 provider checksum 标签。
-- dependency lock file 的 scope：provider 会被锁定，remote module version selection 不会被 lock file 记住。
+当前 `main.tf` 要求：
 
-## 3. 任务目标
+```hcl
+version = "= 2.5.2"
+```
 
-请在 `main.tf` 中完成七个 TODO：
+当前目录也提供了一份锁定到 `2.5.2` 的 `.terraform.lock.hcl`。先执行：
 
-1. 用 `jsondecode(file("${path.module}/data/dependency-lock.json"))` 读取并解析 JSON。
-2. 从解析后的对象中读取 `providers` list。
-3. 构造 `locked_provider_versions_by_source` map，key 为 provider `source`，value 为 `locked_version`。
-4. 构造 `provider_constraints_by_name` map，key 为 provider `local_name`，value 为 `constraint`。
-5. 筛选 `providers_requiring_upgrade`，只保留 `requires_upgrade_to_change == true` 的 provider local name。
-6. 用嵌套 `for` 和 `flatten()` 生成 checksum 标签，格式为 `local_name:hash`。
-7. 构造 `lock_file_scope` object，体现 lock file 名称、provider 是否被跟踪、remote module 是否被跟踪，以及普通 init / 重新选择依赖的命令。
-
-完成后运行 `README.md` 中的命令。
-
-## 4. 验收方式
-
-基础检查：
-
-```sh
+```powershell
 terraform init -input=false
+```
+
+然后在 VS Code 中打开 `.terraform.lock.hcl`，找到下面三项：
+
+```hcl
+version     = "2.5.2"
+constraints = "2.5.2"
+hashes      = [ ... ]
+```
+
+观察重点：
+
+- `version` 是实际锁定的 provider 版本。
+- `constraints` 来自 `main.tf` 中的版本要求。
+- `hashes` 用于校验下载到的 provider package，不需要手写。
+
+## 阶段 2：制造配置与锁文件冲突
+
+现在只修改 `main.tf` 中的一行：
+
+```hcl
+# 修改前
+version = "= 2.5.2"
+
+# 修改后
+version = "= 2.5.3"
+```
+
+先不要使用 `-upgrade`，再次运行：
+
+```powershell
+terraform init -input=false
+```
+
+这一步预期失败，不是你做错了。请在错误信息中找出这两个事实：
+
+1. 锁文件仍然选择了 `2.5.2`。
+2. 新配置要求 `2.5.3`，与现有选择不一致。
+
+这说明普通 `init` 不会静默替换已经锁定的 provider 版本。
+
+## 阶段 3：主动重新选择 provider
+
+现在运行：
+
+```powershell
+terraform init -upgrade -input=false
+```
+
+`-upgrade` 的含义不是升级 Terraform CLI，而是忽略锁文件中已有的 provider 选择，按照当前版本约束重新选择。
+
+再次打开 `.terraform.lock.hcl`，确认：
+
+```hcl
+version     = "2.5.3"
+constraints = "2.5.3"
+```
+
+同时观察 `hashes`。不同 provider 版本对应的 package 不同，因此 checksum 也会随之更新。
+
+## 阶段 4：验收
+
+完成前三个阶段后运行：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期结果：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+测试会直接读取真实的 `.terraform.lock.hcl`，检查：
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output lock_file_name` 显示 `.terraform.lock.hcl`。
-- `terraform output locked_provider_versions_by_source` 显示三个 provider 被锁定的版本。
-- `terraform output provider_constraints_by_name` 显示三个 provider 的版本约束。
-- `terraform output providers_requiring_upgrade` 只显示 `aws`。
-- `terraform output checksum_labels` 显示所有 provider checksum 的扁平标签。
-- `terraform output lock_file_scope` 显示 provider 被 lock file 跟踪，而 remote module 不被 lock file 跟踪。
+- 存在 `hashicorp/local` provider 条目；
+- 最终锁定版本是 `2.5.3`；
+- 约束记录是 `2.5.3`；
+- 锁文件包含 checksum。
 
-## 6. 约束
+如果测试仍然看到 `2.5.2`，请确认你已经修改 `main.tf`，并运行了：
 
-- 不要修改 `practice/` 下的讲义文件。
-- 不要硬编码输出绕过 `jsondecode()` 和 `for` 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 筛选需要升级的 provider 时使用 `provider.requires_upgrade_to_change == true`。
-- 判断 provider/remote module 是否被 lock file 跟踪时，基于数据文件中的 `tracked_by_lock_file` 字段。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+```powershell
+terraform init -upgrade -input=false
+```
+
+## 你现在应该能回答
+
+1. `required_providers` 中的版本约束和锁文件中的实际版本有什么区别？
+2. 为什么修改版本要求后，普通 `terraform init` 会失败？
+3. `terraform init -upgrade` 改变的是 Terraform CLI 版本，还是 provider 选择？
+4. `.terraform/` 和 `.terraform.lock.hcl` 中，哪个通常应该提交到真实项目的 Git？
+5. 锁文件是否会记住 remote module 的版本选择？
+
+第 5 题答案：目前锁文件只跟踪 provider dependency，不记录 remote module 的版本选择。

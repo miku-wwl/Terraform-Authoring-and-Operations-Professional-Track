@@ -8,6 +8,7 @@
 # This repository contains many disposable `work/N` practice sandboxes; each lab can generate
 # its own lock file during exercises, so we ignore it here to keep the training repository clean.
 .terraform.lock.hcl
+!work/114/.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
