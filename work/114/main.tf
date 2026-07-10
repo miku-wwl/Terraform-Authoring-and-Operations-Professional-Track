@@ -6,6 +6,16 @@
 # - .terraform.lock.hcl 中的 hashes 用于校验 provider package，不需要手写或手动修改。
 # - 锁文件跟踪 provider dependency，目前不记录 remote module 的版本选择。
 # - 真实项目通常提交 .terraform.lock.hcl，但不提交本地缓存目录 .terraform/。
+# - terraform init 会创建 .terraform/ 缓存目录，并创建或更新 .terraform.lock.hcl。
+# - terraform init 不会创建资源，所以不会因为 init 自动产生 terraform.tfstate。
+# - Terraform 没有 terraform uninit；要撤销本地初始化，通常只删除 .terraform/。
+# - 删除 .terraform/ 不会销毁资源；再次 init 会按锁文件重新下载相同版本的 provider。
+#
+# PowerShell 清理本地初始化缓存：
+#
+#   Remove-Item -Recurse -Force .terraform
+#
+# 本 Lab 不建议删除 .terraform.lock.hcl，因为它正是本节的学习对象。
 #
 # 本 Lab 不创建资源，学习对象就是当前目录中的 .terraform.lock.hcl。
 # 本节允许并要求你直接打开这个文件观察；其他 Lab 不需要照做。
@@ -56,9 +66,8 @@ terraform {
     local = {
       source = "hashicorp/local"
 
-      # Starter：先保留 2.5.2 完成 TODO 1。
-      # TODO 2 的最终答案：version = "= 2.5.3"
-      version = "= 2.5.2"
+      # 完成状态：配置和锁文件都已经更新到 2.5.3。
+      version = "= 2.5.3"
     }
   }
 }
