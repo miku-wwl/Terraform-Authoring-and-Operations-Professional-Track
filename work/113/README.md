@@ -1,16 +1,14 @@
-# 第 113 节做题环境
+# 第 113 节：观察 AssumeRole 前后的身份
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/113/` 中的参考实现。
+Lab112 重点是会写 `assume_role`。本节通过 provider alias 和 `aws_caller_identity`，观察 AWS Provider 调用 STS 前后的真实身份变化。
 
-本实验使用 Docker 启动 LocalStack 来模拟 AWS，Terraform 和 AWS CLI 在本机执行。不要使用真实 AWS 账号。
+## 你会练到什么
 
-## 知识点总结
-
-- `assume_role` 让 AWS Provider 使用临时角色身份管理资源。
-- Provider 会通过 STS AssumeRole 完成身份切换。
-- 真实 AWS 中常用于跨账号部署；本实验用 LocalStack 模拟调用路径。
-- `role_arn` 指目标角色，`session_name` 标识这次临时会话。
-- 资源本身不需要知道 assume role 细节，只要使用该 provider。
+- 默认 provider：使用基础凭证，是 AssumeRole 的发起者。
+- `aws.assumed`：通过 STS 获得临时身份。
+- `data "aws_caller_identity"`：查询某个 provider 当前代表谁。
+- `provider = aws.assumed`：明确让 data source 或 resource 使用临时身份。
+- trust policy：目标 Role 必须信任发起 AssumeRole 的身份。
 
 ## 1. 启动 LocalStack
 
@@ -22,52 +20,63 @@ docker run -d --rm --name localstack-tf-labs `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，先确认它是否还在运行：
+容器已经存在时，只需确认它仍在运行：
 
 ```powershell
 docker ps --filter "name=localstack-tf-labs"
 ```
 
-## 2. 进入实验目录
+## 2. 准备实验环境
 
 ```powershell
 cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\113
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
 $env:LOCALSTACK_ENDPOINT="http://localhost:4566"
 $env:TF_VAR_localstack_endpoint="http://localhost:4566"
-```
-
-## 3. 开始做题
-
-```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
+```
+
+`bootstrap.ps1` 会创建 `tf-pro-lab-113` IAM Role。它的 trust policy 允许实验账号调用 `sts:AssumeRole`。
+
+可以先确认 Role 已存在：
+
+```powershell
+aws --endpoint-url=$env:LOCALSTACK_ENDPOINT iam get-role --role-name tf-pro-lab-113
+```
+
+## 3. 完成练习
+
+按照 `provider.tf` 和 `main.tf` 中的 TODO，依次取消 Hint 代码的注释。
+
+```powershell
 terraform init -input=false
 terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
-terraform output
+terraform output identity_comparison
+terraform output bucket_name
+```
+
+重点观察 `identity_comparison`：
+
+- `base_arn` 是默认 provider 的基础身份。
+- `assumed_arn` 应包含 `assumed-role/tf-pro-lab-113`。
+- `changed = true` 说明两个 provider 使用的身份不同。
+
+## 4. 验收与清理
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
 terraform destroy -auto-approve
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
 ```
 
-验收重点：
-
-- provider 中配置了 `assume_role`。
-- provider endpoints 中包含 LocalStack `sts` endpoint。
-- Terraform 能通过该 provider 创建 `tf-pro-lab-113` S3 bucket。
-
-## 4. Sandbox / Linux 方式
+## Linux / Sandbox
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
 export LOCALSTACK_ENDPOINT=http://localhost:4566
+export TF_VAR_localstack_endpoint=http://localhost:4566
 bash scripts/check-sandbox.sh
 bash scripts/bootstrap.sh
 terraform init -input=false
@@ -75,13 +84,13 @@ terraform fmt
 terraform validate
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
-terraform output
+terraform output identity_comparison
 bash scripts/verify.sh
 terraform destroy -auto-approve
 bash scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+整个实验结束后，如需停止 LocalStack：
 
 ```powershell
 docker stop localstack-tf-labs

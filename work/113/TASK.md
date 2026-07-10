@@ -1,55 +1,60 @@
 # 第 113 节任务
 
-## 背景
+## 主题
 
-AWS Provider Assume Role 实操
+观察 AWS Provider AssumeRole 前后的身份变化。
 
-## 知识点总结
+Lab112 让你学会写 `assume_role`。Lab113 再向前一步：在同一份 Terraform 配置中保留基础身份，同时创建一个扮演 Role 后的 provider，亲眼比较两者。
 
-- `assume_role` 写在 AWS provider 中。
-- Provider 会先调用 STS AssumeRole，再使用临时身份管理资源。
-- `role_arn` 是要扮演的角色 ARN，`session_name` 是会话名。
-- 本实验用 LocalStack 模拟 STS，不访问真实 AWS。
+## 执行链
 
-## 要求
+```text
+默认 aws provider（基础身份）
+          |
+          | STS AssumeRole
+          v
+aws.assumed provider（临时身份）
+          |
+          v
+创建 S3 bucket
+```
 
-1. 在 provider 中配置 assume_role。
-2. 使用 LocalStack STS endpoint。
-3. 创建 S3 bucket 验证 provider 已完成 assume role 调用路径。
+## 动手任务
+
+1. 运行 `scripts/bootstrap.ps1`，在 LocalStack 中创建目标 IAM Role。
+2. 在 `provider.tf` 中完成带 `alias = "assumed"` 的 provider。
+3. 在 `main.tf` 中用两个 `aws_caller_identity` 分别读取基础身份和临时身份。
+4. 为 S3 bucket 指定 `provider = aws.assumed`。
+5. 输出两个 ARN，确认 AssumeRole 前后的身份不同。
 
 ## Hint
 
-provider 中的关键配置如下：
+选择 provider 的关键写法：
 
 ```hcl
-assume_role {
-  role_arn     = "arn:aws:iam::000000000000:role/tf-pro-lab-113"
-  session_name = "tf-pro-lab-113"
+data "aws_caller_identity" "assumed" {
+  provider = aws.assumed
 }
-```
 
-可以直接参考下面的资源完成 `main.tf`：
-
-```hcl
 resource "aws_s3_bucket" "assumed" {
-  bucket = "tf-pro-lab-113"
-}
-
-output "bucket_name" {
-  value = aws_s3_bucket.assumed.bucket
+  provider = aws.assumed
+  bucket   = "tf-pro-lab-113"
 }
 ```
 
-## 限制
-
-- 不要使用真实 AWS。
-- 不要把真实 access key 写入文件。
-- 不要修改 `practice/labs/113/`。
+如果不写 `provider = aws.assumed`，Terraform 会使用默认 provider，也就无法证明这个对象是通过临时身份管理的。
 
 ## 验收标准
 
-- provider 中存在 `assume_role` block。
-- provider endpoints 中存在 `sts = var.localstack_endpoint`。
-- S3 bucket 通过 assume role provider 创建。
-- `terraform output` 能看到 bucket 名称。
-- `scripts/verify.ps1` 或 `scripts/verify.sh` 通过。
+- `provider.tf` 同时存在默认 `aws` 和 `aws.assumed`。
+- `aws.assumed` 中存在 `assume_role` block。
+- 两个 `aws_caller_identity` 分别绑定正确的 provider。
+- S3 bucket 明确使用 `aws.assumed`。
+- `identity_comparison.changed` 为 `true`。
+- `scripts/verify.ps1` 或 `scripts/verify.sh` 验收通过。
+
+## 限制
+
+- 只使用 LocalStack，不访问真实 AWS。
+- 不要把真实 access key 写入实验文件。
+- 不要修改 `practice/labs/113/`。
