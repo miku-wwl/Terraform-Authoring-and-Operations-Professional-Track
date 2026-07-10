@@ -34,11 +34,11 @@ locals {
   #   reusable_across_workspaces  = true
   # }
   scope_choices = {
-    share_across_projects      = "project_owned"
-    share_within_one_project   = "workspace_variable"
-    all_org_current_and_future = "workspace_scoped"
-    selected_workspaces_only   = "global"
-    reusable_across_workspaces = false
+    share_across_projects      = "organization_owned"
+    share_within_one_project   = "project_owned"
+    all_org_current_and_future = "global"
+    selected_workspaces_only   = "workspace_scoped"
+    reusable_across_workspaces = true
   }
 
   # TODO 2：区分 Terraform variable 与 environment variable。
@@ -51,11 +51,11 @@ locals {
   #   env_values_are_strings   = true
   # }
   variable_categories = {
-    module_input_value       = "environment"
-    provider_process_setting = "terraform"
-    hcl_option_supported_by  = "both_categories"
-    sensitive_supported_by   = "terraform_only"
-    env_values_are_strings   = false
+    module_input_value       = "terraform"
+    provider_process_setting = "environment"
+    hcl_option_supported_by  = "terraform_only"
+    sensitive_supported_by   = "both_categories"
+    env_values_are_strings   = true
   }
 
   # TODO 3：判断普通优先级、Priority Variable Set 和执行模式。
@@ -68,11 +68,11 @@ locals {
   #   newest_edit_always_wins      = false
   # }
   precedence_and_execution = {
-    normal_same_key_winner       = "global_variable_set"
-    priority_set_can_override    = "nothing_outside_its_scope"
-    overwritten_marker_location  = "terraform_state"
-    local_execution_uses_varsets = true
-    newest_edit_always_wins      = true
+    normal_same_key_winner       = "workspace_specific_variable"
+    priority_set_can_override    = "more_specific_scopes_and_cli_values"
+    overwritten_marker_location  = "workspace_variables_ui"
+    local_execution_uses_varsets = false
+    newest_edit_always_wins      = false
   }
 
   # TODO 4：判断 sensitive、凭据和最小作用域的安全做法。
@@ -86,12 +86,12 @@ locals {
   #   trace_logs_need_protection          = true
   # }
   security_judgements = {
-    sensitive_is_write_only_in_ui_api  = false
-    sensitive_guarantees_no_state_leak = true
-    descriptions_are_encrypted         = true
-    prefer_dynamic_credentials         = false
-    credentials_should_be_global       = true
-    trace_logs_need_protection         = false
+    sensitive_is_write_only_in_ui_api  = true
+    sensitive_guarantees_no_state_leak = false
+    descriptions_are_encrypted         = false
+    prefer_dynamic_credentials         = true
+    credentials_should_be_global       = false
+    trace_logs_need_protection         = true
   }
 }
 
