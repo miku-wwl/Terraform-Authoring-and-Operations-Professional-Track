@@ -1,46 +1,45 @@
-run "hcp_terraform_structure_is_modeled_correctly" {
+run "workspace_creation_and_workflow_selection_are_understood" {
   command = plan
 
   assert {
-    condition     = output.organization_name == "example-kplabs-org"
-    error_message = "organization_name must be decoded from the organization object."
-  }
-
-  assert {
-    condition     = length(output.projects) == 2
-    error_message = "projects must decode all project objects from data/hcp-structure.json."
-  }
-
-  assert {
-    condition     = output.user_created_project_names == ["Terraform Learning"]
-    error_message = "user_created_project_names must keep only projects where auto_created is false."
-  }
-
-  assert {
-    condition = output.workspace_workflows_by_name == {
-      "learning-vcs-workspace" = "version_control"
-      "learning-cli-workspace" = "cli_driven"
-      "learning-api-workspace" = "api_driven"
-    }
-    error_message = "workspace_workflows_by_name must map each workspace name to its workflow."
-  }
-
-  assert {
-    condition = output.workspace_project_pairs == [
-      "learning-vcs-workspace->Terraform Learning",
-      "learning-cli-workspace->Terraform Learning",
-      "learning-api-workspace->Terraform Learning"
+    condition = output.creation_sequence == [
+      "create_organization",
+      "use_default_or_create_project",
+      "create_workspace_in_project",
+      "select_workspace_workflow",
+      "configure_workspace_before_first_run"
     ]
-    error_message = "workspace_project_pairs must describe each workspace to project relationship."
+    error_message = "Review TODO 1: create the hierarchy, select a workflow, then configure the workspace before its first run."
   }
 
   assert {
-    condition     = output.registry_feature_names == ["private_modules", "private_providers"]
-    error_message = "registry_feature_names must include enabled private registry features."
+    condition = output.workflow_selection == {
+      git_pr_is_source_of_truth      = "vcs_driven"
+      engineer_uses_local_cli        = "cli_driven"
+      internal_platform_uploads_code = "api_driven"
+    }
+    error_message = "Review TODO 2: select VCS-, CLI-, or API-driven according to the source of truth and run trigger."
   }
 
   assert {
-    condition     = output.free_plan_summary == "free:500 resources"
-    error_message = "free_plan_summary must combine organization plan and resource limit."
+    condition = output.workspace_readiness == [
+      "project_and_name",
+      "workflow_and_configuration_source",
+      "terraform_version_and_execution_mode",
+      "variables_and_credentials",
+      "team_permissions",
+      "auto_apply_and_policy_settings"
+    ]
+    error_message = "Review TODO 3: an empty workspace still needs source, version, variables, credentials, permissions, and run settings."
+  }
+
+  assert {
+    condition = output.platform_capabilities == {
+      private_registry                = "share_private_modules_and_providers"
+      organization_settings           = "users_teams_plan_and_billing"
+      workspace                       = "configuration_state_variables_and_runs"
+      empty_workspace_ready_for_apply = false
+    }
+    error_message = "Review TODO 4: distinguish registry, organization settings, and workspace responsibilities."
   }
 }

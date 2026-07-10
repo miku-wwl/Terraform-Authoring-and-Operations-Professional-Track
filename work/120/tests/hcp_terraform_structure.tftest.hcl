@@ -1,87 +1,44 @@
-run "hcp_terraform_structure_is_modelled_correctly" {
+run "hcp_terraform_structure_is_understood" {
   command = plan
 
   assert {
-    condition     = output.organization_count == 2
-    error_message = "organizations must decode the two organizations from data/hcp_platform.json."
-  }
-
-  assert {
-    condition = output.billing_plan_by_org == {
-      "kp-labs-org"     = "free"
-      "xyz-company-org" = "standard"
+    condition = output.object_responsibilities == {
+      organization = "teams_billing_and_org_settings"
+      project      = "group_workspaces_and_scope_access"
+      workspace    = "configuration_variables_state_and_runs"
     }
-    error_message = "billing_plan_by_org must map each organization to its billing plan."
+    error_message = "Review TODO 1: match organization, project, and workspace to their primary responsibilities."
   }
 
   assert {
-    condition = output.project_inventory == [
-      {
-        org_name            = "kp-labs-org"
-        project_name        = "security-team-project"
-        team_access_enabled = false
-        workspace_count     = 3
-      },
-      {
-        org_name            = "kp-labs-org"
-        project_name        = "app-team-project"
-        team_access_enabled = false
-        workspace_count     = 2
-      },
-      {
-        org_name            = "xyz-company-org"
-        project_name        = "platform-project"
-        team_access_enabled = true
-        workspace_count     = 2
-      }
-    ]
-    error_message = "project_inventory must flatten projects and preserve their organization context."
-  }
-
-  assert {
-    condition     = output.workspace_count == 7
-    error_message = "workspace_inventory must flatten all seven workspaces from the nested HCP model."
-  }
-
-  assert {
-    condition = output.vcs_connected_workspace_names == [
-      "aws-hardening",
-      "azure-hardening",
-      "gcp-hardening",
-      "demo-workspace",
-      "hcp-core",
-      "network-foundation"
-    ]
-    error_message = "vcs_connected_workspace_names must exclude only the local scratch workspace with vcs_provider == none."
-  }
-
-  assert {
-    condition = output.workspace_repository_map == {
-      "aws-hardening"      = "kp-labs/aws-hardening"
-      "azure-hardening"    = "KP-Labs/AzureHardening/_git/terraform"
-      "gcp-hardening"      = "kp-labs/gcp-hardening"
-      "demo-workspace"     = "kp-labs/demo-workspace"
-      "hcp-core"           = "xyz-company/hcp-core"
-      "network-foundation" = "xyz-company/network-foundation"
+    condition = output.storage_comparison == {
+      local_configuration = "local_disk"
+      hcp_configuration   = "vcs_or_cli_api_upload"
+      local_variables     = "tfvars_cli_or_environment"
+      hcp_variables       = "workspace_or_variable_sets"
+      local_state         = "local_or_configured_backend"
+      hcp_state           = "workspace_managed_state"
+      hcp_run_history     = "workspace_run_history"
     }
-    error_message = "workspace_repository_map must map only VCS-connected workspaces to their repositories."
+    error_message = "Review TODO 2: compare where configuration, variables, state, and run history live."
   }
 
   assert {
-    condition = output.sensitive_variables_by_workspace == {
-      "aws-hardening"      = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
-      "azure-hardening"    = ["ARM_CLIENT_SECRET"]
-      "gcp-hardening"      = ["GOOGLE_CREDENTIALS"]
-      "demo-workspace"     = []
-      "local-scratch"      = []
-      "hcp-core"           = ["HCP_TOKEN"]
-      "network-foundation" = ["AWS_SECRET_ACCESS_KEY"]
+    condition = output.workflow_choices == {
+      repository_commit_triggers_run = "vcs_driven"
+      local_cli_starts_remote_run    = "cli_driven"
+      automation_uploads_config      = "api_driven"
+      vcs_is_mandatory               = false
     }
-    error_message = "sensitive_variables_by_workspace must preserve workspace-level sensitive variable names."
+    error_message = "Review TODO 3: HCP Terraform supports VCS-, CLI-, and API-driven workflows; VCS is optional."
   }
 
   assert {
-    condition     = output.standard_org_names == ["xyz-company-org"]
-    error_message = "standard_org_names must identify organizations whose billing_plan is standard."
+    condition = output.organization_design == {
+      network_project  = ["network-dev", "network-prod"]
+      app_project      = ["app-dev", "app-prod"]
+      security_project = ["security-monitoring", "security-hardening"]
+    }
+    error_message = "Review TODO 4: group related dev/prod workspaces into ownership-oriented projects."
   }
 }

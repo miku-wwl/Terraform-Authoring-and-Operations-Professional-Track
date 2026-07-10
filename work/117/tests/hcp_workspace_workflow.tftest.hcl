@@ -1,66 +1,47 @@
-run "hcp_workspace_and_run_workflow_are_modeled_correctly" {
+run "hcp_terraform_overview_is_understood" {
   command = plan
 
   assert {
-    condition = output.workspace_summary == {
-      organization     = "platform-engineering"
-      project          = "networking"
-      workspace        = "network-prod"
-      terraform_version = "1.9.8"
-      execution_mode   = "remote"
+    condition = output.platform_facts == {
+      replaces_terraform_language        = false
+      terraform_cli_still_useful         = true
+      hcp_workspace_equals_cli_workspace = false
+      vcs_connection_is_required         = false
     }
-    error_message = "workspace_summary must be built from the decoded HCP workspace mock data."
+    error_message = "Review TODO 1: HCP Terraform complements Terraform CLI, its workspaces differ from CLI workspaces, and VCS is optional."
   }
 
   assert {
-    condition     = output.vcs_source == "github:acme/network-infrastructure@main"
-    error_message = "vcs_source must combine provider, repository, and branch."
-  }
-
-  assert {
-    condition = output.run_phase_names == [
+    condition = output.governed_run_phases == [
+      "vcs_change",
       "plan",
       "cost_estimation",
       "policy_check",
+      "manual_approval",
       "apply"
     ]
-    error_message = "run_phase_names must preserve the phase order from the mock run."
+    error_message = "Review TODO 2: preserve the example governed run order from VCS change through apply."
   }
 
   assert {
-    condition     = output.failed_policy_names == ["restrict-instance-types"]
-    error_message = "failed_policy_names must include only policies whose status is failed."
+    condition = output.scenario_answers == {
+      preserve_plan_apply_history = "run_history"
+      share_and_version_state     = "remote_state"
+      block_untagged_resources    = "policy_enforcement"
+      share_internal_modules      = "private_registry"
+      protect_variable_values     = "sensitive_variables"
+      trigger_runs_from_commits   = "vcs_integration"
+    }
+    error_message = "Review TODO 3: map each team problem to the matching HCP Terraform capability."
   }
 
   assert {
-    condition = output.sensitive_variable_keys == [
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY"
-    ]
-    error_message = "sensitive_variable_keys must include every variable marked sensitive."
-  }
-
-  assert {
-    condition     = output.terraform_variable_keys == ["environment"]
-    error_message = "terraform_variable_keys must select variables in the terraform category."
-  }
-
-  assert {
-    condition = output.environment_variable_keys == [
-      "AWS_REGION",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY"
-    ]
-    error_message = "environment_variable_keys must select variables in the env category."
-  }
-
-  assert {
-    condition     = output.run_blocked
-    error_message = "run_blocked must be true when at least one policy failed."
-  }
-
-  assert {
-    condition     = output.manual_approval_required
-    error_message = "manual_approval_required must be true when auto_apply is false."
+    condition = output.run_decisions == {
+      mandatory_policy_failed         = true
+      failed_policy_blocks_apply      = true
+      auto_apply                      = false
+      manual_confirmation_if_eligible = true
+    }
+    error_message = "Review TODO 4: a mandatory policy failure blocks apply, while auto_apply=false requires confirmation for an eligible run."
   }
 }

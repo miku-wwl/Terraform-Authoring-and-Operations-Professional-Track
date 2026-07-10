@@ -1,77 +1,97 @@
-# Terraform 实操训练 121：HCP Terraform 组织、项目与工作区建模
+# Terraform 实操训练 121：创建 Workspace 与选择 Workflow
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/121` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform 基础结构建模练习。
+创建 organization、project 和 workspace 只是搭建容器。真正决定后续工作方式的是 workspace workflow 和相关设置。
 
-这节课的核心是理解 HCP Terraform 里的几个基础对象：
+```text
+Organization
+→ Default Project 或自定义 Project
+→ 在 Project 中创建 Workspace
+→ 选择 VCS / CLI / API workflow
+→ 配置版本、变量、凭证、权限和运行策略
+→ 第一次 Run
+```
 
-- organization：HCP Terraform 的顶层组织边界。
-- project：组织下用于分组管理 workspace 的项目。
-- workspace：真正运行 Terraform workflow、保存远程 state、连接 VCS/CLI/API 的工作区。
-- registry：企业可以放私有 modules 和 providers 的位置。
-- settings：组织级设置，例如用户邀请、计划与账单。
+## 阶段 1：创建顺序
 
-本 lab 不会真的调用 HCP Terraform API，也不会创建真实云资源。你需要从 `data/hcp-structure.json` 读取 mock 数据，用 `jsondecode()` 和 `for` 表达式整理出课程要求的结构化输出。
+完成 `main.tf` 的 TODO 1。
 
-## 2. 核心主题
+新 organization 通常会提供 Default Project。学习或小型场景可以先使用它；生产环境可以根据团队、系统或权限边界创建自定义 project。
 
-- `file()`：读取当前 module 下的 JSON 文件。
-- `jsondecode()`：把 HCP mock JSON 转成 Terraform 值。
-- organization / project / workspace 的层级关系。
-- workspace workflow：`version_control`、`cli_driven`、`api_driven`。
-- 用 `for` 表达式构造 list 和 map。
-- 用过滤条件区分默认项目和用户创建的项目。
+Workspace 必须属于某个 project。创建 workspace 后仍要继续配置，它不是一创建就自动具备代码和云权限。
 
-## 3. 任务目标
+## 阶段 2：Workflow 选型
 
-请在 `main.tf` 中完成八个 TODO：
+完成 TODO 2：
 
-1. 用 `jsondecode(file("${path.module}/data/hcp-structure.json"))` 读取并解析 JSON。
-2. 从解析后的对象中读取 `organization`。
-3. 从解析后的对象中读取 `projects`。
-4. 从解析后的对象中读取 `workspaces`。
-5. 从解析后的对象中读取 `registry_features`。
-6. 提取 organization name。
-7. 筛选不是默认创建的 project name。
-8. 构造 workspace workflow map、workspace project pair list、registry feature list 和 free plan summary。
+| 场景 | 推荐 workflow |
+|---|---|
+| Git PR 是唯一变更入口 | VCS-driven |
+| 工程师希望继续使用本地 Terraform CLI | CLI-driven |
+| 内部平台或 CI 上传配置并调用 API | API-driven |
 
-完成后运行 `README.md` 中的命令。
+选择的关键不是哪个“更高级”，而是谁是配置 source of truth、谁触发 run、现有团队流程是什么。
 
-## 4. 验收方式
+## 阶段 3：Workspace 上线检查
 
-基础检查：
+完成 TODO 3。第一次正式 run 前至少检查：
 
-```sh
-terraform init -input=false
+- workspace 名称和所属 project；
+- workflow 和配置来源；
+- Terraform 版本和 execution mode；
+- Terraform variables、environment variables 和云认证；
+- 团队权限；
+- auto-apply、policy checks 和审批设置。
+
+空 workspace 只表示对象存在，不表示生产工作流已经准备好。
+
+## 阶段 4：Registry 与 Settings
+
+完成 TODO 4：
+
+- Private registry：共享组织内部 module/provider。
+- Organization settings：用户、团队、套餐、计费和组织级设置。
+- Workspace：配置、变量、state、runs 和执行设置。
+
+Private registry 不是 state backend，也不是存放 workspace run history 的位置。
+
+## 可选真实观察
+
+如果你已经自愿创建 HCP Terraform 学习账号，可以在独立的 sandbox organization 中：
+
+1. 查看 Default Project；
+2. 新建一个 `terraform-learning` project；
+3. 打开创建 workspace 页面；
+4. 观察 VCS、CLI、API workflow 选项；
+5. 不需要连接真实云账号，也不要上传凭证。
+
+UI 观察不是自动测试前提。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output organization_name` 显示 `example-kplabs-org`。
-- `terraform output user_created_project_names` 只显示用户手动创建的 `Terraform Learning`。
-- `terraform output workspace_workflows_by_name` 显示三个 workspace 分别对应 VCS、CLI、API workflow。
-- `terraform output workspace_project_pairs` 显示 workspace 到 project 的绑定关系。
-- `terraform output registry_feature_names` 显示私有 module 和 provider registry 能力。
-- `terraform output free_plan_summary` 显示 free plan 和 500 resource limit。
+1. 创建 workspace 前为什么需要 organization/project？
+2. Git PR 驱动的团队应选择什么 workflow？
+3. CLI-driven 是否仍然使用本地 Terraform 命令？
+4. 空 workspace 为什么还不能直接用于生产 apply？
+5. Private registry 和 workspace 分别保存什么？
 
-## 6. 约束
+## 官方参考
 
-- 不要硬编码输出绕过 `jsondecode()` 和 `for` 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 筛选用户创建项目时使用 `project.auto_created == false`。
-- workspace workflow map 必须以 workspace name 作为 key。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Sign up and create an organization](https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-sign-up)
+- [HCP Terraform workflows](https://developer.hashicorp.com/terraform/tutorials/cloud-get-started)
+- [HCP Terraform workspaces](https://developer.hashicorp.com/terraform/cloud-docs/workspaces)

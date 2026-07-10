@@ -1,76 +1,102 @@
-# Terraform 实操训练 120：HCP Terraform 基础结构建模
+# Terraform 实操训练 120：Organization、Project 与 Workspace
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/120` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform 组织结构建模练习。
+Lab 119 解决“用户怎样进入平台”；Lab 120 继续解决“进入平台后，Terraform 工作负载怎样组织”。
 
-HCP Terraform 的基础结构可以先按三层理解：
+```text
+Organization
+  ├─ Project: network
+  │    ├─ Workspace: network-dev
+  │    └─ Workspace: network-prod
+  ├─ Project: applications
+  │    ├─ Workspace: app-dev
+  │    └─ Workspace: app-prod
+  └─ Project: security
+       ├─ Workspace: security-monitoring
+       └─ Workspace: security-hardening
+```
 
-- Organization：一个或多个团队协作的共享空间，billing 通常在 organization 级别管理。
-- Project：用来把相关 workspace 组织成组，方便按团队、系统或环境管理。
-- Workspace：可以近似理解为 HCP Terraform 里的一个 Terraform 工作目录；它通常连接到 GitHub、GitLab、Bitbucket、Azure DevOps 等 VCS 仓库，并在 workspace 级别管理 state、variables、credentials / secrets。
+## 阶段 1：对象职责
 
-本 lab 不会调用真实 HCP Terraform API。我们用 JSON mock 数据模拟多个 organization、project 和 workspace，然后用 Terraform 表达式整理出清晰的 inventory。
+完成 `main.tf` 的 TODO 1：
 
-## 2. 核心主题
+- Organization：团队、套餐/计费和组织级设置边界。
+- Project：组织 workspace/Stack，并帮助划分团队访问范围。
+- Workspace：管理一套具体 Terraform 配置的变量、state、runs 和执行设置。
 
-- `jsondecode(file(...))`：读取 mock 数据。
-- organization 级别 billing：把 organization 名称映射到 billing plan。
-- project 分组：把 project 展平成可检查的清单。
-- workspace inventory：从 organization -> project -> workspace 的嵌套结构中展开 workspace。
-- VCS 连接：筛选已经连接 Git 仓库的 workspace。
-- workspace 级别变量与敏感变量：整理每个 workspace 的 sensitive variable 名称。
+不要把一个 workspace 理解为整个公司的所有 Terraform，也不要把 project 当成 provider 或 module。
 
-## 3. 任务目标
+## 阶段 2：本地目录与 Remote Workspace
 
-请在 `main.tf` 中完成八个 TODO：
+完成 TODO 2。
 
-1. 用 `jsondecode(file("${path.module}/data/hcp_platform.json"))` 读取并解析 JSON。
-2. 从解析后的对象中读取 `organizations` list。
-3. 构造 `billing_plan_by_org`，key 为 organization 名称，value 为 billing plan。
-4. 展平 project 清单，每条记录包含 `org_name`、`project_name`、`team_access_enabled`、`workspace_count`。
-5. 展平 workspace 清单，每条记录包含 `org_name`、`project_name`、`workspace_name`、`vcs_provider`、`repository`、`state_location`。
-6. 筛选已经连接 VCS 的 workspace name，排除 `vcs_provider == "none"` 的本地 scratch workspace。
-7. 构造 `workspace_repository_map`，key 为 workspace name，value 为 repository，只保留已连接 VCS 的 workspace。
-8. 构造 `sensitive_variables_by_workspace`，key 为 workspace name，value 为该 workspace 的 sensitive variable 名称列表。
+| 内容 | 本地工作流 | HCP remote workspace |
+|---|---|---|
+| 配置 | 本地磁盘 | VCS 或 CLI/API 上传 |
+| 变量值 | tfvars、CLI、环境变量 | Workspace variables / variable sets |
+| State | 本地或自选 remote backend | Workspace-managed state |
+| Run history | 终端/CI 自己保存 | Workspace 集中保存 |
 
-完成后运行 `README.md` 中的命令。
+HCP Terraform workspace 和 CLI workspace 名称相同，但语义不同：
 
-## 4. 验收方式
+- HCP workspace 是平台中的基础设施管理单元。
+- CLI workspace 是同一 working directory 下多个 state 实例的命名机制。
 
-基础检查：
+## 阶段 3：配置来源与 Workflow
 
-```sh
-terraform init -input=false
+完成 TODO 3：
+
+```text
+VCS-driven
+Git commit/PR 触发 run
+
+CLI-driven
+本地 terraform plan/apply 触发 remote run
+
+API-driven
+外部自动化上传配置并管理 run
+```
+
+原课程主要演示 VCS，但当前官方工作流并不要求所有 workspace 都连接 Git。
+
+## 阶段 4：按职责拆分 Workspace
+
+完成 TODO 4。
+
+通常应根据生命周期、权限、所有权和故障范围拆分 workspace。例如：
+
+- 网络团队管理 network project；
+- 应用团队管理 app project；
+- 安全团队管理 security project；
+- dev 与 prod 使用不同 workspace，隔离 state 和运行权限。
+
+不要仅因为“目录多”就机械拆分，也不要把所有基础设施放进一个巨大 workspace。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output organization_count` 显示 2。
-- `terraform output workspace_count` 显示 7。
-- `terraform output billing_plan_by_org` 能体现 billing 在 organization 级别管理。
-- `terraform output project_inventory` 能体现 project 对 workspace 的分组。
-- `terraform output vcs_connected_workspace_names` 只包含连接了 VCS 的 workspace。
-- `terraform output sensitive_variables_by_workspace` 能体现 credentials / secrets 应按 workspace 敏感变量管理。
+1. Organization、project、workspace 各自解决什么问题？
+2. HCP workspace 和 CLI workspace 是否相同？
+3. HCP Terraform 配置是否必须来自 VCS？
+4. Remote workspace 中 state 和变量存在哪里？
+5. 为什么 network-dev 与 network-prod 通常应该拆成不同 workspace？
 
-## 6. 约束
+## 官方参考
 
-- 不要连接真实 HCP Terraform。
-- 不要要求 HCP token、云账号或 GitHub token。
-- 不要硬编码 output 绕过 JSON 读取与 for 表达式练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 筛选 VCS workspace 时排除 `vcs_provider == "none"`。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [HCP Terraform workspaces](https://developer.hashicorp.com/terraform/cloud-docs/workspaces)
+- [HCP Terraform projects](https://developer.hashicorp.com/terraform/cloud-docs/projects)
+- [HCP Terraform plans and workflows](https://developer.hashicorp.com/terraform/cloud-docs/overview)

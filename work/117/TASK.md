@@ -1,71 +1,102 @@
-# Terraform 实操训练 117：模拟 HCP Terraform Workspace 与 Run Workflow
+# Terraform 实操训练 117：HCP Terraform 概览
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/117` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成一个 HCP Terraform workspace/run 的本地数据建模练习。
+HCP Terraform 是帮助团队集中运行和治理 Terraform 的平台。旧资料中的 Terraform Cloud 通常指它的旧名称。
 
-HCP Terraform 为团队提供集中式 runs、远程 state、VCS 集成、workspace variables、cost estimation、policy checks 和人工审批等能力。本 lab 不连接真实 HCP Terraform，而是读取 `data/hcp_workspace.json` 中的 mock 数据，使用 Terraform 表达式分析一个 workspace 和一次 run。
+它解决的不是“怎样写 resource block”，而是多人共同使用 Terraform 时的运行环境、state、审计、审批、变量、权限和策略问题。
 
-## 2. 核心主题
+```text
+本地 CLI 工作流
+代码 + 变量 + state + 执行记录
+经常分散在工程师电脑或团队自建系统中
 
-- HCP Terraform workspace：保存 Terraform 版本、execution mode、VCS 与变量配置。
-- VCS-driven workflow：代码仓库变更可以触发远程 run。
-- Run phases：plan、cost estimation、policy check、apply。
-- Policy checks：失败的强制策略会阻止 run 进入 apply。
-- Workspace variables：区分 Terraform variables 与 environment variables。
-- Sensitive variables：识别应在平台中以敏感方式保存的变量。
-- Manual approval：`auto_apply = false` 时需要人工确认 apply。
+HCP Terraform 工作流
+workspace 集中关联配置、变量、state、run 历史和权限
+remote run 提供一致的执行环境
+```
 
-## 3. 任务目标
+## 阶段 1：理解产品定位
 
-请在 `main.tf` 中完成九个 TODO：
+完成 `main.tf` 的 TODO 1，重点排除四个误解：
 
-1. 使用 `jsondecode(file(...))` 读取 `data/hcp_workspace.json`。
-2. 读取 workspace object。
-3. 构造 workspace summary。
-4. 构造 VCS source label，例如 `github:acme/network-infrastructure@main`。
-5. 从 run phases 中提取 phase name list。
-6. 找出 status 为 `failed` 的 policy names。
-7. 找出 sensitive variable keys。
-8. 分别找出 Terraform variable keys 与 environment variable keys。
-9. 根据失败策略与 `auto_apply` 判断 run 是否 blocked、是否需要人工审批。
+- HCP Terraform 不替代 Terraform 语言。
+- Terraform CLI 仍然有价值，并且可以触发 remote run。
+- HCP Terraform workspace 不等于 CLI workspace。
+- VCS integration 很常用，但不是硬性要求，也可以通过 CLI/API 上传配置。
 
-完成后运行 `README.md` 中的命令。
+完成后运行：
 
-## 4. 验收方式
+```powershell
+terraform plan -input=false -no-color
+```
 
-```sh
-terraform init -input=false
+观察 `platform_facts`。
+
+## 阶段 2：理解典型 Run Workflow
+
+完成 TODO 2。本场景假设：
+
+- VCS commit 触发 run；
+- 已启用 cost estimation；
+- 已配置强制 policy checks；
+- `auto_apply = false`。
+
+因此示例顺序为：
+
+```text
+VCS change
+→ plan
+→ cost estimation
+→ policy check
+→ manual approval
+→ apply
+```
+
+这不是所有 run 永远固定的阶段。是否出现成本估算、策略检查和人工确认，取决于套餐、配置、策略和 run 类型。
+
+## 阶段 3：把团队问题映射到平台能力
+
+完成 TODO 3：
+
+| 团队问题 | 对应能力 |
+|---|---|
+| 几天后追查谁 plan/apply | Run history |
+| 多人共享并保留 state 版本 | Remote state |
+| 禁止无标签资源进入 apply | Policy enforcement |
+| 团队共享内部 module | Private registry |
+| 隐藏变量值 | Sensitive variables |
+| Git commit 自动触发 run | VCS integration |
+
+敏感变量能降低直接暴露风险，但真实云凭证仍应优先考虑短期、动态的认证方式，而不是长期 access key。
+
+## 阶段 4：Policy 与审批判断
+
+完成 TODO 4，区分两个独立条件：
+
+1. 强制策略失败：run 不能进入 apply。
+2. `auto_apply = false`：如果 run 通过必要检查，apply 前仍需要人工确认。
+
+“需要人工确认”不代表可以绕过失败的强制策略。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- workspace summary 正确显示 organization、project、workspace、Terraform version 与 execution mode。
-- VCS source label 为 `github:acme/network-infrastructure@main`。
-- run phases 按 JSON 中的顺序输出。
-- 失败策略只有 `restrict-instance-types`。
-- sensitive variables 包含两项 AWS credential key。
-- Terraform variables 与 environment variables 被正确分类。
-- run 因 policy failure 被阻止，并且由于 `auto_apply = false` 需要人工审批。
-
-## 6. 约束
-
-- 不要修改 `tests/` 下的测试来绕过验收。
-- 不要硬编码最终输出；必须从 JSON mock 数据计算。
-- JSON 文件路径必须使用 `path.module` 构造。
-- 变量分类必须基于 `category` 字段。
-- 策略失败判断必须基于 `status == "failed"`。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+1. HCP Terraform 是否取代 Terraform CLI？
+2. HCP Terraform workspace 和 CLI workspace 是否相同？
+3. VCS 是否是唯一的配置来源？
+4. Run history、remote state、private registry 分别解决什么问题？
+5. 强制策略失败和 `auto_apply = false` 分别会造成什么结果？

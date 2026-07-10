@@ -1,21 +1,30 @@
-# 第 122 节做题环境
+# Lab 122：VCS-driven Workspace
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 `practice/` 下的参考实现或讲义文件。
+本节深入学习 HCP Terraform workspace 如何连接 Git 仓库，以及 PR、push、manual apply 和 discard 如何影响 run。
 
-本 lab 使用本地 JSON mock 数据模拟 HCP Terraform workspace、VCS workflow、workspace variables 和 run workflow。你不需要 HCP Terraform 账号、GitHub token 或 AWS 凭据。
+请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成。每个 TODO 都提供完整答案级 Hint。
 
-## 本地执行
+学习路径：
+
+1. 配置 repository、branch、working directory 和 trigger patterns。
+2. 判断 PR、push、confirm、discard 的结果。
+3. 为 monorepo 的多套 Terraform 配置隔离 workspace/state。
+4. 用 OIDC 动态凭证替代长期 AdministratorAccess key。
+
+每完成一段，可以运行：
 
 ```powershell
 cd work/122
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+最终验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
+本 Lab 不需要真实 HCP、GitHub 或 AWS 账号，也不执行 `apply` 或 `destroy`。

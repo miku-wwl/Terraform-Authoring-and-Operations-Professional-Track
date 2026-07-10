@@ -1,75 +1,120 @@
-# Terraform 实操训练 116：TF_LOG 与 TF_LOG_PATH 实战
+# Terraform 实操训练 116：日志去向与会话生命周期
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/116` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 Terraform debugging 配置建模练习，并亲自运行命令观察 Terraform 日志。
+Lab 115 已经证明 TRACE 比 INFO 更详细。本节不再重复日志级别比较，而是观察环境变量如何改变日志去向，以及为什么临时会话设置比永久开启 TRACE 更安全。
 
-普通的 `terraform plan` 只展示常规结果。排查 Terraform Core、provider 初始化或 graph 构建问题时，可以临时设置：
+```text
+仅设置 TF_LOG
+    → 详细日志写到 stderr，在终端显示
 
-- `TF_LOG`：控制日志级别。
-- `TF_LOG_PATH`：把调试日志写入指定文件，避免大量内容直接输出到终端。
+TF_LOG + TF_LOG_PATH
+    → 详细日志写入指定文件
 
-本 lab 不连接任何云账号，也不要求真实基础设施。`terraform_data` 仅提供一个安全的本地 plan 对象。
+清除环境变量
+    → 后续 Terraform 命令恢复默认，不再追加详细日志
+```
 
-## 2. 核心主题
+## 阶段 1：让 INFO 日志显示在终端
 
-- `TF_LOG` 支持 `ERROR`、`WARN`、`INFO`、`DEBUG`、`TRACE`。
-- `TRACE` 最详细，正常工作时不应长期启用。
-- Windows CMD 使用 `set`。
-- Windows PowerShell 使用 `$env:NAME = "value"`。
-- Linux 和 macOS 使用 `export`。
-- 当前终端设置的环境变量通常只在该会话及其子进程中有效。
-- `TF_LOG_PATH` 只负责指定日志文件；仍需同时设置有效的 `TF_LOG`。
-- 调试日志可能包含路径、参数、请求上下文甚至敏感数据，不能未经检查直接公开。
-
-## 3. 任务目标
-
-请在 `main.tf` 中完成六个 TODO：
-
-1. 用 `jsondecode(file(...))` 读取 `data/debugging.json`。
-2. 从数据中取得按低到高 verbosity 排列的日志级别。
-3. 取得最高 verbosity 的日志级别。
-4. 构造以 shell 名称为 key 的临时 `TF_LOG` 命令 map。
-5. 构造三个 shell 的 `TRACE + TF_LOG_PATH` 命令列表。
-6. 构造清理环境变量的命令 map。
-
-完成 Terraform TODO 后，按照 `README.md` 分别尝试：
-
-- 普通 `terraform plan`。
-- `TF_LOG=INFO`。
-- `TF_LOG=TRACE`。
-- `TF_LOG=TRACE` 配合 `TF_LOG_PATH=terraform-debug.log`。
-- 清除环境变量后再次运行 plan。
-
-## 4. 验收方式
-
-```sh
+```powershell
 terraform init -input=false
+$env:TF_LOG="INFO"
+terraform plan -input=false -no-color
+Remove-Item Env:TF_LOG
+```
+
+没有设置 `TF_LOG_PATH`，所以详细日志写到 stderr，并与正常 plan 输出一起显示在终端。
+
+## 阶段 2：让 TRACE 日志写入文件
+
+```powershell
+Remove-Item terraform-debug.log -ErrorAction SilentlyContinue
+$env:TF_LOG="TRACE"
+$env:TF_LOG_PATH="terraform-debug.log"
+terraform plan -input=false -no-color
+$beforeCleanup = (Get-Item terraform-debug.log).Length
+```
+
+打开 `terraform-debug.log`，搜索 `[TRACE]`。此时不要立即清除变量，因为下一阶段需要比较清理前后的文件大小。
+
+## 阶段 3：清除变量并验证日志停止追加
+
+```powershell
+Remove-Item Env:TF_LOG
+Remove-Item Env:TF_LOG_PATH
+terraform plan -input=false -no-color
+$afterCleanup = (Get-Item terraform-debug.log).Length
+$beforeCleanup -eq $afterCleanup
+```
+
+预期返回 `True`。这说明清除环境变量以后，普通 plan 没有继续向日志文件追加内容。
+
+再检查：
+
+```powershell
+Test-Path Env:TF_LOG
+Test-Path Env:TF_LOG_PATH
+```
+
+两条都应返回 `False`。
+
+这种 `$env:` 设置属于当前 PowerShell 进程的环境变量，Terraform 作为其子进程会继承它。关闭当前终端后，设置也会消失。
+
+## 阶段 4：验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-手动确认：
+预期：
 
-- 设置 `INFO` 后，终端出现额外日志。
-- 设置 `TRACE` 后，日志量显著增加。
-- 设置 `TF_LOG_PATH` 后，详细日志写入 `terraform-debug.log`。
-- 清除环境变量或打开新终端后，不再默认生成该日志文件。
+```text
+Success! 1 passed, 0 failed.
+```
 
-## 5. 预期结果
+测试会读取真实的 `terraform-debug.log`，确认它包含 TRACE 日志。文件大小在清理后是否停止变化，由阶段 3 的 PowerShell 比较直接验证。
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `highest_verbosity` 为 `TRACE`。
-- `temporary_log_commands` 同时包含 CMD、PowerShell、Linux/macOS 的正确语法。
-- `trace_file_commands` 为每种 shell 生成两条命令：设置 `TF_LOG=TRACE` 和设置 `TF_LOG_PATH`。
-- `cleanup_commands` 能清除两个调试环境变量。
+## 跨平台参考
 
-## 6. 约束
+Windows CMD：
 
-- 不要硬编码输出绕过 `jsondecode()` 和 `for` 表达式。
-- JSON 文件路径必须使用 `path.module`。
-- 不要在仓库中提交真实调试日志。
-- 不要把 access key、secret、token 或其他凭据写入示例。
-- 不要把 `TF_LOG=TRACE` 配成全局永久默认值。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+```bat
+set TF_LOG=TRACE
+set TF_LOG_PATH=terraform-debug.log
+terraform plan -input=false -no-color
+set TF_LOG=
+set TF_LOG_PATH=
+```
+
+Linux/macOS：
+
+```bash
+export TF_LOG=TRACE
+export TF_LOG_PATH=terraform-debug.log
+terraform plan -input=false -no-color
+unset TF_LOG
+unset TF_LOG_PATH
+```
+
+## 安全与清理
+
+- 不要把 TRACE 永久配置为系统环境变量。
+- 日志文件会追加内容，每次复现实验前先删除旧文件。
+- Debug log 可能包含敏感上下文，分享前必须检查和脱敏。
+- 如果中途退出步骤，使用下面的命令清理：
+
+```powershell
+Remove-Item Env:TF_LOG -ErrorAction SilentlyContinue
+Remove-Item Env:TF_LOG_PATH -ErrorAction SilentlyContinue
+```
+
+## 你现在应该能回答
+
+1. 只设置 `TF_LOG` 时，详细日志输出到哪里？
+2. `TF_LOG_PATH` 能否单独开启日志？
+3. 为什么 Terraform 能看到 PowerShell 中设置的 `$env:TF_LOG`？
+4. 怎样证明清除变量后日志不再追加？
+5. 为什么不应该永久开启 TRACE？

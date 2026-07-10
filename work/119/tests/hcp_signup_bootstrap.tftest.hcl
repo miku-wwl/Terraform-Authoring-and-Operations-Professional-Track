@@ -1,51 +1,47 @@
-run "hcp_signup_bootstrap_is_modelled_correctly" {
+run "hcp_account_and_organization_boundaries_are_understood" {
   command = plan
 
   assert {
-    condition     = output.portal_url == "https://app.terraform.io"
-    error_message = "portal_url must be read from data/hcp_signup.json and equal https://app.terraform.io."
-  }
-
-  assert {
-    condition     = output.account_fields == ["username", "email", "password"]
-    error_message = "account_fields must come from the mock JSON account_creation.required_fields list."
-  }
-
-  assert {
-    condition = output.account_identity == {
-      username = "lab119-user"
-      email    = "student+lab119@example.com"
-    }
-    error_message = "account_identity must use the safe lab username and plus-addressed practice email."
-  }
-
-  assert {
-    condition     = !contains(keys(output.account_identity), "password")
-    error_message = "account_identity must not expose a password."
-  }
-
-  assert {
-    condition     = output.email_verification_required == true
-    error_message = "email_verification_required must be read from the mock JSON file and be true."
-  }
-
-  assert {
-    condition     = output.organization_name == "lab119-learning-org"
-    error_message = "organization_name must be lab119-learning-org."
-  }
-
-  assert {
-    condition     = output.organization_slug == "lab119-learning-org"
-    error_message = "organization_slug must normalize organization_name with lower() and replace()."
-  }
-
-  assert {
-    condition = output.onboarding_checklist == [
-      "Open https://app.terraform.io",
-      "Create account with username/email/password",
-      "Verify email address",
-      "Create first organization lab119-learning-org"
+    condition = output.object_hierarchy == [
+      "user_account",
+      "organization",
+      "project",
+      "workspace"
     ]
-    error_message = "onboarding_checklist must describe the account and organization bootstrap flow in order."
+    error_message = "Review TODO 1: follow the learning path from user identity through organization and project to workspace."
+  }
+
+  assert {
+    condition = output.signup_facts == {
+      personal_identity_exists = true
+      remote_state_ready       = false
+      workspace_already_exists = false
+      cloud_credentials_ready  = false
+      can_join_multiple_orgs   = true
+    }
+    error_message = "Review TODO 2: signup establishes identity but does not configure state, workspace, or cloud credentials."
+  }
+
+  assert {
+    condition = output.onboarding_sequence == [
+      "open_hcp_terraform",
+      "create_or_link_account",
+      "verify_identity",
+      "create_or_join_organization",
+      "create_project_or_use_default",
+      "create_and_configure_workspace"
+    ]
+    error_message = "Review TODO 3: preserve the conceptual onboarding sequence from portal access to a configured workspace."
+  }
+
+  assert {
+    condition = output.security_practices == {
+      commit_password_to_git       = false
+      output_api_token             = false
+      use_short_token_expiration   = true
+      enable_strong_authentication = true
+      redact_verification_links    = true
+    }
+    error_message = "Review TODO 4: never commit passwords or output tokens; prefer short expiry, strong authentication, and redaction."
   }
 }

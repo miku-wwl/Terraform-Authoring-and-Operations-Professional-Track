@@ -1,80 +1,101 @@
-# Terraform 实操训练 119：HCP Terraform 账号与组织初始化信息建模
+# Terraform 实操训练 119：账号、Organization 与安全边界
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/119` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform 账号注册与组织初始化信息建模练习。
+本节原视频演示注册 HCP Terraform 账号。考试和实际工作中更重要的不是网页按钮，而是理解下面的对象关系：
 
-本节视频的重点是：HCP Terraform 是托管服务，入口是 `app.terraform.io`；第一次使用时需要创建免费账号，填写 username、email、password，完成邮箱验证，然后创建第一个 organization。
+```text
+User account
+  └─ 可以加入一个或多个 Organization
 
-真实注册动作应该在浏览器里完成，不应该把真实密码写进 Terraform 代码。本 lab 只使用 mock 数据和非真实邮箱，训练你把注册流程、账号身份和 organization 命名规则建模成可验证的 Terraform 输出。
+Organization
+  └─ Project
+       └─ Workspace / Stack
+```
 
-## 2. 核心主题
+账号表示“你是谁”；organization 定义团队、权限和计费边界；workspace 才关联具体 Terraform 配置、变量、state 和 runs。
 
-- HCP Terraform hosted service：使用 `https://app.terraform.io` 作为入口。
-- Account bootstrap：username、email、password 是注册账号的核心输入。
-- Email verification：账号创建后需要完成邮箱确认。
-- Organization bootstrap：邮箱确认后创建第一个 organization。
-- 安全边界：不要把真实 password 作为 Terraform output 输出。
-- `jsondecode(file(...))`：读取本地 mock 注册流程数据。
-- 字符串处理：用 `lower()`、`replace()` 生成 organization slug。
+## 阶段 1：对象层级
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1。
 
-请在 `main.tf` 中完成七个 TODO：
+需要注意：用户可以属于多个 organization，所以 user 与 organization 不是简单的一对一父子关系。这里的列表只是帮助你建立从身份到基础设施 workspace 的学习顺序。
 
-1. 用 `jsondecode(file("${path.module}/data/hcp_signup.json"))` 读取并解析 mock 数据。
-2. 从 mock 数据中读取 HCP Terraform portal URL。
-3. 从 mock 数据中读取注册账号需要的字段列表。
-4. 配置非真实练习账号身份：
-   - username：`lab119-user`
-   - email：`student+lab119@example.com`
-5. 从 mock 数据中读取邮箱验证要求。
-6. 配置第一个 organization：
-   - organization name：`lab119-learning-org`
-   - organization slug：由 organization name 转成小写，并把空格替换成连字符。
-7. 生成 onboarding checklist，顺序必须是：
-   - `Open https://app.terraform.io`
-   - `Create account with username/email/password`
-   - `Verify email address`
-   - `Create first organization lab119-learning-org`
+## 阶段 2：注册不等于工作流就绪
 
-完成后运行 `README.md` 中的命令。
+完成 TODO 2。
 
-## 4. 验收方式
+注册并验证账号后，已经建立的是个人身份。它不代表：
 
-基础检查：
+- 已经创建 workspace；
+- 已经迁移 remote state；
+- 已经连接 VCS；
+- 已经配置 AWS/Azure/GCP credentials；
+- 已经具备某个 organization 的权限。
 
-```sh
-terraform init -input=false
+因此“我能登录 HCP Terraform”与“团队远程工作流已经配置完成”是两件事。
+
+## 阶段 3：Onboarding 顺序
+
+完成 TODO 3：
+
+```text
+打开 HCP Terraform
+→ 创建或关联账号
+→ 验证身份/邮箱
+→ 创建或加入 organization
+→ 创建 project 或使用 Default Project
+→ 创建并配置 workspace
+```
+
+实际页面字段和按钮可能变化，HCP Europe 等环境的组织管理方式也可能不同。重点是理解对象依赖，不是死记 UI。
+
+## 阶段 4：账号安全
+
+完成 TODO 4。
+
+- 密码不能进入 Terraform 配置或 Git。
+- API token 不能通过 output 暴露。
+- Token 应使用尽可能短的有效期。
+- 应启用 MFA/SSO 等强认证方式。
+- 邮箱验证链接也属于临时敏感链接，截图和分享时需要隐藏。
+
+## 可选真实体验
+
+如果你愿意创建免费学习账号：
+
+1. 打开 [HCP Terraform](https://app.terraform.io)。
+2. 使用个人学习身份注册或使用 HCP account 登录。
+3. 完成要求的身份/邮箱验证。
+4. 创建一个专门用于学习的 organization。
+5. 暂时不需要连接真实 AWS，也不要把任何密码或 token 写入仓库。
+
+真实注册不是自动测试的前提，也不应由脚本代替你完成。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output portal_url` 显示 `https://app.terraform.io`。
-- `terraform output account_fields` 显示 `username`、`email`、`password`。
-- `terraform output account_identity` 只显示 username 和 email，不显示 password。
-- `terraform output email_verification_required` 显示 `true`。
-- `terraform output organization_name` 显示 `lab119-learning-org`。
-- `terraform output organization_slug` 显示 `lab119-learning-org`。
-- `terraform output onboarding_checklist` 显示四个账号/组织初始化步骤。
+1. User account 与 organization 是不是同一个概念？
+2. 一个用户能否属于多个 organization？
+3. 注册账号后 remote state 是否自动配置完成？
+4. Organization、project、workspace 分别处于什么层级？
+5. 为什么 API token 不应该通过 Terraform output 显示？
 
-## 6. 约束
+## 官方参考
 
-- 不要把真实 HCP Terraform 账号、真实邮箱、真实密码写进本 lab。
-- 不要输出 password。
-- 不要硬编码 portal URL 和 account fields，必须从 `data/hcp_signup.json` 读取。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [Sign up for HCP Terraform](https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-sign-up)
+- [HCP Terraform users](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/users)
+- [HCP Terraform organizations](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/organizations)

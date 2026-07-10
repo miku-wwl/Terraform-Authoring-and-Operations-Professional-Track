@@ -13,6 +13,7 @@
 # Lab 115 generates temporary debug logs that may contain sensitive details.
 work/115/terraform-info.log
 work/115/terraform-trace.log
+work/116/terraform-debug.log
 
 # .tfstate files
 *.tfstate

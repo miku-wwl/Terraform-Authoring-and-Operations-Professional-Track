@@ -1,19 +1,32 @@
-# 第 119 节做题环境
+# Lab 119：HCP Terraform 账号与 Organization
 
-这是你的上机做题目录。请编辑当前目录下的 Terraform 文件，不要修改 `practice/` 下的参考实现或讲义文件。
+本节学习账号注册的意义，以及 user、organization、project、workspace 的关系。
 
-## 本地执行
+必做部分不需要真实 HCP Terraform 账号。请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成；每个 TODO 都包含完整答案级 Hint。
+
+学习路径：
+
+1. 排列主要对象层级。
+2. 判断注册账号后哪些内容仍未配置。
+3. 排列从身份注册到 workspace 的概念步骤。
+4. 判断账号、密码和 API token 的安全做法。
+
+每完成一段可以运行：
 
 ```powershell
 cd work/119
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+最终验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
+本 Lab 没有资源，不需要执行 `apply` 或 `destroy`。
+
+如果你愿意体验真实 UI，可以访问 [HCP Terraform](https://app.terraform.io)，使用自己的账号完成注册、邮箱验证，并创建独立的学习 organization。不要把密码、token 或验证链接写入本仓库。

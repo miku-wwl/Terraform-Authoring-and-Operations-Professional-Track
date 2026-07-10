@@ -1,69 +1,97 @@
-# Terraform 实操训练 118：HCP Terraform Pricing 结构化数据练习
+# Terraform 实操训练 118：HCP Terraform 定价判断
 
-## 1. 背景
+## 本节主旨
 
-本目录是 `work/118` 上机做题环境。这里不是参考答案目录，你需要在当前目录内完成 HCP Terraform pricing 概念数据处理练习。
+本节不是让你背一张可能很快过期的美元价格表，而是建立三个判断框架：
 
-本 lab 不会连接 HCP Terraform，不会创建真实云资源，也不会验证实时价格。它把课程中提到的 pricing 概念整理成 `data/pricing.json`，要求你用 Terraform 本地表达式读取、筛选、映射和汇总这些信息。
+```text
+使用哪种交付模式？
+→ HCP Terraform 托管 SaaS / Terraform Enterprise 自托管
 
-> 注意：真实产品定价会变化，本练习只使用 mock 数据训练考试概念和 Terraform 表达式写法。
+主要按什么计费？
+→ Managed Resources / Resources Under Management
 
-## 2. 核心主题
+哪些信息会变化？
+→ 单价、免费额度、套餐名称和精确 feature matrix
+```
 
-- HCP Terraform 不一定完全免费，付费能力取决于 plan、使用量和组织需要。
-- 常见 plan：`Essentials`、`Standard`、`Premium`。
-- 计费关注点：按月、按 managed resource、按使用模式。
-- Higher tier features：例如 audit logging、drift detection、policy/security、governance/compliance 等。
-- Self-managed / enterprise 场景：例如 air-gapped installation 更偏企业自托管能力。
-- Terraform 数据处理：`jsondecode()`、`file()`、`for` 表达式、`contains()`、map 构造、list 过滤。
+## 阶段 1：托管与自托管
 
-## 3. 任务目标
+完成 `main.tf` 的 TODO 1。
 
-请在 `main.tf` 中完成六个 TODO：
+- HCP Terraform：HashiCorp/IBM 运营的托管 SaaS。
+- Terraform Enterprise：组织自行部署和运营。
+- Air-gapped、强隔离和完全私有部署需求通常指向 Terraform Enterprise。
 
-1. 用 `jsondecode(file("${path.module}/data/pricing.json"))` 读取并解析 pricing mock 数据。
-2. 从解析后的对象中读取 `plans` list。
-3. 用 `for` 表达式取出所有 plan name。
-4. 构造 `plans_by_name` map，key 为 plan name。
-5. 找出不包含 `audit_logging` 的 plan name。
-6. 找出支持 `air_gapped_installation` 的 plan name。
-7. 从 `billing_models` 中取出所有 billing model name。
-8. 构造推荐摘要 `exam_summary`，包含最基础 plan、最高功能 plan、pay-as-you-go 是否存在、air-gapped 是否只在 enterprise 场景。
+Terraform Enterprise 不是简单的“第四个云端套餐”，部署和运营责任不同。
 
-完成后运行 `README.md` 中的命令。
+## 阶段 2：Managed Resource 计费
 
-## 4. 验收方式
+完成 TODO 2。
 
-基础检查：
+当前官方 PAYG 计费重点是每个计费小时中的 managed resource 峰值。Managed resource 是 HCP Terraform 管理的 state 中 `mode = "managed"` 的资源。
 
-```sh
-terraform init -input=false
+需要避免的误解：
+
+- 不是每运行一次 `plan` 就按一份完整基础设施额外计数。
+- 修改同一个资源很多次，不代表它自动变成很多个 managed resources。
+- 当前 PAYG 规则中，部分小时按完整小时计。
+
+具体计价公式和单价可能变化，预算时必须使用当前官方页面和实际资源规模。
+
+## 阶段 3：场景选择
+
+完成 TODO 3：
+
+| 场景 | 正确方向 |
+|---|---|
+| 小团队学习体验 | 查询当前 Free/trial 条件 |
+| 需要审计、漂移检测、持续验证 | 查询当前 Standard 或更高层级 feature matrix |
+| 需要 air-gapped 安装 | Terraform Enterprise |
+| 需要精确月度预算 | 当前官方单价 + 实际 managed resource 使用量 |
+
+当前官方文档显示付费 edition 具有递增包含关系，但功能打包仍可能变化。
+
+## 阶段 4：考试记忆策略
+
+完成 TODO 4。
+
+应该理解和记忆：
+
+- Managed resource 的计费思路；
+- SaaS 与 self-hosted 的区别；
+- 治理、审计、漂移检测属于平台高级能力。
+
+不应长期死记：
+
+- 某个固定美元价格；
+- 某个时间点的免费额度；
+- 每个套餐完整、逐项的 feature matrix。
+
+## 最终验收
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
 ```
 
-可选观察输出：
+预期：
 
-```sh
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
+```text
+Success! 1 passed, 0 failed.
 ```
 
-## 5. 预期结果
+## 你现在应该能回答
 
-- `terraform test` 返回 `1 passed, 0 failed`。
-- `terraform output plan_names` 显示 `Essentials`、`Standard`、`Premium`、`Enterprise Self-Managed`。
-- `terraform output plans_without_audit_logging` 显示只有 `Essentials`。
-- `terraform output air_gapped_plan_names` 显示只有 `Enterprise Self-Managed`。
-- `terraform output billing_model_names` 显示 `Pay As You Go`、`Flex`、`Enterprise Self-Managed`。
-- `terraform output exam_summary` 能说明考试重点：Essentials 功能最少，Premium 在 HCP 托管 plan 中功能最多，Pay As You Go 存在，Air-gapped 更偏企业自托管。
+1. HCP Terraform 与 Terraform Enterprise 的交付模式有什么区别？
+2. HCP Terraform PAYG 的主要使用量单位是什么？
+3. 反复修改同一个资源是否等于不断增加 managed resource 数量？
+4. Air-gapped 环境通常选择哪个方向？
+5. 为什么不应该死记课程截图里的美元价格？
 
-## 6. 约束
+## 官方核对入口
 
-- 不要硬编码输出绕过 `jsondecode()`、`for` 表达式和 `contains()` 练习。
-- JSON 文件路径必须基于 `path.module` 构造。
-- 真实价格可能变化，不要把本 mock 数据当成实时官方报价。
-- 最终提交应保留 starter TODO 状态，不要把答案直接提交进去。
+- [HCP Terraform plans and features](https://developer.hashicorp.com/terraform/cloud-docs/overview)
+- [Estimate HCP Terraform cost](https://developer.hashicorp.com/terraform/cloud-docs/overview/estimate-hcp-terraform-cost)
+- [HashiCorp product pricing](https://www.hashicorp.com/en/pricing)
