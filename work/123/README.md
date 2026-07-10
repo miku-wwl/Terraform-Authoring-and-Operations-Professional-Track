@@ -1,36 +1,30 @@
-# 第 123 节做题环境
+# Lab 123：CLI-driven Workflow 概念判断
 
-这是你的上机做题目录。请编辑当前目录下的文件，不要修改 `tests/` 下的测试文件。
+本节只学习 HCP Terraform CLI-driven workflow 的基础概念，不连接真实 HCP Terraform，也不执行远端命令。
 
-本节练习的目标是理解 HCP Terraform 的 CLI-driven workflow：代码仍然保存在本地工作目录，但通过 `terraform { cloud { ... } }` 把本地目录链接到 HCP Terraform workspace。之后从本地 terminal 发起 `terraform plan`、`terraform apply`、`terraform destroy`，实际 run 会在 HCP Terraform 远端执行，并把输出 stream 回本地 CLI。
+请直接阅读 `main.tf` 顶部知识总结，按 TODO 1～4 完成。每个 TODO 都提供完整答案级 Hint。
 
-## 本地执行
+学习路径：
+
+1. 根据团队场景选择 VCS、CLI 或 API-driven workflow。
+2. 区分 cloud block、terraform login 和 provider 认证。
+3. 判断 plan/apply/destroy 的本地发起与远端执行行为。
+4. 判断新建 CLI-driven workspace 还缺少哪些设置。
+
+每完成一段，可以运行：
 
 ```powershell
 cd work/123
 terraform init -input=false
+terraform plan -input=false -no-color
+```
+
+全部完成后验收：
+
+```powershell
 terraform fmt
 terraform validate
 terraform test
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-terraform destroy -auto-approve
 ```
 
-最终验证时会使用 `terraform fmt -check`。
-
-## 目录说明
-
-```text
-123/
-├── main.tf                         # 测试辅助代码：读取 hcp/ 和 commands/ 下的文件并输出检查结果
-├── hcp/
-│   └── cli_workflow.tf             # 需要你补全的 HCP Terraform CLI-driven workflow 示例配置
-├── commands/
-│   └── cli_driven_workflow.sh      # 需要你补全的本地 CLI 发起远端 run 的命令
-└── tests/
-    └── cli_driven_workflow.tftest.hcl
-```
-
-> 注意：本 lab 不会真的连接 HCP Terraform，也不会创建 AWS Security Group。根目录 `main.tf` 只是做静态检查，用来练习 CLI-driven workflow 的关键配置和命令写法。
+本 Lab 没有资源，不需要执行 `apply` 或 `destroy`。

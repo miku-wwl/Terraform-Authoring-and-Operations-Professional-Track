@@ -26,9 +26,9 @@ locals {
   #   workspace    = "configuration_variables_state_and_runs"
   # }
   object_responsibilities = {
-    organization = "single_terraform_state"
-    project      = "provider_plugin_cache"
-    workspace    = "organization_billing_only"
+    organization = "teams_billing_and_org_settings"
+    project      = "group_workspaces_and_scope_access"
+    workspace    = "configuration_variables_state_and_runs"
   }
 
   # TODO 2：比较本地 working directory 与 HCP remote workspace。
@@ -42,7 +42,15 @@ locals {
   #   hcp_state           = "workspace_managed_state"
   #   hcp_run_history     = "workspace_run_history"
   # }
-  storage_comparison = {}
+  storage_comparison = {
+    local_configuration = "local_disk"
+    hcp_configuration   = "vcs_or_cli_api_upload"
+    local_variables     = "tfvars_cli_or_environment"
+    hcp_variables       = "workspace_or_variable_sets"
+    local_state         = "local_or_configured_backend"
+    hcp_state           = "workspace_managed_state"
+    hcp_run_history     = "workspace_run_history"
+  }
 
   # TODO 3：为配置来源选择 HCP Terraform workflow。
   # 答案级 Hint：完整答案如下：
@@ -53,10 +61,10 @@ locals {
   #   vcs_is_mandatory               = false
   # }
   workflow_choices = {
-    repository_commit_triggers_run = "cli_driven"
-    local_cli_starts_remote_run    = "vcs_driven"
-    automation_uploads_config      = "manual_only"
-    vcs_is_mandatory               = true
+    repository_commit_triggers_run = "vcs_driven"
+    local_cli_starts_remote_run    = "cli_driven"
+    automation_uploads_config      = "api_driven"
+    vcs_is_mandatory               = false
   }
 
   # TODO 4：为一个 organization 设计 project/workspace 分组。
@@ -66,7 +74,11 @@ locals {
   #   app_project     = ["app-dev", "app-prod"]
   #   security_project = ["security-monitoring", "security-hardening"]
   # }
-  organization_design = {}
+  organization_design = {
+    network_project = ["network-dev", "network-prod"]
+    app_project     = ["app-dev", "app-prod"]
+    security_project = ["security-monitoring", "security-hardening"]
+  }
 }
 
 output "object_responsibilities" {
