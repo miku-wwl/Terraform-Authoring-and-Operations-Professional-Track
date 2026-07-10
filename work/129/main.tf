@@ -35,11 +35,11 @@ locals {
   #   task_specific_permissions   = "custom"
   # }
   role_choices = {
-    view_workspace_information = "admin"
-    propose_without_apply      = "write"
-    daily_plan_and_apply       = "plan"
-    manage_settings_and_access = "read"
-    task_specific_permissions  = "owners"
+    view_workspace_information = "read"
+    propose_without_apply      = "plan"
+    daily_plan_and_apply       = "write"
+    manage_settings_and_access = "admin"
+    task_specific_permissions  = "custom"
   }
 
   # TODO 2：判断 Read、Plan、Write、Admin 的关键能力。
@@ -53,12 +53,12 @@ locals {
   #   admin_can_delete_workspace = true
   # }
   role_capabilities = {
-    read_can_plan              = true
-    plan_can_plan              = false
-    plan_can_apply             = true
-    write_can_apply            = false
-    write_can_manage_settings  = true
-    admin_can_delete_workspace = false
+    read_can_plan              = false
+    plan_can_plan              = true
+    plan_can_apply             = false
+    write_can_apply            = true
+    write_can_manage_settings  = false
+    admin_can_delete_workspace = true
   }
 
   # TODO 3：判断 outputs、完整 state 与 state write 的边界。
@@ -72,12 +72,12 @@ locals {
   #   state_cli_maintenance    = "read_and_write"
   # }
   state_judgements = {
-    outputs_only_reads        = "complete_state_file"
-    full_state_permission     = "outputs_only"
-    create_state_versions     = "read"
-    state_may_contain_secrets = false
-    plan_preset_reads_state   = false
-    state_cli_maintenance     = "no_access"
+    outputs_only_reads        = "public_root_outputs"
+    full_state_permission     = "read"
+    create_state_versions     = "read_and_write"
+    state_may_contain_secrets = true
+    plan_preset_reads_state   = true
+    state_cli_maintenance     = "read_and_write"
   }
 
   # TODO 4：为细粒度权限和敏感数据场景选择正确做法。
@@ -91,12 +91,12 @@ locals {
   #   reduce_excess_access       = "review_all_additive_grants"
   # }
   security_scenarios = {
-    auditor_runs_no_full_state  = "read_role"
-    sensitive_variable_read     = "show_plaintext_value"
-    download_sentinel_mocks     = "safe_for_every_user"
-    attach_workspace_run_task   = "read_outputs_only"
-    custom_can_delete_workspace = true
-    reduce_excess_access        = "add_lower_permission_team"
+    auditor_runs_no_full_state  = "custom_role"
+    sensitive_variable_read     = "value_remains_write_only"
+    download_sentinel_mocks     = "treat_as_sensitive_access"
+    attach_workspace_run_task   = "manage_workspace_run_tasks"
+    custom_can_delete_workspace = false
+    reduce_excess_access        = "review_all_additive_grants"
   }
 }
 
