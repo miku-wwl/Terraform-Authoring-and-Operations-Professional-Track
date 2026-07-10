@@ -1,0 +1,14 @@
+# Copy this file into a separate real-HCP experiment directory and rename it
+# to a .tf filename. Replace both placeholder values before terraform init.
+# Do not use real tokens in Terraform configuration.
+
+terraform {
+  cloud {
+    hostname     = "app.terraform.io"
+    organization = "REPLACE_WITH_ORGANIZATION"
+
+    workspaces {
+      name = "REPLACE_WITH_WORKSPACE"
+    }
+  }
+}

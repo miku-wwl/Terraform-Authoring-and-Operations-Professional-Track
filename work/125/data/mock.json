@@ -1,0 +1,117 @@
+{
+  "workspaces": [
+    {
+      "name": "checkout-api",
+      "project": "commerce"
+    },
+    {
+      "name": "catalog-api",
+      "project": "commerce"
+    },
+    {
+      "name": "analytics",
+      "project": "data"
+    }
+  ],
+  "variable_sets": [
+    {
+      "name": "global-aws",
+      "scope": {
+        "type": "global"
+      },
+      "variables": [
+        {
+          "key": "AWS_REGION",
+          "value": "ap-southeast-2",
+          "category": "env",
+          "sensitive": false
+        },
+        {
+          "key": "AWS_ACCESS_KEY_ID",
+          "value": "shared-access-key",
+          "category": "env",
+          "sensitive": true
+        }
+      ]
+    },
+    {
+      "name": "commerce-database",
+      "scope": {
+        "type": "project",
+        "project": "commerce"
+      },
+      "variables": [
+        {
+          "key": "db_server",
+          "value": "10.20.0.15",
+          "category": "terraform",
+          "sensitive": false
+        },
+        {
+          "key": "db_write_capacity",
+          "value": 10,
+          "category": "terraform",
+          "sensitive": false
+        }
+      ]
+    },
+    {
+      "name": "checkout-features",
+      "scope": {
+        "type": "workspace",
+        "workspace": "checkout-api"
+      },
+      "variables": [
+        {
+          "key": "feature_mode",
+          "value": "canary",
+          "category": "terraform",
+          "sensitive": false
+        },
+        {
+          "key": "APP_LOG_LEVEL",
+          "value": "info",
+          "category": "env",
+          "sensitive": false
+        }
+      ]
+    }
+  ],
+  "workspace_variables": {
+    "checkout-api": [
+      {
+        "key": "db_write_capacity",
+        "value": 15,
+        "category": "terraform",
+        "sensitive": false
+      },
+      {
+        "key": "APP_LOG_LEVEL",
+        "value": "debug",
+        "category": "env",
+        "sensitive": false
+      },
+      {
+        "key": "service_owner",
+        "value": "payments",
+        "category": "terraform",
+        "sensitive": false
+      }
+    ],
+    "catalog-api": [],
+    "analytics": [
+      {
+        "key": "AWS_REGION",
+        "value": "us-west-2",
+        "category": "env",
+        "sensitive": false
+      },
+      {
+        "key": "DATA_RETENTION_DAYS",
+        "value": 30,
+        "category": "terraform",
+        "sensitive": false
+      }
+    ]
+  }
+}
