@@ -1,80 +1,119 @@
-# 第 137 节做题环境：IAM Role 与 AssumeRole 信任策略
+# Lab 137：IAM Role 与 AssumeRole 信任策略
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/137/` 中的参考实现。
+本实验使用 Terraform AWS Provider 连接 LocalStack IAM，实际创建一个只信任 EC2 service principal 的 IAM Role。
 
-本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
+你会练到：
 
-## 知识点总结
-
-- IAM role 的 trust policy 决定哪个身份或服务可以扮演它。
-- EC2 的 service principal 是 `ec2.amazonaws.com`。
-- `assume_role_policy` 放信任策略；真正的权限要另外用 policy/attachment 授权。
+- Role、trust policy 与 permissions policy 的职责边界；
+- `Principal.Service` 和 `sts:AssumeRole`；
+- `aws_iam_policy_document` 如何生成 trust JSON；
+- `.json` 如何进入 `aws_iam_role.assume_role_policy`；
+- 使用 `jsondecode` 验证 Role 实际保存的信任语义。
 
 ## 1. 启动 LocalStack
+
+本 Lab 只需要 IAM：
 
 ```powershell
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
-  -p 4510-4559:4510-4559 `
-  -e SERVICES=ec2,iam,sts,s3,autoscaling `
+  -e SERVICES=iam `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，先确认它是否还在运行：
+如果同名容器没有启用 IAM，先执行 `docker stop localstack-tf-labs`，再重新启动。
+
+## 2. 准备安全环境
+
+bootstrap 必须在当前 PowerShell 进程执行：
 
 ```powershell
-docker ps --filter "name=localstack-tf-labs"
+cd D:\workshop\Codex\Terraform-Authoring-and-Operations-Professional-Track\work\137
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+& .\scripts\bootstrap.ps1
+& .\scripts\check-sandbox.ps1
 ```
 
-## 2. 进入实验目录
+脚本强制使用 `test/test` 和 `http://localhost:4566`。Provider 只配置 IAM endpoint。
+
+## 3. 边学边练
+
+### TODO 1：构造 Trust Policy
+
+完成 `aws_iam_policy_document.ec2_trust` 后运行：
 
 ```powershell
-cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\137
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
-$env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-$env:TF_VAR_localstack_endpoint="http://localhost:4566"
-```
-
-## 3. 开始做题
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform plan -input=false -no-color
+```
+
+检查生成 JSON 中的 `Principal.Service`、`Action` 和 `Effect`。HCL 输入是 list，但单元素在 JSON 中可能规范化为字符串，语义不变。
+
+### TODO 2：创建 Role
+
+把 data source 的 `.json` 赋给 `assume_role_policy`。再次 plan，应只出现 1 个待创建 IAM Role。
+
+本 Lab 没有 permissions policy。这是有意设计：trust policy 只允许 EC2 扮演 Role，不赋予 S3、EC2 或其他业务权限。
+
+### TODO 3：输出并测试信任语义
+
+完成 outputs 后运行：
+
+```powershell
+terraform fmt -check
+terraform validate
+terraform test
+```
+
+预期：
+
+```text
+Success! 1 passed, 0 failed.
+```
+
+## 4. Apply 与验证
+
+```powershell
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
-terraform destroy -auto-approve
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+& .\scripts\verify.ps1
 ```
 
-## 4. Terraform Sandbox / Linux 方式
+验证脚本检查 Role identity 和完整 trust policy 语义，不只检查 ARN 是否存在。
+
+## 5. Destroy 与清理
+
+```powershell
+terraform destroy -auto-approve
+& .\scripts\clean.ps1
+```
+
+## Linux / Sandbox
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
-export LOCALSTACK_ENDPOINT=http://localhost:4566
-export TF_VAR_localstack_endpoint=http://localhost:4566
-bash scripts/check-sandbox.sh
-bash scripts/bootstrap.sh
+cd work/137
+. ./scripts/bootstrap.sh
+sh scripts/check-sandbox.sh
 terraform init -input=false
 terraform fmt
 terraform validate
+terraform test
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-bash scripts/verify.sh
+sh scripts/verify.sh
 terraform destroy -auto-approve
-bash scripts/clean.sh
+sh scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
+## 实验边界
+
+真实 EC2 使用这个 Role 还通常需要 Instance Profile，以及调用方的 `iam:PassRole` 权限。应用最终能访问哪些 AWS 资源，则由 Role 的 permissions policies 决定。这些属于后续主题，本 Lab 不混入额外操作。
+
+## 停止 LocalStack
 
 ```powershell
 docker stop localstack-tf-labs

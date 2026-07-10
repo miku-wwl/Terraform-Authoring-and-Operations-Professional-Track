@@ -1,4 +1,14 @@
-$endpoint = if ($env:LOCALSTACK_ENDPOINT) { $env:LOCALSTACK_ENDPOINT } else { 'http://localhost:4566' }
-if ($endpoint -ne 'http://localhost:4566') {
-  Write-Warning '当前 endpoint 不是默认 LocalStack 地址，请确认没有连接真实 AWS。'
-}
+$ErrorActionPreference = 'Stop'
+$expectedEndpoint = 'http://localhost:4566'
+if ($env:LOCALSTACK_ENDPOINT -ne $expectedEndpoint) { throw "LOCALSTACK_ENDPOINT must be $expectedEndpoint." }
+if ($env:TF_VAR_localstack_endpoint -ne $expectedEndpoint) { throw "TF_VAR_localstack_endpoint must be $expectedEndpoint." }
+if ($env:AWS_ACCESS_KEY_ID -ne 'test' -or $env:AWS_SECRET_ACCESS_KEY -ne 'test') { throw 'Lab 137 requires test/test credentials.' }
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker is unavailable.' }
+$containerHealth = docker inspect --format '{{.State.Health.Status}}' localstack-tf-labs 2>$null
+if ($LASTEXITCODE -ne 0 -or $containerHealth.Trim() -ne 'healthy') { throw "LocalStack is missing or unhealthy: $containerHealth" }
+$services = docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' localstack-tf-labs | Where-Object { $_ -like 'SERVICES=*' }
+$enabledServices = (($services -replace '^SERVICES=', '') -split ',').Trim()
+if ($enabledServices -notcontains 'iam') { throw 'Recreate LocalStack with SERVICES=iam.' }
+$health = Invoke-RestMethod -Uri "$expectedEndpoint/_localstack/health" -TimeoutSec 5
+if ($health.services.iam -notin @('available', 'running')) { throw "IAM is not ready: $($health.services.iam)" }
+Write-Host 'PASS: LocalStack IAM is healthy, endpoint is local, and credentials are test/test.'
