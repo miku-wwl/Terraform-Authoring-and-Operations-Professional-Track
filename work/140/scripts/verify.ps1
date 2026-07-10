@@ -1,5 +1,7 @@
-$ErrorActionPreference = 'Stop'
-terraform output -raw launch_template_id | Out-Null
-$spec = terraform output -json asg_spec
-if ($spec -notmatch 'tf-pro-lab-140-web') { throw 'asg_spec does not contain expected name.' }
-Write-Host 'PASS: launch template exists and ASG spec is modeled for LocalStack-limited practice.'
+$ErrorActionPreference='Stop'
+$x=terraform output -json asg_spec|ConvertFrom-Json
+if($x.name-ne'tf-pro-lab-140-web'-or$x.min_size-ne 1-or$x.desired_capacity-ne 2-or$x.max_size-ne 3){throw 'ASG identity/capacity incorrect.'}
+if(@($x.vpc_zone_identifier).Count-ne 2-or(@($x.vpc_zone_identifier)|Select-Object -Unique).Count-ne 2){throw 'Expected two unique subnets.'}
+if([string]::IsNullOrWhiteSpace($x.launch_template.id)-or$x.launch_template.version-ne'$Latest'){throw 'Launch Template reference incorrect.'}
+if($x.health_check_type-ne'EC2'){throw 'Health check type incorrect.'}
+Write-Host 'PASS: ASG model capacity, subnets, health check, and Launch Template reference are correct.'

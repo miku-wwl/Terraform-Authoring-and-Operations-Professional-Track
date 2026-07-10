@@ -1,85 +1,66 @@
-# 第 140 节做题环境：Auto Scaling Group 与 Launch Template
+# Lab 140：Auto Scaling Group 与 Launch Template
 
-这是你的上机做题目录。请编辑当前目录，不要修改 `practice/labs/140/` 中的参考实现。
+本实验真实创建 VPC、双 AZ Subnet 和 Launch Template，再用 Terraform local 建模 ASG。LocalStack Community 4.2.0 不执行 ASG API，所以不会启动实例。
 
-本实验默认使用 Docker 启动 LocalStack 来模拟 AWS。不要使用真实 AWS 账号。
-
-## LocalStack 限制
-
-LocalStack Community 当前不支持真实创建 Auto Scaling Group，`CreateAutoScalingGroup` 会返回 501。因此本题只真实创建 `aws_launch_template`，并用 `local.asg_spec` 建模 ASG 的关键配置。真实 ASG 创建、实例扩缩容和健康检查行为需要在真实 AWS 或支持该 API 的 sandbox 中验证。
-
-## 知识点总结
-
-- Launch Template 定义实例怎么启动，ASG 定义实例组怎么扩缩容。
-- ASG 常见核心字段是最小容量、最大容量、期望容量和启动模板引用。
-- 本 lab 用 `locals` 建模 ASG，重点练结构和引用关系。
-
-## 1. 启动 LocalStack
+## 1. 启动 EC2-only LocalStack
 
 ```powershell
 docker run -d --rm --name localstack-tf-labs `
   -p 4566:4566 `
-  -p 4510-4559:4510-4559 `
-  -e SERVICES=ec2,iam,sts,s3,autoscaling `
+  -e SERVICES=ec2 `
   localstack/localstack:4.2.0
 ```
 
-如果容器已经存在，先确认它是否还在运行：
+## 2. 安全准备
 
 ```powershell
-docker ps --filter "name=localstack-tf-labs"
+cd D:\workshop\Codex\Terraform-Authoring-and-Operations-Professional-Track\work\140
+Set-ExecutionPolicy -Scope Process Bypass -Force
+& .\scripts\bootstrap.ps1
+& .\scripts\check-sandbox.ps1
 ```
 
-## 2. 进入实验目录
+## 3. 边学边练
+
+先阅读 `main.tf`，运行 init/fmt/validate/plan，观察 4 个真实 EC2 资源。完成 TODO 1 后，确认 `asg_spec` 的字段可逐项映射到真实 `aws_autoscaling_group`。
+
+完成 TODO 2 后运行：
 
 ```powershell
-cd D:\workshop\GitHub\Terraform-Authoring-and-Operations-Professional-Track\work\140
-$env:AWS_ACCESS_KEY_ID="test"
-$env:AWS_SECRET_ACCESS_KEY="test"
-$env:AWS_DEFAULT_REGION="us-east-1"
-$env:LOCALSTACK_ENDPOINT="http://localhost:4566"
-$env:TF_VAR_localstack_endpoint="http://localhost:4566"
-```
-
-## 3. 开始做题
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\check-sandbox.ps1
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap.ps1
-terraform init -input=false
-terraform fmt
+terraform fmt -check
 terraform validate
+terraform test
+```
+
+预期：`Success! 1 passed, 0 failed.`
+
+## 4. Apply、验证与清理
+
+```powershell
 terraform plan -input=false -no-color -out=tfplan
 terraform apply -auto-approve tfplan
 terraform output
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify.ps1
+& .\scripts\verify.ps1
 terraform destroy -auto-approve
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\clean.ps1
+& .\scripts\clean.ps1
 ```
 
-## 4. Terraform Sandbox / Linux 方式
+输出是 ASG 配置模型；不要把它误认为真实 ASG 或实例。
+
+## Linux / Sandbox
 
 ```sh
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
-export LOCALSTACK_ENDPOINT=http://localhost:4566
-export TF_VAR_localstack_endpoint=http://localhost:4566
-bash scripts/check-sandbox.sh
-bash scripts/bootstrap.sh
+cd work/140
+. ./scripts/bootstrap.sh
+sh scripts/check-sandbox.sh
 terraform init -input=false
 terraform fmt
 terraform validate
-terraform plan -input=false -no-color -out=tfplan
-terraform apply -auto-approve tfplan
-terraform output
-bash scripts/verify.sh
+terraform test
+terraform apply -auto-approve
+sh scripts/verify.sh
 terraform destroy -auto-approve
-bash scripts/clean.sh
+sh scripts/clean.sh
 ```
 
-## 5. 清理 LocalStack
-
-```powershell
-docker stop localstack-tf-labs
-```
+真实 AWS 中建议跨多个 AZ subnet，并明确 Launch Template 的版本策略；扩缩容行为需要在受控 AWS sandbox 验证。
