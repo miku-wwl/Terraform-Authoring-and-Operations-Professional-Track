@@ -1,6 +1,0 @@
-direction,protocol,port,cidr_key
-in,tcp,80,app
-in,tcp,5432,database
-in,tcp,8081-8085,monitoring
-out,tcp,443,app
-in,tcp,9000,antivirus

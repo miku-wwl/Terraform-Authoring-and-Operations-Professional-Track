@@ -1,2 +1,0 @@
-username=app
-password=local-only

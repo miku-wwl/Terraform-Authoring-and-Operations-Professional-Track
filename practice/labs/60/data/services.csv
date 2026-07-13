@@ -1,4 +1,0 @@
-name,port,enabled
-api,8080,true
-worker,9000,false
-billing,7070,true

@@ -1,5 +1,0 @@
-direction,protocol,port,cidr
-in,tcp,80,10.167.10.0/24
-in,tcp,443,10.167.20.0/24
-out,tcp,443,0.0.0.0/0
-in,tcp,8081-8085,10.167.30.0/24
